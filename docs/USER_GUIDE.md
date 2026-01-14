@@ -44,8 +44,8 @@ SonicKit is a cross-platform real-time audio processing library written in pure 
 
 ### Prerequisites
 
-- CMake 3.14 or higher
-- C11 compatible compiler (GCC 4.9+, Clang 3.4+, MSVC 2015+)
+- CMake 3.16 or higher
+- C11 compatible compiler (GCC 4.9+, Clang 3.4+, MSVC 2015+, MinGW)
 
 ### Building from Source
 
@@ -71,12 +71,13 @@ cmake --install . --prefix /usr/local
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `VOICE_ENABLE_OPUS` | ON | Enable Opus codec |
-| `VOICE_ENABLE_G722` | ON | Enable G.722 codec |
-| `VOICE_ENABLE_RNNOISE` | OFF | Enable RNNoise neural network denoiser |
-| `VOICE_ENABLE_SRTP` | OFF | Enable SRTP encryption |
-| `VOICE_BUILD_EXAMPLES` | ON | Build example programs |
-| `VOICE_BUILD_TESTS` | ON | Build unit tests |
+| `SONICKIT_BUILD_EXAMPLES` | ON | Build example programs |
+| `SONICKIT_BUILD_TESTS` | ON | Build unit tests |
+| `SONICKIT_ENABLE_OPUS` | ON | Enable Opus codec |
+| `SONICKIT_ENABLE_G722` | OFF | Enable G.722 codec |
+| `SONICKIT_ENABLE_RNNOISE` | ON | Enable RNNoise neural network denoiser |
+| `SONICKIT_ENABLE_SRTP` | ON | Enable SRTP encryption |
+| `SONICKIT_ENABLE_DTLS` | ON | Enable DTLS-SRTP key exchange |
 
 ### Linking in Your Project
 
@@ -97,7 +98,7 @@ target_link_libraries(your_app PRIVATE SonicKit::SonicKit)
 #include <stdio.h>
 
 // Callback function for captured audio
-void on_capture(voice_device_t *dev, const int16_t *samples, 
+void on_capture(voice_device_t *dev, const int16_t *samples,
                 size_t count, void *user_data) {
     printf("Captured %zu samples\n", count);
 }
@@ -105,7 +106,7 @@ void on_capture(voice_device_t *dev, const int16_t *samples,
 int main() {
     // Initialize library
     voice_init(NULL);
-    
+
     // Configure device
     voice_device_config_t config;
     voice_device_config_init(&config);
@@ -114,24 +115,24 @@ int main() {
     config.channels = 1;
     config.frame_size = 480;  // 10ms at 48kHz
     config.capture_callback = on_capture;
-    
+
     // Create and start device
     voice_device_t *device = voice_device_create(&config);
     if (!device) {
         fprintf(stderr, "Failed to create device\n");
         return 1;
     }
-    
+
     voice_device_start(device);
-    
+
     // Capture for 5 seconds
     voice_sleep_ms(5000);
-    
+
     // Cleanup
     voice_device_stop(device);
     voice_device_destroy(device);
     voice_deinit();
-    
+
     return 0;
 }
 ```
@@ -191,16 +192,16 @@ int main() {
     voice_global_config_t global_config;
     voice_global_config_init(&global_config);
     global_config.log_level = VOICE_LOG_DEBUG;
-    
+
     // Initialize
     voice_error_t err = voice_init(&global_config);
     if (err != VOICE_OK) {
         fprintf(stderr, "Init failed: %s\n", voice_error_string(err));
         return 1;
     }
-    
+
     // ... use library ...
-    
+
     // Cleanup
     voice_deinit();
     return 0;
@@ -219,14 +220,14 @@ int main() {
 void list_devices() {
     voice_device_info_t devices[16];
     size_t count = 16;
-    
+
     // List capture devices
     voice_device_enumerate(VOICE_DEVICE_MODE_CAPTURE, devices, &count);
     printf("Capture devices:\n");
     for (size_t i = 0; i < count; i++) {
         printf("  [%zu] %s (ID: %s)\n", i, devices[i].name, devices[i].id);
     }
-    
+
     // List playback devices
     count = 16;
     voice_device_enumerate(VOICE_DEVICE_MODE_PLAYBACK, devices, &count);
@@ -241,13 +242,13 @@ void list_devices() {
 
 ```c
 // Capture callback
-void on_capture(voice_device_t *dev, const int16_t *input, 
+void on_capture(voice_device_t *dev, const int16_t *input,
                 size_t samples, void *user_data) {
     // Process captured audio
 }
 
 // Playback callback
-void on_playback(voice_device_t *dev, int16_t *output, 
+void on_playback(voice_device_t *dev, int16_t *output,
                  size_t samples, void *user_data) {
     // Fill output buffer
 }
@@ -350,7 +351,7 @@ int output_frames = (input_frames * 16000) / 48000;
 int16_t output[output_frames];
 int actual_output;
 
-voice_resampler_process(resampler, input, input_frames, 
+voice_resampler_process(resampler, input, input_frames,
                         output, output_frames, &actual_output);
 ```
 
@@ -374,7 +375,7 @@ voice_encoder_t *encoder = voice_encoder_create(&enc_config);
 
 // Encode
 uint8_t encoded[256];
-int encoded_size = voice_encoder_encode(encoder, pcm_frame, 960, 
+int encoded_size = voice_encoder_encode(encoder, pcm_frame, 960,
                                         encoded, sizeof(encoded));
 
 // Decoder
@@ -410,7 +411,7 @@ rtp_session_t *rtp = rtp_session_create(&config);
 // Create RTP packet
 uint8_t packet[1500];
 size_t packet_size;
-rtp_session_create_packet(rtp, encoded_data, encoded_size, 
+rtp_session_create_packet(rtp, encoded_data, encoded_size,
                           timestamp, false, packet, &packet_size);
 
 // Parse received packet
@@ -521,7 +522,7 @@ public class SonicKitLib {
     static {
         System.loadLibrary("sonickit");
     }
-    
+
     public static native void nativeInit(Context context);
     public static native void nativeRelease();
 }
@@ -532,21 +533,57 @@ SonicKitLib.nativeInit(getApplicationContext());
 
 ### WebAssembly
 
-```javascript
-// Load module
-const SonicKit = await loadSonicKit();
+SonicKit can be compiled to WebAssembly for real-time audio processing in browsers.
 
-// Create denoiser
-const denoiser = new SonicKit.Denoiser(48000, 480, 0);
+**Building WASM:**
 
-// Process audio
-const input = new Int16Array(480);
-// ... fill input ...
-const output = denoiser.process(input);
+```bash
+# Install Emscripten SDK
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk && ./emsdk install latest && ./emsdk activate latest
+source ./emsdk_env.sh  # Linux/macOS
+# or emsdk_env.bat      # Windows
 
-// Cleanup
-denoiser.delete();
+# Build
+cd sonickit/wasm
+mkdir build && cd build
+emcmake cmake .. -DWASM_ENABLE_OPUS=OFF -DWASM_ENABLE_RNNOISE=OFF
+emmake make -j8
 ```
+
+**Browser Usage:**
+
+```html
+<script src="sonickit.js"></script>
+<script>
+// Load module
+Module().then(sonicKit => {
+    // Create denoiser (48kHz, 480 samples/frame)
+    const denoiser = new sonicKit.Denoiser(48000, 480, 0);
+
+    // Process audio (Int16Array)
+    const input = new Int16Array(480);
+    // ... fill audio data ...
+    const output = denoiser.process(input);
+
+    // Cleanup
+    denoiser.delete();
+});
+</script>
+```
+
+**Available JavaScript API Classes:**
+
+| Class | Constructor | Methods |
+|-------|-------------|--------|
+| `Denoiser` | `(sampleRate, frameSize, engine)` | `process()`, `reset()` |
+| `EchoCanceller` | `(sampleRate, frameSize, filterLen)` | `process()`, `reset()` |
+| `AGC` | `(sampleRate, frameSize, mode, target)` | `process()`, `getGain()`, `reset()` |
+| `VAD` | `(sampleRate, frameSize, mode)` | `isSpeech()`, `getProbability()`, `reset()` |
+| `Resampler` | `(channels, inRate, outRate, quality)` | `process()`, `reset()` |
+| `G711Codec` | `(useAlaw)` | `encode()`, `decode()` |
+
+For more details, see [wasm/README.md](../wasm/README.md).
 
 ---
 

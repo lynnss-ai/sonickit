@@ -57,7 +57,7 @@
 ## 项目结构
 
 ```
-voice/
+sonickit/
 ├── include/
 │   ├── voice/           # 核心头文件
 │   │   ├── types.h      # 基础类型定义
@@ -90,15 +90,26 @@ voice/
 │   │   ├── g711.h            # G.711 编解码
 │   │   ├── g722.h            # G.722 编解码
 │   │   └── opus.h            # Opus 编解码
-│   └── network/         # 网络模块
-│       ├── rtp.h             # RTP 协议
-│       ├── srtp.h            # SRTP 加密
-│       ├── jitter_buffer.h   # 抖动缓冲
-│       ├── bandwidth_estimator.h  # 带宽估计
-│       ├── ice.h             # ICE/STUN/TURN
-│       └── transport.h       # 传输层抽象
+│   ├── network/         # 网络模块
+│   │   ├── rtp.h             # RTP 协议
+│   │   ├── srtp.h            # SRTP 加密
+│   │   ├── jitter_buffer.h   # 抖动缓冲
+│   │   ├── bandwidth_estimator.h  # 带宽估计
+│   │   ├── ice.h             # ICE/STUN/TURN
+│   │   └── transport.h       # 传输层抽象
+│   ├── sip/             # SIP 协议模块
+│   │   ├── sip_core.h        # SIP 核心协议
+│   │   └── sip_ua.h          # SIP 用户代理
+│   └── utils/           # 工具模块
+│       ├── diagnostics.h     # 诊断工具
+│       └── simd_utils.h      # SIMD 优化
 ├── src/                 # 实现文件
 ├── examples/            # 示例程序
+├── wasm/                # WebAssembly 支持
+│   ├── api/                  # JS 绑定 API
+│   ├── platform/             # WASM 平台层
+│   ├── stubs/                # 桩函数
+│   └── examples/             # 浏览器演示
 ├── docs/                # 文档
 │   └── NEW_FEATURES.md  # 新功能详细文档
 ├── third_party/         # 第三方库
@@ -303,6 +314,10 @@ denoiser.delete();
 | **bandwidth_estimator** | 带宽估计 | GCC/REMB/BBR |
 | **ice** | NAT 穿透 | ICE/STUN/TURN |
 | **transport** | 传输层 | UDP/TCP，QoS |
+| **sip_core** | SIP 协议 | RFC 3261，注册/呼叫 |
+| **sip_ua** | SIP 用户代理 | 呼叫管理，会话控制 |
+| **diagnostics** | 诊断工具 | 性能分析，调试日志 |
+| **simd_utils** | SIMD 优化 | SSE/AVX/NEON 加速 |
 | **statistics** | 统计收集 | MOS/R-Factor，JSON |
 
 ## 快速开始

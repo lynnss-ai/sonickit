@@ -59,7 +59,7 @@ A cross-platform real-time audio processing library written in pure C.
 ## Project Structure
 
 ```
-voice/
+sonickit/
 ├── include/
 │   ├── voice/           # Core headers
 │   │   ├── types.h      # Basic type definitions
@@ -92,15 +92,26 @@ voice/
 │   │   ├── g711.h            # G.711 codec
 │   │   ├── g722.h            # G.722 codec
 │   │   └── opus.h            # Opus codec
-│   └── network/         # Network modules
-│       ├── rtp.h             # RTP protocol
-│       ├── srtp.h            # SRTP encryption
-│       ├── jitter_buffer.h   # Jitter buffer
-│       ├── bandwidth_estimator.h  # Bandwidth estimation
-│       ├── ice.h             # ICE/STUN/TURN
-│       └── transport.h       # Transport layer abstraction
+│   ├── network/         # Network modules
+│   │   ├── rtp.h             # RTP protocol
+│   │   ├── srtp.h            # SRTP encryption
+│   │   ├── jitter_buffer.h   # Jitter buffer
+│   │   ├── bandwidth_estimator.h  # Bandwidth estimation
+│   │   ├── ice.h             # ICE/STUN/TURN
+│   │   └── transport.h       # Transport layer abstraction
+│   ├── sip/             # SIP protocol modules
+│   │   ├── sip_core.h        # SIP core protocol
+│   │   └── sip_ua.h          # SIP user agent
+│   └── utils/           # Utility modules
+│       ├── diagnostics.h     # Diagnostic tools
+│       └── simd_utils.h      # SIMD optimizations
 ├── src/                 # Implementation files
 ├── examples/            # Example programs
+├── wasm/                # WebAssembly support
+│   ├── api/                  # JS binding API
+│   ├── platform/             # WASM platform layer
+│   ├── stubs/                # Stub functions
+│   └── examples/             # Browser demos
 ├── docs/                # Documentation
 │   └── NEW_FEATURES.md  # New features documentation
 ├── third_party/         # Third-party libraries
@@ -305,6 +316,10 @@ For more WASM details, see [wasm/README.md](wasm/README.md).
 | **bandwidth_estimator** | Bandwidth estimation | GCC/REMB/BBR |
 | **ice** | NAT traversal | ICE/STUN/TURN |
 | **transport** | Transport layer | UDP/TCP, QoS |
+| **sip_core** | SIP Protocol | RFC 3261, Register/Call |
+| **sip_ua** | SIP User Agent | Call management, Session control |
+| **diagnostics** | Diagnostics | Performance analysis, Debug logging |
+| **simd_utils** | SIMD Optimization | SSE/AVX/NEON acceleration |
 | **statistics** | Statistics collection | MOS/R-Factor, JSON |
 
 ## Quick Start

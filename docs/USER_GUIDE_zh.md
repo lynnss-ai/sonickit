@@ -44,8 +44,8 @@ SonicKit 是一个使用纯 C 语言编写的跨平台实时音频处理库。�
 
 ### 前置要求
 
-- CMake 3.14 或更高版本
-- C11 兼容编译器（GCC 4.9+、Clang 3.4+、MSVC 2015+）
+- CMake 3.16 或更高版本
+- C11 兼容编译器（GCC 4.9+、Clang 3.4+、MSVC 2015+、MinGW）
 
 ### 从源码构建
 
@@ -71,12 +71,13 @@ cmake --install . --prefix /usr/local
 
 | 选项 | 默认值 | 描述 |
 |------|--------|------|
-| `VOICE_ENABLE_OPUS` | ON | 启用 Opus 编解码器 |
-| `VOICE_ENABLE_G722` | ON | 启用 G.722 编解码器 |
-| `VOICE_ENABLE_RNNOISE` | OFF | 启用 RNNoise 神经网络降噪器 |
-| `VOICE_ENABLE_SRTP` | OFF | 启用 SRTP 加密 |
-| `VOICE_BUILD_EXAMPLES` | ON | 构建示例程序 |
-| `VOICE_BUILD_TESTS` | ON | 构建单元测试 |
+| `SONICKIT_BUILD_EXAMPLES` | ON | 构建示例程序 |
+| `SONICKIT_BUILD_TESTS` | ON | 构建单元测试 |
+| `SONICKIT_ENABLE_OPUS` | ON | 启用 Opus 编解码器 |
+| `SONICKIT_ENABLE_G722` | OFF | 启用 G.722 编解码器 |
+| `SONICKIT_ENABLE_RNNOISE` | ON | 启用 RNNoise 神经网络降噪器 |
+| `SONICKIT_ENABLE_SRTP` | ON | 启用 SRTP 加密 |
+| `SONICKIT_ENABLE_DTLS` | ON | 启用 DTLS-SRTP 密钥交换 |
 
 ### 在项目中链接
 
@@ -97,7 +98,7 @@ target_link_libraries(your_app PRIVATE SonicKit::SonicKit)
 #include <stdio.h>
 
 // 采集音频的回调函数
-void on_capture(voice_device_t *dev, const int16_t *samples, 
+void on_capture(voice_device_t *dev, const int16_t *samples,
                 size_t count, void *user_data) {
     printf("采集了 %zu 个样本\n", count);
 }
@@ -105,7 +106,7 @@ void on_capture(voice_device_t *dev, const int16_t *samples,
 int main() {
     // 初始化库
     voice_init(NULL);
-    
+
     // 配置设备
     voice_device_config_t config;
     voice_device_config_init(&config);
@@ -114,24 +115,24 @@ int main() {
     config.channels = 1;
     config.frame_size = 480;  // 48kHz 时 10ms
     config.capture_callback = on_capture;
-    
+
     // 创建并启动设备
     voice_device_t *device = voice_device_create(&config);
     if (!device) {
         fprintf(stderr, "创建设备失败\n");
         return 1;
     }
-    
+
     voice_device_start(device);
-    
+
     // 采集 5 秒
     voice_sleep_ms(5000);
-    
+
     // 清理
     voice_device_stop(device);
     voice_device_destroy(device);
     voice_deinit();
-    
+
     return 0;
 }
 ```
@@ -191,16 +192,16 @@ int main() {
     voice_global_config_t global_config;
     voice_global_config_init(&global_config);
     global_config.log_level = VOICE_LOG_DEBUG;
-    
+
     // 初始化
     voice_error_t err = voice_init(&global_config);
     if (err != VOICE_OK) {
         fprintf(stderr, "初始化失败: %s\n", voice_error_string(err));
         return 1;
     }
-    
+
     // ... 使用库 ...
-    
+
     // 清理
     voice_deinit();
     return 0;
@@ -219,14 +220,14 @@ int main() {
 void list_devices() {
     voice_device_info_t devices[16];
     size_t count = 16;
-    
+
     // 列出采集设备
     voice_device_enumerate(VOICE_DEVICE_MODE_CAPTURE, devices, &count);
     printf("采集设备:\n");
     for (size_t i = 0; i < count; i++) {
         printf("  [%zu] %s (ID: %s)\n", i, devices[i].name, devices[i].id);
     }
-    
+
     // 列出播放设备
     count = 16;
     voice_device_enumerate(VOICE_DEVICE_MODE_PLAYBACK, devices, &count);
@@ -241,13 +242,13 @@ void list_devices() {
 
 ```c
 // 采集回调
-void on_capture(voice_device_t *dev, const int16_t *input, 
+void on_capture(voice_device_t *dev, const int16_t *input,
                 size_t samples, void *user_data) {
     // 处理采集的音频
 }
 
 // 播放回调
-void on_playback(voice_device_t *dev, int16_t *output, 
+void on_playback(voice_device_t *dev, int16_t *output,
                  size_t samples, void *user_data) {
     // 填充输出缓冲区
 }
@@ -350,7 +351,7 @@ int output_frames = (input_frames * 16000) / 48000;
 int16_t output[output_frames];
 int actual_output;
 
-voice_resampler_process(resampler, input, input_frames, 
+voice_resampler_process(resampler, input, input_frames,
                         output, output_frames, &actual_output);
 ```
 
@@ -374,7 +375,7 @@ voice_encoder_t *encoder = voice_encoder_create(&enc_config);
 
 // 编码
 uint8_t encoded[256];
-int encoded_size = voice_encoder_encode(encoder, pcm_frame, 960, 
+int encoded_size = voice_encoder_encode(encoder, pcm_frame, 960,
                                         encoded, sizeof(encoded));
 
 // 解码器
@@ -410,7 +411,7 @@ rtp_session_t *rtp = rtp_session_create(&config);
 // 创建 RTP 数据包
 uint8_t packet[1500];
 size_t packet_size;
-rtp_session_create_packet(rtp, encoded_data, encoded_size, 
+rtp_session_create_packet(rtp, encoded_data, encoded_size,
                           timestamp, false, packet, &packet_size);
 
 // 解析接收的数据包
@@ -521,7 +522,7 @@ public class SonicKitLib {
     static {
         System.loadLibrary("sonickit");
     }
-    
+
     public static native void nativeInit(Context context);
     public static native void nativeRelease();
 }
@@ -532,21 +533,57 @@ SonicKitLib.nativeInit(getApplicationContext());
 
 ### WebAssembly
 
-```javascript
-// 加载模块
-const SonicKit = await loadSonicKit();
+SonicKit 支持编译为 WebAssembly，在浏览器中运行实时音频处理。
 
-// 创建降噪器
-const denoiser = new SonicKit.Denoiser(48000, 480, 0);
+**构建 WASM:**
 
-// 处理音频
-const input = new Int16Array(480);
-// ... 填充 input ...
-const output = denoiser.process(input);
+```bash
+# 安装 Emscripten SDK
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk && ./emsdk install latest && ./emsdk activate latest
+source ./emsdk_env.sh  # Linux/macOS
+# 或 emsdk_env.bat      # Windows
 
-// 清理
-denoiser.delete();
+# 构建
+cd sonickit/wasm
+mkdir build && cd build
+emcmake cmake .. -DWASM_ENABLE_OPUS=OFF -DWASM_ENABLE_RNNOISE=OFF
+emmake make -j8
 ```
+
+**浏览器使用:**
+
+```html
+<script src="sonickit.js"></script>
+<script>
+// 加载模块
+Module().then(sonicKit => {
+    // 创建降噪器 (48kHz, 480 样本/帧)
+    const denoiser = new sonicKit.Denoiser(48000, 480, 0);
+
+    // 处理音频 (Int16Array)
+    const input = new Int16Array(480);
+    // ... 填充音频数据 ...
+    const output = denoiser.process(input);
+
+    // 清理
+    denoiser.delete();
+});
+</script>
+```
+
+**可用的 JavaScript API 类:**
+
+| 类名 | 构造函数 | 方法 |
+|------|----------|------|
+| `Denoiser` | `(sampleRate, frameSize, engine)` | `process()`, `reset()` |
+| `EchoCanceller` | `(sampleRate, frameSize, filterLen)` | `process()`, `reset()` |
+| `AGC` | `(sampleRate, frameSize, mode, target)` | `process()`, `getGain()`, `reset()` |
+| `VAD` | `(sampleRate, frameSize, mode)` | `isSpeech()`, `getProbability()`, `reset()` |
+| `Resampler` | `(channels, inRate, outRate, quality)` | `process()`, `reset()` |
+| `G711Codec` | `(useAlaw)` | `encode()`, `decode()` |
+
+更多详情请参阅 [wasm/README.md](../wasm/README.md)。
 
 ---
 
