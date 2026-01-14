@@ -195,6 +195,8 @@ set(SONICKIT_SOURCES
     src/dsp/compressor.c
     src/dsp/effects.c
     src/dsp/watermark.c
+    src/dsp/time_stretcher.c
+    src/dsp/delay_estimator.c
 
     # 编解码器
     src/codec/codec.c
@@ -362,6 +364,34 @@ if(SONICKIT_BUILD_TESTS)
     target_include_directories(test_sip PRIVATE ${TEST_INCLUDE_DIR})
     target_link_libraries(test_sip voice)
     add_test(NAME test_sip COMMAND test_sip)
+
+    # ============================================
+    # 性能基准测试 (Phase 1)
+    # ============================================
+    option(SONICKIT_BUILD_BENCHMARKS "Build performance benchmarks" ON)
+
+    if(SONICKIT_BUILD_BENCHMARKS)
+        # SIMD 基准测试
+        add_executable(benchmark_simd tests/benchmark_simd.c)
+        target_include_directories(benchmark_simd PRIVATE ${TEST_INCLUDE_DIR})
+        target_link_libraries(benchmark_simd voice)
+
+        # DSP 基准测试
+        add_executable(benchmark_dsp tests/benchmark_dsp.c)
+        target_include_directories(benchmark_dsp PRIVATE ${TEST_INCLUDE_DIR})
+        target_link_libraries(benchmark_dsp voice)
+
+        # 设置编译标志启用 AVX2 (如果支持)
+        if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+            target_compile_options(benchmark_simd PRIVATE -mavx2 -mfma)
+            target_compile_options(benchmark_dsp PRIVATE -mavx2 -mfma)
+        elseif(MSVC)
+            target_compile_options(benchmark_simd PRIVATE /arch:AVX2)
+            target_compile_options(benchmark_dsp PRIVATE /arch:AVX2)
+        endif()
+
+        message(STATUS "  Benchmarks:   ON")
+    endif()
 endif()
 
 # ============================================
