@@ -1,8 +1,9 @@
-/**
+﻿/**
  * @file statistics.h
  * @brief Comprehensive statistics collection
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
- * 综合统计收集模块，收集和报告各种音频/网络指标
+ * Comprehensive statistics collection module, collects and reports various audio/network metrics
  */
 
 #ifndef VOICE_STATISTICS_H
@@ -19,83 +20,83 @@ extern "C" {
 #endif
 
 /* ============================================
- * 统计收集器
+ * Statistics Collector
  * ============================================ */
 
 typedef struct voice_stats_collector_s voice_stats_collector_t;
 
 /* ============================================
- * 音频统计
+ * Audio Statistics
  * ============================================ */
 
 typedef struct {
-    /* 电平 */
-    float input_level_db;           /**< 输入电平 (dBFS) */
-    float output_level_db;          /**< 输出电平 (dBFS) */
-    float noise_level_db;           /**< 噪声电平 (dBFS) */
+    /* Level */
+    float input_level_db;           /**< Input level (dBFS) */
+    float output_level_db;          /**< Output level (dBFS) */
+    float noise_level_db;           /**< Noise level (dBFS) */
     
-    /* 语音活动 */
-    float speech_ratio;             /**< 语音占比 (0-1) */
-    uint64_t speech_duration_ms;    /**< 总语音时长 (ms) */
+    /* Voice activity */
+    float speech_ratio;             /**< Speech ratio (0-1) */
+    uint64_t speech_duration_ms;    /**< Total speech duration (ms) */
     
-    /* 处理 */
-    float agc_gain_db;              /**< AGC 增益 (dB) */
-    bool echo_detected;             /**< 检测到回声 */
-    float echo_return_loss_db;      /**< 回声返回损耗 (dB) */
+    /* Processing */
+    float agc_gain_db;              /**< AGC gain (dB) */
+    bool echo_detected;             /**< Echo detected */
+    float echo_return_loss_db;      /**< Echo return loss (dB) */
     
-    /* 质量 */
-    float snr_db;                   /**< 信噪比 (dB) */
-    uint32_t clipping_count;        /**< 削波次数 */
-    uint32_t underrun_count;        /**< 缓冲区欠载次数 */
-    uint32_t overrun_count;         /**< 缓冲区溢出次数 */
+    /* Quality */
+    float snr_db;                   /**< Signal-to-noise ratio (dB) */
+    uint32_t clipping_count;        /**< Clipping count */
+    uint32_t underrun_count;        /**< Buffer underrun count */
+    uint32_t overrun_count;         /**< Buffer overrun count */
 } voice_audio_stats_t;
 
 /* ============================================
- * 编解码器统计
+ * Codec Statistics
  * ============================================ */
 
 typedef struct {
-    char codec_name[32];            /**< 编解码器名称 */
-    uint32_t sample_rate;           /**< 采样率 */
-    uint8_t channels;               /**< 通道数 */
-    uint32_t bitrate;               /**< 当前比特率 (bps) */
+    char codec_name[32];            /**< Codec name */
+    uint32_t sample_rate;           /**< Sample rate */
+    uint8_t channels;               /**< Number of channels */
+    uint32_t bitrate;               /**< Current bitrate (bps) */
     
-    /* 编码 */
-    uint64_t frames_encoded;        /**< 编码帧数 */
-    uint64_t bytes_encoded;         /**< 编码字节数 */
-    float avg_encode_time_us;       /**< 平均编码时间 (μs) */
+    /* Encoding */
+    uint64_t frames_encoded;        /**< Encoded frames */
+    uint64_t bytes_encoded;         /**< Encoded bytes */
+    float avg_encode_time_us;       /**< Average encode time (μs) */
     
-    /* 解码 */
-    uint64_t frames_decoded;        /**< 解码帧数 */
-    uint64_t bytes_decoded;         /**< 解码字节数 */
-    float avg_decode_time_us;       /**< 平均解码时间 (μs) */
-    uint64_t fec_recovered;         /**< FEC 恢复帧数 */
+    /* Decoding */
+    uint64_t frames_decoded;        /**< Decoded frames */
+    uint64_t bytes_decoded;         /**< Decoded bytes */
+    float avg_decode_time_us;       /**< Average decode time (μs) */
+    uint64_t fec_recovered;         /**< FEC recovered frames */
     
     /* DTX */
-    bool dtx_enabled;               /**< DTX 是否启用 */
-    uint64_t dtx_frames;            /**< DTX 帧数 */
+    bool dtx_enabled;               /**< DTX enabled */
+    uint64_t dtx_frames;            /**< DTX frames */
 } voice_codec_stats_t;
 
 /* ============================================
- * 网络统计
+ * Network Statistics
  * ============================================ */
 
 typedef struct {
-    /* 发送 */
-    uint64_t packets_sent;          /**< 发送包数 */
-    uint64_t bytes_sent;            /**< 发送字节数 */
-    uint32_t send_bitrate;          /**< 发送比特率 (bps) */
+    /* Sending */
+    uint64_t packets_sent;          /**< Packets sent */
+    uint64_t bytes_sent;            /**< Bytes sent */
+    uint32_t send_bitrate;          /**< Send bitrate (bps) */
     
-    /* 接收 */
-    uint64_t packets_received;      /**< 接收包数 */
-    uint64_t bytes_received;        /**< 接收字节数 */
-    uint32_t recv_bitrate;          /**< 接收比特率 (bps) */
+    /* Receiving */
+    uint64_t packets_received;      /**< Packets received */
+    uint64_t bytes_received;        /**< Bytes received */
+    uint32_t recv_bitrate;          /**< Receive bitrate (bps) */
     
-    /* 丢包 */
-    uint64_t packets_lost;          /**< 丢失包数 */
-    float packet_loss_rate;         /**< 丢包率 (0-1) */
-    uint64_t packets_late;          /**< 迟到包数 */
-    uint64_t packets_discarded;     /**< 丢弃包数 */
+    /* Packet loss */
+    uint64_t packets_lost;          /**< Lost packets */
+    float packet_loss_rate;         /**< Packet loss rate (0-1) */
+    uint64_t packets_late;          /**< Late packets */
+    uint64_t packets_discarded;     /**< Discarded packets */
     
     /* 延迟 */
     uint32_t rtt_ms;                /**< 往返延迟 (ms) */
@@ -173,11 +174,13 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stats_config_init(voice_stats_config_t *config);
 
 /**
  * @brief 创建统计收集器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_stats_collector_t *voice_stats_collector_create(
     const voice_stats_config_t *config
@@ -185,11 +188,13 @@ voice_stats_collector_t *voice_stats_collector_create(
 
 /**
  * @brief 销毁统计收集器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stats_collector_destroy(voice_stats_collector_t *collector);
 
 /**
  * @brief 更新音频统计
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stats_update_audio(
     voice_stats_collector_t *collector,
@@ -198,6 +203,7 @@ void voice_stats_update_audio(
 
 /**
  * @brief 更新编解码器统计
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stats_update_codec(
     voice_stats_collector_t *collector,
@@ -206,6 +212,7 @@ void voice_stats_update_codec(
 
 /**
  * @brief 更新网络统计
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stats_update_network(
     voice_stats_collector_t *collector,
@@ -214,6 +221,7 @@ void voice_stats_update_network(
 
 /**
  * @brief 记录发送的包
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stats_on_packet_sent(
     voice_stats_collector_t *collector,
@@ -222,6 +230,7 @@ void voice_stats_on_packet_sent(
 
 /**
  * @brief 记录接收的包
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stats_on_packet_received(
     voice_stats_collector_t *collector,
@@ -231,6 +240,7 @@ void voice_stats_on_packet_received(
 
 /**
  * @brief 记录丢失的包
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stats_on_packet_lost(
     voice_stats_collector_t *collector,
@@ -239,6 +249,7 @@ void voice_stats_on_packet_lost(
 
 /**
  * @brief 获取会话统计
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_stats_get_session(
     voice_stats_collector_t *collector,
@@ -247,6 +258,7 @@ voice_error_t voice_stats_get_session(
 
 /**
  * @brief 获取最新快照
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_stats_get_snapshot(
     voice_stats_collector_t *collector,
@@ -255,6 +267,7 @@ voice_error_t voice_stats_get_snapshot(
 
 /**
  * @brief 获取历史快照
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_stats_get_history(
     voice_stats_collector_t *collector,
@@ -264,11 +277,13 @@ voice_error_t voice_stats_get_history(
 
 /**
  * @brief 重置统计
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stats_reset(voice_stats_collector_t *collector);
 
 /**
  * @brief 导出统计为 JSON
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 size_t voice_stats_export_json(
     voice_stats_collector_t *collector,
@@ -278,6 +293,7 @@ size_t voice_stats_export_json(
 
 /**
  * @brief 打印统计摘要
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stats_print_summary(voice_stats_collector_t *collector);
 

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file echo_canceller.h
  * @brief Acoustic Echo Cancellation (AEC) interface
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef DSP_ECHO_CANCELLER_H
@@ -33,12 +34,14 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 配置结构指针
  */
 void voice_aec_config_init(voice_aec_config_t *config);
 
 /**
  * @brief 创建回声消除器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 配置
  * @return 回声消除器句柄
  */
@@ -46,12 +49,14 @@ voice_aec_t *voice_aec_create(const voice_aec_config_t *config);
 
 /**
  * @brief 销毁回声消除器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  */
 void voice_aec_destroy(voice_aec_t *aec);
 
 /**
  * @brief 处理回声消除 (同步模式)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 要求播放信号和麦克风信号时间对齐
  * 
@@ -72,6 +77,7 @@ voice_error_t voice_aec_process(
 
 /**
  * @brief 播放端回调 (异步模式)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 在播放线程中调用，缓存播放数据用于AEC
  * 
@@ -88,6 +94,7 @@ voice_error_t voice_aec_playback(
 
 /**
  * @brief 采集端回调 (异步模式)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 在采集线程中调用，处理回声消除
  * 
@@ -106,6 +113,7 @@ voice_error_t voice_aec_capture(
 
 /**
  * @brief 设置回声抑制量
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  * @param suppress_db 抑制量 (负dB)
  * @param suppress_active_db 近端活跃时抑制量
@@ -119,6 +127,7 @@ voice_error_t voice_aec_set_suppress(
 
 /**
  * @brief 启用/禁用回声消除
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  * @param enabled 是否启用
  * @return 错误码
@@ -127,6 +136,7 @@ voice_error_t voice_aec_set_enabled(voice_aec_t *aec, bool enabled);
 
 /**
  * @brief 检查是否启用
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  * @return true 已启用
  */
@@ -134,12 +144,14 @@ bool voice_aec_is_enabled(voice_aec_t *aec);
 
 /**
  * @brief 重置回声消除器状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  */
 void voice_aec_reset(voice_aec_t *aec);
 
 /**
  * @brief 获取滤波器延迟估计
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  * @return 延迟(样本数)
  */

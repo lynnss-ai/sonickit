@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file codec_common.h
  * @brief Codec internal common definitions
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef CODEC_COMMON_H

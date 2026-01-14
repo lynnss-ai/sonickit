@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file audio_quality.c
  * @brief Audio quality metrics and MOS estimation implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "audio/audio_quality.h"

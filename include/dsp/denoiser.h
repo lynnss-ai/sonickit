@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file denoiser.h
  * @brief Audio denoiser interface (SpeexDSP + RNNoise)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef DSP_DENOISER_H
@@ -37,12 +38,14 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 配置结构指针
  */
 void voice_denoiser_config_init(voice_denoiser_config_t *config);
 
 /**
  * @brief 创建去噪器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 配置
  * @return 去噪器句柄
  */
@@ -50,12 +53,14 @@ voice_denoiser_t *voice_denoiser_create(const voice_denoiser_config_t *config);
 
 /**
  * @brief 销毁去噪器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  */
 void voice_denoiser_destroy(voice_denoiser_t *denoiser);
 
 /**
  * @brief 处理音频帧 (int16)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  * @param samples 输入/输出音频样本 (原地处理)
  * @param count 样本数
@@ -69,6 +74,7 @@ float voice_denoiser_process_int16(
 
 /**
  * @brief 处理音频帧 (float)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  * @param samples 输入/输出音频样本 (原地处理)
  * @param count 样本数
@@ -82,6 +88,7 @@ float voice_denoiser_process_float(
 
 /**
  * @brief 处理音频帧 (通用宏，默认使用 int16)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  * @param samples 输入/输出音频样本 (原地处理)
  * @param count 样本数
@@ -92,6 +99,7 @@ float voice_denoiser_process_float(
 
 /**
  * @brief 设置噪声抑制量
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  * @param db 抑制量 (负dB)
  * @return 错误码
@@ -100,6 +108,7 @@ voice_error_t voice_denoiser_set_noise_suppress(voice_denoiser_t *denoiser, int 
 
 /**
  * @brief 启用/禁用去噪
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  * @param enabled 是否启用
  * @return 错误码
@@ -108,6 +117,7 @@ voice_error_t voice_denoiser_set_enabled(voice_denoiser_t *denoiser, bool enable
 
 /**
  * @brief 获取当前引擎类型
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  * @return 引擎类型
  */
@@ -115,6 +125,7 @@ voice_denoise_engine_t voice_denoiser_get_engine(voice_denoiser_t *denoiser);
 
 /**
  * @brief 切换去噪引擎
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  * @param engine 目标引擎
  * @return 错误码
@@ -126,6 +137,7 @@ voice_error_t voice_denoiser_switch_engine(
 
 /**
  * @brief 重置去噪器状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  */
 void voice_denoiser_reset(voice_denoiser_t *denoiser);
@@ -148,12 +160,14 @@ typedef struct {
 
 /**
  * @brief 初始化自适应配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 配置结构指针
  */
 void voice_adaptive_denoiser_config_init(voice_adaptive_denoiser_config_t *config);
 
 /**
  * @brief 创建自适应去噪器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 配置
  * @return 去噪器句柄
  */
@@ -163,12 +177,14 @@ voice_adaptive_denoiser_t *voice_adaptive_denoiser_create(
 
 /**
  * @brief 销毁自适应去噪器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  */
 void voice_adaptive_denoiser_destroy(voice_adaptive_denoiser_t *denoiser);
 
 /**
  * @brief 处理音频帧
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  * @param samples 输入/输出音频样本
  * @param count 样本数
@@ -182,6 +198,7 @@ float voice_adaptive_denoiser_process(
 
 /**
  * @brief 获取当前使用的引擎
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param denoiser 去噪器句柄
  * @return 引擎类型
  */

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file platform_android.c
  * @brief Android-specific audio session management
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 使用 JNI 与 Android Audio 系统交互
  */

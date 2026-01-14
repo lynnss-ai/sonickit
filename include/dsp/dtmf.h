@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file dtmf.h
  * @brief DTMF (Dual-Tone Multi-Frequency) detection and generation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * DTMF 信号检测和生成模块
  * 用于电话系统按键音的编解码
@@ -105,11 +106,13 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_dtmf_detector_config_init(voice_dtmf_detector_config_t *config);
 
 /**
  * @brief 创建检测器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_dtmf_detector_t *voice_dtmf_detector_create(
     const voice_dtmf_detector_config_t *config
@@ -117,11 +120,13 @@ voice_dtmf_detector_t *voice_dtmf_detector_create(
 
 /**
  * @brief 销毁检测器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_dtmf_detector_destroy(voice_dtmf_detector_t *detector);
 
 /**
  * @brief 处理音频帧
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param detector 检测器
  * @param samples 音频样本
  * @param num_samples 样本数
@@ -137,11 +142,13 @@ voice_dtmf_digit_t voice_dtmf_detector_process(
 
 /**
  * @brief 重置检测器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_dtmf_detector_reset(voice_dtmf_detector_t *detector);
 
 /**
  * @brief 获取检测到的数字序列
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param detector 检测器
  * @param buffer 输出缓冲区
  * @param buffer_size 缓冲区大小
@@ -155,6 +162,7 @@ size_t voice_dtmf_detector_get_digits(
 
 /**
  * @brief 清除数字缓冲区
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_dtmf_detector_clear_digits(voice_dtmf_detector_t *detector);
 
@@ -164,11 +172,13 @@ void voice_dtmf_detector_clear_digits(voice_dtmf_detector_t *detector);
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_dtmf_generator_config_init(voice_dtmf_generator_config_t *config);
 
 /**
  * @brief 创建生成器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_dtmf_generator_t *voice_dtmf_generator_create(
     const voice_dtmf_generator_config_t *config
@@ -176,11 +186,13 @@ voice_dtmf_generator_t *voice_dtmf_generator_create(
 
 /**
  * @brief 销毁生成器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_dtmf_generator_destroy(voice_dtmf_generator_t *generator);
 
 /**
  * @brief 生成单个 DTMF 音调
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param generator 生成器
  * @param digit 数字
  * @param output 输出缓冲区
@@ -196,6 +208,7 @@ size_t voice_dtmf_generator_generate(
 
 /**
  * @brief 生成 DTMF 序列
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param generator 生成器
  * @param digits 数字序列 (以 '\0' 结尾)
  * @param output 输出缓冲区
@@ -211,6 +224,7 @@ size_t voice_dtmf_generator_generate_sequence(
 
 /**
  * @brief 重置生成器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_dtmf_generator_reset(voice_dtmf_generator_t *generator);
 
@@ -220,11 +234,13 @@ void voice_dtmf_generator_reset(voice_dtmf_generator_t *generator);
 
 /**
  * @brief 验证 DTMF 字符是否有效
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 bool voice_dtmf_is_valid_digit(char c);
 
 /**
  * @brief 获取 DTMF 频率
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param digit 数字
  * @param low_freq 输出低频率
  * @param high_freq 输出高频率

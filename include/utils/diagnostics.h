@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file diagnostics.h
  * @brief Audio and network diagnostics tools
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * Provides comprehensive diagnostic capabilities for voice applications:
  * - Network quality testing (latency, jitter, packet loss)
@@ -29,6 +30,7 @@ extern "C" {
 
 /**
  * @brief Network quality test type
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_NET_TEST_LATENCY,      /**< Round-trip latency test */
@@ -40,6 +42,7 @@ typedef enum {
 
 /**
  * @brief Network quality rating
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_NET_QUALITY_EXCELLENT,  /**< < 50ms latency, < 5% loss */
@@ -51,6 +54,7 @@ typedef enum {
 
 /**
  * @brief Network diagnostic results
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     /* Latency metrics (milliseconds) */
@@ -84,6 +88,7 @@ typedef struct {
 
 /**
  * @brief Network diagnostic configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     const char *target_host;     /**< Target host for testing */
@@ -99,21 +104,25 @@ typedef struct voice_net_diagnostic_s voice_net_diagnostic_t;
 
 /**
  * @brief Initialize network diagnostic config with defaults
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_net_diagnostic_config_init(voice_net_diagnostic_config_t *config);
 
 /**
  * @brief Create network diagnostic instance
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_net_diagnostic_t *voice_net_diagnostic_create(const voice_net_diagnostic_config_t *config);
 
 /**
  * @brief Destroy network diagnostic instance
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_net_diagnostic_destroy(voice_net_diagnostic_t *diag);
 
 /**
  * @brief Run a specific network test
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_net_diagnostic_run(voice_net_diagnostic_t *diag,
                                         voice_net_test_type_t test_type,
@@ -121,12 +130,14 @@ voice_error_t voice_net_diagnostic_run(voice_net_diagnostic_t *diag,
 
 /**
  * @brief Run quick network quality check
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_net_diagnostic_quick_check(const char *host, uint16_t port,
                                                 voice_net_diagnostic_result_t *result);
 
 /**
  * @brief Get quality description string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *voice_net_quality_to_string(voice_net_quality_t quality);
 
@@ -136,6 +147,7 @@ const char *voice_net_quality_to_string(voice_net_quality_t quality);
 
 /**
  * @brief Echo detection result
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     bool echo_detected;          /**< Whether echo was detected */
@@ -147,6 +159,7 @@ typedef struct {
 
 /**
  * @brief Echo detection configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     uint32_t sample_rate;        /**< Sample rate */
@@ -159,21 +172,25 @@ typedef struct voice_echo_detector_s voice_echo_detector_t;
 
 /**
  * @brief Initialize echo detector config
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_echo_detector_config_init(voice_echo_detector_config_t *config);
 
 /**
  * @brief Create echo detector
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_echo_detector_t *voice_echo_detector_create(const voice_echo_detector_config_t *config);
 
 /**
  * @brief Destroy echo detector
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_echo_detector_destroy(voice_echo_detector_t *detector);
 
 /**
  * @brief Process audio pair for echo detection
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param detector Echo detector instance
  * @param reference Reference signal (speaker output)
  * @param capture Captured signal (microphone input)
@@ -188,12 +205,14 @@ voice_error_t voice_echo_detector_process(voice_echo_detector_t *detector,
 
 /**
  * @brief Get current echo metrics
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_echo_detector_get_result(voice_echo_detector_t *detector,
                                               voice_echo_result_t *result);
 
 /**
  * @brief Reset echo detector
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_echo_detector_reset(voice_echo_detector_t *detector);
 
@@ -203,6 +222,7 @@ void voice_echo_detector_reset(voice_echo_detector_t *detector);
 
 /**
  * @brief Loopback test type
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_LOOPBACK_LOCAL,        /**< Local software loopback */
@@ -212,6 +232,7 @@ typedef enum {
 
 /**
  * @brief Loopback test results
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     /* Latency */
@@ -235,6 +256,7 @@ typedef struct {
 
 /**
  * @brief Loopback test configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     uint32_t sample_rate;        /**< Sample rate */
@@ -257,27 +279,32 @@ typedef struct voice_loopback_test_s voice_loopback_test_t;
 
 /**
  * @brief Initialize loopback config
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_loopback_config_init(voice_loopback_config_t *config);
 
 /**
  * @brief Create loopback test
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_loopback_test_t *voice_loopback_test_create(const voice_loopback_config_t *config);
 
 /**
  * @brief Destroy loopback test
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_loopback_test_destroy(voice_loopback_test_t *test);
 
 /**
  * @brief Run loopback test
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_loopback_test_run(voice_loopback_test_t *test,
                                        voice_loopback_result_t *result);
 
 /**
  * @brief Run quick local loopback test
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_loopback_quick_test(uint32_t sample_rate,
                                          voice_loopback_result_t *result);
@@ -288,6 +315,7 @@ voice_error_t voice_loopback_quick_test(uint32_t sample_rate,
 
 /**
  * @brief Device health status
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_DEVICE_HEALTHY,        /**< Device working normally */
@@ -299,6 +327,7 @@ typedef enum {
 
 /**
  * @brief Device diagnostic results
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     voice_device_health_t health;    /**< Overall health status */
@@ -330,28 +359,33 @@ typedef struct voice_device_monitor_s voice_device_monitor_t;
 
 /**
  * @brief Create device health monitor
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_device_monitor_t *voice_device_monitor_create(void);
 
 /**
  * @brief Destroy device monitor
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_device_monitor_destroy(voice_device_monitor_t *monitor);
 
 /**
  * @brief Attach monitor to active audio device
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_device_monitor_attach(voice_device_monitor_t *monitor,
                                            void *device_handle);
 
 /**
  * @brief Get current device diagnostics
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_device_monitor_get_diagnostics(voice_device_monitor_t *monitor,
                                                     voice_device_diagnostic_t *diag);
 
 /**
  * @brief Get health status string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *voice_device_health_to_string(voice_device_health_t health);
 
@@ -361,6 +395,7 @@ const char *voice_device_health_to_string(voice_device_health_t health);
 
 /**
  * @brief Audio quality metrics (updated in real-time)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     /* Signal levels */
@@ -389,6 +424,7 @@ typedef struct voice_quality_monitor_s voice_quality_monitor_t;
 
 /**
  * @brief Quality monitor configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     uint32_t sample_rate;            /**< Sample rate */
@@ -400,21 +436,25 @@ typedef struct {
 
 /**
  * @brief Initialize quality monitor config
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_quality_monitor_config_init(voice_quality_monitor_config_t *config);
 
 /**
  * @brief Create quality monitor
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_quality_monitor_t *voice_quality_monitor_create(const voice_quality_monitor_config_t *config);
 
 /**
  * @brief Destroy quality monitor
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_quality_monitor_destroy(voice_quality_monitor_t *monitor);
 
 /**
  * @brief Process audio frame and update metrics
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_quality_monitor_process(voice_quality_monitor_t *monitor,
                                              const int16_t *samples,
@@ -422,6 +462,7 @@ voice_error_t voice_quality_monitor_process(voice_quality_monitor_t *monitor,
 
 /**
  * @brief Process float audio frame
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_quality_monitor_process_float(voice_quality_monitor_t *monitor,
                                                    const float *samples,
@@ -429,17 +470,20 @@ voice_error_t voice_quality_monitor_process_float(voice_quality_monitor_t *monit
 
 /**
  * @brief Get current quality metrics
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_quality_monitor_get_metrics(voice_quality_monitor_t *monitor,
                                                  voice_quality_metrics_t *metrics);
 
 /**
  * @brief Reset quality monitor statistics
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_quality_monitor_reset(voice_quality_monitor_t *monitor);
 
 /**
  * @brief Set callback for quality alerts
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*voice_quality_alert_callback_t)(void *user_data,
                                                 const voice_quality_metrics_t *metrics,
@@ -455,6 +499,7 @@ voice_error_t voice_quality_monitor_set_callback(voice_quality_monitor_t *monito
 
 /**
  * @brief Generate comprehensive diagnostic report
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     voice_net_diagnostic_result_t network;
@@ -468,11 +513,13 @@ typedef struct {
 
 /**
  * @brief Run full diagnostic suite
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_run_full_diagnostics(voice_diagnostic_report_t *report);
 
 /**
  * @brief Format diagnostic report as string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_format_diagnostic_report(const voice_diagnostic_report_t *report,
                                               char *buffer, size_t buffer_size);

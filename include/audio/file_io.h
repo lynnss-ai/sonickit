@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file file_io.h
  * @brief Audio file I/O interface (WAV/MP3/FLAC)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef AUDIO_FILE_IO_H
@@ -47,6 +48,7 @@ typedef struct audio_reader_s audio_reader_t;
 
 /**
  * @brief 打开音频文件用于读取
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param path 文件路径
  * @return 读取器句柄
  */
@@ -54,6 +56,7 @@ audio_reader_t *audio_reader_open(const char *path);
 
 /**
  * @brief 从内存打开音频数据
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param data 音频数据
  * @param size 数据大小
  * @return 读取器句柄
@@ -62,11 +65,13 @@ audio_reader_t *audio_reader_open_memory(const void *data, size_t size);
 
 /**
  * @brief 关闭读取器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void audio_reader_close(audio_reader_t *reader);
 
 /**
  * @brief 获取音频信息
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t audio_reader_get_info(
     audio_reader_t *reader,
@@ -75,6 +80,7 @@ voice_error_t audio_reader_get_info(
 
 /**
  * @brief 读取PCM数据 (int16)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param reader 读取器句柄
  * @param output 输出缓冲区
  * @param frames_to_read 要读取的帧数
@@ -90,6 +96,7 @@ voice_error_t audio_reader_read_s16(
 
 /**
  * @brief 读取PCM数据 (float)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param reader 读取器句柄
  * @param output 输出缓冲区
  * @param frames_to_read 要读取的帧数
@@ -105,6 +112,7 @@ voice_error_t audio_reader_read_f32(
 
 /**
  * @brief 定位到指定帧
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param reader 读取器句柄
  * @param frame 目标帧号
  * @return 错误码
@@ -116,11 +124,13 @@ voice_error_t audio_reader_seek(
 
 /**
  * @brief 获取当前帧位置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 uint64_t audio_reader_tell(audio_reader_t *reader);
 
 /**
  * @brief 检查是否到达文件末尾
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 bool audio_reader_is_eof(audio_reader_t *reader);
 
@@ -142,11 +152,13 @@ typedef struct {
 
 /**
  * @brief 初始化默认写入配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void audio_writer_config_init(audio_writer_config_t *config);
 
 /**
  * @brief 创建音频文件写入器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param path 文件路径
  * @param config 配置
  * @return 写入器句柄
@@ -158,11 +170,13 @@ audio_writer_t *audio_writer_create(
 
 /**
  * @brief 关闭写入器 (完成文件写入)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t audio_writer_close(audio_writer_t *writer);
 
 /**
  * @brief 写入PCM数据 (int16)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param writer 写入器句柄
  * @param input 输入缓冲区
  * @param frames 帧数
@@ -176,6 +190,7 @@ voice_error_t audio_writer_write_s16(
 
 /**
  * @brief 写入PCM数据 (float)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param writer 写入器句柄
  * @param input 输入缓冲区
  * @param frames 帧数
@@ -189,6 +204,7 @@ voice_error_t audio_writer_write_f32(
 
 /**
  * @brief 获取已写入的帧数
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 uint64_t audio_writer_get_frames_written(audio_writer_t *writer);
 
@@ -198,16 +214,19 @@ uint64_t audio_writer_get_frames_written(audio_writer_t *writer);
 
 /**
  * @brief 从文件扩展名推断格式
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 audio_file_format_t audio_file_format_from_path(const char *path);
 
 /**
  * @brief 获取格式名称
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *audio_file_format_name(audio_file_format_t format);
 
 /**
  * @brief 检查格式是否支持
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 bool audio_file_format_supported(audio_file_format_t format);
 
@@ -217,6 +236,7 @@ bool audio_file_format_supported(audio_file_format_t format);
 
 /**
  * @brief 获取音频信息 (简化版 - 兼容旧示例)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param reader 读取器句柄
  * @param sample_rate 采样率输出
  * @param channels 通道数输出
@@ -241,6 +261,7 @@ static inline voice_error_t audio_reader_get_info_ex(
 
 /**
  * @brief 创建音频写入器 (简化版 - 兼容旧示例)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param path 文件路径
  * @param sample_rate 采样率
  * @param channels 通道数

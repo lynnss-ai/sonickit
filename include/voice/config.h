@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file config.h
  * @brief Voice library configuration structures
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef VOICE_CONFIG_H
@@ -13,221 +14,229 @@ extern "C" {
 #endif
 
 /* ============================================
- * 全局配置
+ * Global Configuration
  * ============================================ */
 
 typedef struct {
-    voice_log_level_t log_level;        /**< 日志级别 */
-    bool enable_performance_monitor;     /**< 启用性能监控 */
-    bool enable_adaptive_denoise;        /**< 启用自适应去噪切换 */
-    uint32_t thread_priority;            /**< 音频线程优先级 */
+    voice_log_level_t log_level;        /**< Log level */
+    bool enable_performance_monitor;     /**< Enable performance monitoring */
+    bool enable_adaptive_denoise;        /**< Enable adaptive denoising switching */
+    uint32_t thread_priority;            /**< Audio thread priority */
 } voice_global_config_t;
 
 /* ============================================
- * 音频设备配置
+ * Audio Device Configuration
  * ============================================ */
 
 typedef struct {
-    uint32_t sample_rate;               /**< 采样率 */
-    uint8_t channels;                   /**< 通道数 */
-    voice_format_t format;              /**< 采样格式 */
-    uint32_t frame_size_ms;             /**< 帧时长(毫秒) */
-    uint32_t buffer_size_ms;            /**< 缓冲区时长(毫秒) */
-    const char *device_id;              /**< 设备ID (NULL=默认) */
+    uint32_t sample_rate;               /**< Sample rate */
+    uint8_t channels;                   /**< Number of channels */
+    voice_format_t format;              /**< Sample format */
+    uint32_t frame_size_ms;             /**< Frame duration (milliseconds) */
+    uint32_t buffer_size_ms;            /**< Buffer duration (milliseconds) */
+    const char *device_id;              /**< Device ID (NULL=default) */
 } voice_device_config_t;
 
 /* ============================================
- * 编解码器配置
+ * Codec Configuration
  * ============================================ */
 
 typedef struct {
-    voice_codec_type_t type;            /**< 编解码器类型 */
-    uint32_t sample_rate;               /**< 采样率 */
-    uint8_t channels;                   /**< 通道数 */
-    uint32_t bitrate;                   /**< 比特率 (bps) */
-    uint32_t frame_size_ms;             /**< 帧时长(毫秒) */
-    uint8_t complexity;                 /**< 复杂度 (0-10) */
-    bool enable_dtx;                    /**< 启用不连续传输 */
-    bool enable_fec;                    /**< 启用前向纠错 */
-    bool enable_plc;                    /**< 启用丢包补偿 */
+    voice_codec_type_t type;            /**< Codec type */
+    uint32_t sample_rate;               /**< Sample rate */
+    uint8_t channels;                   /**< Number of channels */
+    uint32_t bitrate;                   /**< Bit rate (bps) */
+    uint32_t frame_size_ms;             /**< Frame duration (milliseconds) */
+    uint8_t complexity;                 /**< Complexity (0-10) */
+    bool enable_dtx;                    /**< Enable discontinuous transmission */
+    bool enable_fec;                    /**< Enable forward error correction */
+    bool enable_plc;                    /**< Enable packet loss concealment */
 } voice_codec_config_t;
 
 /* ============================================
- * 去噪配置
+ * Denoising Configuration
  * ============================================ */
 
 typedef struct {
-    voice_denoise_engine_t engine;      /**< 去噪引擎 */
-    int noise_suppress_db;              /**< 噪声抑制量 (负dB) */
-    bool enable_agc;                    /**< 启用自动增益 */
-    bool enable_vad;                    /**< 启用语音检测 */
+    voice_denoise_engine_t engine;      /**< Denoising engine */
+    int noise_suppress_db;              /**< Noise suppression amount (negative dB) */
+    bool enable_agc;                    /**< Enable automatic gain */
+    bool enable_vad;                    /**< Enable voice detection */
     
-    /* 自适应切换参数 */
-    float cpu_threshold_high;           /**< CPU阈值(切换到SpeexDSP) */
-    float cpu_threshold_low;            /**< CPU阈值(切换到RNNoise) */
-    int battery_threshold;              /**< 电量阈值 */
+    /* Adaptive switching parameters */
+    float cpu_threshold_high;           /**< CPU threshold (switch to SpeexDSP) */
+    float cpu_threshold_low;            /**< CPU threshold (switch to RNNoise) */
+    int battery_threshold;              /**< Battery threshold */
 } voice_denoise_config_t;
 
 /* ============================================
- * 回声消除配置
+ * Echo Cancellation Configuration
  * ============================================ */
 
 typedef struct {
-    bool enabled;                       /**< 是否启用 */
-    uint32_t frame_size;                /**< 帧大小(样本数) */
-    uint32_t filter_length;             /**< 滤波器长度(样本数) */
-    int echo_suppress_db;               /**< 回声抑制量 (负dB) */
-    int echo_suppress_active_db;        /**< 近端活跃时抑制量 */
+    bool enabled;                       /**< Enable or not */
+    uint32_t frame_size;                /**< Frame size (samples) */
+    uint32_t filter_length;             /**< Filter length (samples) */
+    int echo_suppress_db;               /**< Echo suppression amount (negative dB) */
+    int echo_suppress_active_db;        /**< Suppression when near-end active */
 } voice_aec_config_t;
 
 /* ============================================
- * 重采样配置
+ * Resampler Configuration
  * ============================================ */
 
 typedef struct {
-    uint32_t input_rate;                /**< 输入采样率 */
-    uint32_t output_rate;               /**< 输出采样率 */
-    uint8_t channels;                   /**< 通道数 */
-    int quality;                        /**< 质量 (0-10) */
+    uint32_t input_rate;                /**< Input sample rate */
+    uint32_t output_rate;               /**< Output sample rate */
+    uint8_t channels;                   /**< Number of channels */
+    int quality;                        /**< Quality (0-10) */
 } voice_resampler_config_t;
 
 /* ============================================
- * 网络传输配置
+ * Network Transport Configuration
  * ============================================ */
 
 typedef struct {
-    const char *local_ip;               /**< 本地IP */
-    uint16_t local_port;                /**< 本地端口 */
-    const char *remote_ip;              /**< 远端IP */
-    uint16_t remote_port;               /**< 远端端口 */
-    bool enable_rtcp;                   /**< 启用RTCP */
-    uint32_t rtcp_interval_ms;          /**< RTCP发送间隔 */
+    const char *local_ip;               /**< Local IP */
+    uint16_t local_port;                /**< Local port */
+    const char *remote_ip;              /**< Remote IP */
+    uint16_t remote_port;               /**< Remote port */
+    bool enable_rtcp;                   /**< Enable RTCP */
+    uint32_t rtcp_interval_ms;          /**< RTCP send interval */
 } voice_network_config_t;
 
 /* ============================================
- * Jitter Buffer 配置
+ * Jitter Buffer Configuration
  * ============================================ */
 
 typedef struct {
-    uint32_t min_delay_ms;              /**< 最小延迟 */
-    uint32_t max_delay_ms;              /**< 最大延迟 */
-    uint32_t target_delay_ms;           /**< 目标延迟 */
-    bool adaptive;                      /**< 自适应模式 */
-    uint32_t max_packets;               /**< 最大缓存包数 */
+    uint32_t min_delay_ms;              /**< Minimum delay */
+    uint32_t max_delay_ms;              /**< Maximum delay */
+    uint32_t target_delay_ms;           /**< Target delay */
+    bool adaptive;                      /**< Adaptive mode */
+    uint32_t max_packets;               /**< Maximum buffered packets */
 } voice_jitter_buffer_config_t;
 
 /* ============================================
- * SRTP 加密配置
+ * SRTP Encryption Configuration
  * ============================================ */
 
 typedef struct {
-    bool enabled;                       /**< 是否启用 */
-    voice_crypto_suite_t suite;         /**< 加密套件 */
-    voice_key_exchange_t key_exchange;  /**< 密钥交换方式 */
+    bool enabled;                       /**< Enable or not */
+    voice_crypto_suite_t suite;         /**< Crypto suite */
+    voice_key_exchange_t key_exchange;  /**< Key exchange method */
     
-    /* 预共享密钥模式 */
-    const uint8_t *master_key;          /**< 主密钥 */
-    size_t master_key_len;              /**< 密钥长度 */
-    const uint8_t *master_salt;         /**< 主盐 */
-    size_t master_salt_len;             /**< 盐长度 */
+    /* Pre-shared key mode */
+    const uint8_t *master_key;          /**< Master key */
+    size_t master_key_len;              /**< Key length */
+    const uint8_t *master_salt;         /**< Master salt */
+    size_t master_salt_len;             /**< Salt length */
     
-    /* DTLS 模式 */
-    const char *cert_file;              /**< 证书文件 */
-    const char *key_file;               /**< 私钥文件 */
-    const char *ca_file;                /**< CA证书文件 */
-    bool verify_peer;                   /**< 验证对端 */
+    /* DTLS mode */
+    const char *cert_file;              /**< Certificate file */
+    const char *key_file;               /**< Private key file */
+    const char *ca_file;                /**< CA certificate file */
+    bool verify_peer;                   /**< Verify peer */
 } voice_srtp_config_t;
 
 /* ============================================
- * 文件 I/O 配置
+ * File I/O Configuration
  * ============================================ */
 
 typedef struct {
-    const char *path;                   /**< 文件路径 */
-    voice_format_t format;              /**< 输出格式 */
-    uint32_t sample_rate;               /**< 输出采样率 */
-    uint8_t channels;                   /**< 输出通道数 */
+    const char *path;                   /**< File path */
+    voice_format_t format;              /**< Output format */
+    uint32_t sample_rate;               /**< Output sample rate */
+    uint8_t channels;                   /**< Output channels */
 } voice_file_config_t;
 
 /* ============================================
- * 音频处理管线配置
+ * Audio Processing Pipeline Configuration
  * ============================================ */
 
 typedef struct {
-    /* 设备配置 */
-    voice_device_config_t capture;      /**< 采集设备配置 */
-    voice_device_config_t playback;     /**< 播放设备配置 */
+    /* Device configuration */
+    voice_device_config_t capture;      /**< Capture device configuration */
+    voice_device_config_t playback;     /**< Playback device configuration */
     
-    /* DSP 配置 */
-    voice_denoise_config_t denoise;     /**< 去噪配置 */
-    voice_aec_config_t aec;             /**< 回声消除配置 */
-    voice_resampler_config_t resampler; /**< 重采样配置 */
+    /* DSP configuration */
+    voice_denoise_config_t denoise;     /**< Denoising configuration */
+    voice_aec_config_t aec;             /**< Echo cancellation configuration */
+    voice_resampler_config_t resampler; /**< Resampler configuration */
     
-    /* 编解码配置 */
-    voice_codec_config_t codec;         /**< 编解码器配置 */
+    /* Codec configuration */
+    voice_codec_config_t codec;         /**< Codec configuration */
     
-    /* 网络配置 */
-    voice_network_config_t network;     /**< 网络配置 */
-    voice_jitter_buffer_config_t jitter_buffer; /**< Jitter Buffer配置 */
-    voice_srtp_config_t srtp;           /**< SRTP配置 */
+    /* Network configuration */
+    voice_network_config_t network;     /**< Network configuration */
+    voice_jitter_buffer_config_t jitter_buffer; /**< Jitter buffer configuration */
+    voice_srtp_config_t srtp;           /**< SRTP configuration */
     
-    /* 回调 */
-    voice_audio_callback_t on_capture;  /**< 采集回调 */
-    voice_audio_callback_t on_playback; /**< 播放回调 */
-    voice_event_callback_t on_event;    /**< 事件回调 */
-    void *user_data;                    /**< 用户数据 */
+    /* Callbacks */
+    voice_audio_callback_t on_capture;  /**< Capture callback */
+    voice_audio_callback_t on_playback; /**< Playback callback */
+    voice_event_callback_t on_event;    /**< Event callback */
+    void *user_data;                    /**< User data */
 } voice_pipeline_config_t;
 
 /* ============================================
- * 默认配置初始化
+ * Default Configuration Initialization
  * ============================================ */
 
 /**
- * @brief 初始化默认全局配置
- * @param config 配置结构指针
+ * @brief Initialize default global configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Configuration structure pointer
  */
 void voice_config_init_global(voice_global_config_t *config);
 
 /**
- * @brief 初始化默认设备配置
- * @param config 配置结构指针
+ * @brief Initialize default device configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Configuration structure pointer
  */
 void voice_config_init_device(voice_device_config_t *config);
 
 /**
- * @brief 初始化默认编解码器配置
- * @param config 配置结构指针
- * @param type 编解码器类型
+ * @brief Initialize default codec configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Configuration structure pointer
+ * @param type Codec type
  */
 void voice_config_init_codec(voice_codec_config_t *config, voice_codec_type_t type);
 
 /**
- * @brief 初始化默认去噪配置
- * @param config 配置结构指针
+ * @brief Initialize default denoising configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Configuration structure pointer
  */
 void voice_config_init_denoise(voice_denoise_config_t *config);
 
 /**
- * @brief 初始化默认回声消除配置
- * @param config 配置结构指针
+ * @brief Initialize default echo cancellation configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Configuration structure pointer
  */
 void voice_config_init_aec(voice_aec_config_t *config);
 
 /**
- * @brief 初始化默认Jitter Buffer配置
- * @param config 配置结构指针
+ * @brief Initialize default jitter buffer configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Configuration structure pointer
  */
 void voice_config_init_jitter_buffer(voice_jitter_buffer_config_t *config);
 
 /**
- * @brief 初始化默认SRTP配置
- * @param config 配置结构指针
+ * @brief Initialize default SRTP configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Configuration structure pointer
  */
 void voice_config_init_srtp(voice_srtp_config_t *config);
 
 /**
- * @brief 初始化默认管线配置
- * @param config 配置结构指针
+ * @brief Initialize default pipeline configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Configuration structure pointer
  */
 void voice_config_init_pipeline(voice_pipeline_config_t *config);
 

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file audio_recorder.c
  * @brief Audio recording and playback implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "audio/audio_recorder.h"

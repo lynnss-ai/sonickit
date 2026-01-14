@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file device.c
  * @brief Audio device implementation using miniaudio
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #define MINIAUDIO_IMPLEMENTATION

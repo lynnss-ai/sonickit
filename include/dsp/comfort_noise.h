@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file comfort_noise.h
  * @brief Comfort Noise Generation (CNG)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 舒适噪声生成模块，用于在静音期间生成背景噪声
  * 避免通话中出现"死寂"的感觉
@@ -71,21 +72,25 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_cng_config_init(voice_cng_config_t *config);
 
 /**
  * @brief 创建 CNG 实例
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_cng_t *voice_cng_create(const voice_cng_config_t *config);
 
 /**
  * @brief 销毁 CNG 实例
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_cng_destroy(voice_cng_t *cng);
 
 /**
  * @brief 分析输入噪声特性
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 在检测到静音时调用，用于学习背景噪声特性
  */
 voice_error_t voice_cng_analyze(
@@ -96,6 +101,7 @@ voice_error_t voice_cng_analyze(
 
 /**
  * @brief 生成舒适噪声
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param cng CNG 实例
  * @param output 输出缓冲区
  * @param num_samples 生成的样本数
@@ -108,6 +114,7 @@ voice_error_t voice_cng_generate(
 
 /**
  * @brief 生成舒适噪声 (float)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_cng_generate_float(
     voice_cng_t *cng,
@@ -117,16 +124,19 @@ voice_error_t voice_cng_generate_float(
 
 /**
  * @brief 设置噪声电平
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_cng_set_level(voice_cng_t *cng, float level_db);
 
 /**
  * @brief 获取当前噪声电平
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 float voice_cng_get_level(voice_cng_t *cng);
 
 /**
  * @brief 编码 SID 帧 (RFC 3389)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_cng_encode_sid(
     voice_cng_t *cng,
@@ -135,6 +145,7 @@ voice_error_t voice_cng_encode_sid(
 
 /**
  * @brief 解码 SID 帧并更新 CNG 参数
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_cng_decode_sid(
     voice_cng_t *cng,
@@ -143,6 +154,7 @@ voice_error_t voice_cng_decode_sid(
 
 /**
  * @brief 重置 CNG
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_cng_reset(voice_cng_t *cng);
 

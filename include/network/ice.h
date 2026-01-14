@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file ice.h
  * @brief ICE (Interactive Connectivity Establishment) support
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * ICE/STUN/TURN 支持，用于 NAT 穿透
  * 基于 RFC 5245 (ICE), RFC 5389 (STUN), RFC 5766 (TURN)
@@ -148,26 +149,31 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_ice_config_init(voice_ice_config_t *config);
 
 /**
  * @brief 创建 ICE Agent
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_ice_agent_t *voice_ice_agent_create(const voice_ice_config_t *config);
 
 /**
  * @brief 销毁 ICE Agent
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_ice_agent_destroy(voice_ice_agent_t *agent);
 
 /**
  * @brief 开始收集候选
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_ice_gather_candidates(voice_ice_agent_t *agent);
 
 /**
  * @brief 获取本地候选列表
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_ice_get_local_candidates(
     voice_ice_agent_t *agent,
@@ -177,6 +183,7 @@ voice_error_t voice_ice_get_local_candidates(
 
 /**
  * @brief 添加远端候选
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_ice_add_remote_candidate(
     voice_ice_agent_t *agent,
@@ -185,6 +192,7 @@ voice_error_t voice_ice_add_remote_candidate(
 
 /**
  * @brief 设置远端凭据
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_ice_set_remote_credentials(
     voice_ice_agent_t *agent,
@@ -194,6 +202,7 @@ voice_error_t voice_ice_set_remote_credentials(
 
 /**
  * @brief 获取本地凭据
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_ice_get_local_credentials(
     voice_ice_agent_t *agent,
@@ -205,16 +214,19 @@ voice_error_t voice_ice_get_local_credentials(
 
 /**
  * @brief 开始连接检查
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_ice_start_checks(voice_ice_agent_t *agent);
 
 /**
  * @brief 获取当前状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_ice_state_t voice_ice_get_state(voice_ice_agent_t *agent);
 
 /**
  * @brief 发送数据 (通过选定的候选对)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_ice_send(
     voice_ice_agent_t *agent,
@@ -225,6 +237,7 @@ voice_error_t voice_ice_send(
 
 /**
  * @brief 处理收到的数据
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_ice_process_incoming(
     voice_ice_agent_t *agent,
@@ -235,6 +248,7 @@ voice_error_t voice_ice_process_incoming(
 
 /**
  * @brief 关闭 ICE Agent
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_ice_close(voice_ice_agent_t *agent);
 
@@ -244,16 +258,19 @@ void voice_ice_close(voice_ice_agent_t *agent);
 
 /**
  * @brief 创建 STUN 客户端
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_stun_client_t *voice_stun_client_create(const voice_stun_config_t *config);
 
 /**
  * @brief 销毁 STUN 客户端
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_stun_client_destroy(voice_stun_client_t *client);
 
 /**
  * @brief 绑定请求 (获取公网地址)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_stun_binding_request(
     voice_stun_client_t *client,
@@ -266,6 +283,7 @@ voice_error_t voice_stun_binding_request(
 
 /**
  * @brief 将候选序列化为 SDP 属性
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 size_t voice_ice_candidate_to_sdp(
     const voice_ice_candidate_t *candidate,
@@ -275,6 +293,7 @@ size_t voice_ice_candidate_to_sdp(
 
 /**
  * @brief 从 SDP 属性解析候选
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_ice_candidate_from_sdp(
     const char *sdp_line,

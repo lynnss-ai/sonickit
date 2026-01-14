@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file simd_utils.c
  * @brief SIMD utilities implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "utils/simd_utils.h"

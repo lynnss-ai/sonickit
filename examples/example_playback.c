@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file example_playback.c
  * @brief Simple audio file playback example
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 演示从音频文件播放到扬声器
  */

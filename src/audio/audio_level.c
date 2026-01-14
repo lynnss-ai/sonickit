@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file audio_level.c
  * @brief Audio level metering implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "audio/audio_level.h"

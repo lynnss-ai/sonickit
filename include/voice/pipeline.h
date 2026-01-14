@@ -1,10 +1,11 @@
-/**
+﻿/**
  * @file pipeline.h
  * @brief Audio processing pipeline interface
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
- * 完整的音频处理流水线:
- * 采集 -> 重采样 -> AEC -> 降噪 -> AGC -> 编码 -> RTP -> 网络
- * 网络 -> RTP -> 抖动缓冲 -> 解码 -> 重采样 -> 播放
+ * Complete audio processing pipeline:
+ * Capture -> Resampling -> AEC -> Denoising -> AGC -> Encoding -> RTP -> Network
+ * Network -> RTP -> Jitter Buffer -> Decoding -> Resampling -> Playback
  */
 
 #ifndef VOICE_PIPELINE_H
@@ -27,20 +28,20 @@ extern "C" {
 #endif
 
 /* ============================================
- * 管线类型
+ * Pipeline Types
  * ============================================ */
 
 typedef struct voice_pipeline_s voice_pipeline_t;
 
-/** 管线模式 */
+/** Pipeline mode */
 typedef enum {
-    PIPELINE_MODE_CAPTURE,      /**< 仅采集 */
-    PIPELINE_MODE_PLAYBACK,     /**< 仅播放 */
-    PIPELINE_MODE_DUPLEX,       /**< 双工 */
-    PIPELINE_MODE_LOOPBACK,     /**< 回环测试 */
+    PIPELINE_MODE_CAPTURE,      /**< Capture only */
+    PIPELINE_MODE_PLAYBACK,     /**< Playback only */
+    PIPELINE_MODE_DUPLEX,       /**< Full duplex */
+    PIPELINE_MODE_LOOPBACK,     /**< Loopback test */
 } pipeline_mode_t;
 
-/** 管线状态 */
+/** Pipeline state */
 typedef enum {
     PIPELINE_STATE_STOPPED,
     PIPELINE_STATE_STARTING,
@@ -50,45 +51,45 @@ typedef enum {
 } pipeline_state_t;
 
 /* ============================================
- * 管线配置
+ * Pipeline Configuration
  * ============================================ */
 
 typedef struct {
     pipeline_mode_t mode;
     
-    /* 音频设备配置 */
-    uint32_t sample_rate;           /**< 内部采样率 */
-    uint8_t channels;               /**< 通道数 */
-    uint32_t frame_duration_ms;     /**< 帧时长 (ms) */
-    const char *capture_device;     /**< 采集设备ID (NULL=默认) */
-    const char *playback_device;    /**< 播放设备ID (NULL=默认) */
+    /* Audio device configuration */
+    uint32_t sample_rate;           /**< Internal sample rate */
+    uint8_t channels;               /**< Number of channels */
+    uint32_t frame_duration_ms;     /**< Frame duration (ms) */
+    const char *capture_device;     /**< Capture device ID (NULL=default) */
+    const char *playback_device;    /**< Playback device ID (NULL=default) */
     
-    /* DSP 配置 */
-    bool enable_aec;                /**< 启用AEC */
-    bool enable_denoise;            /**< 启用降噪 */
-    bool enable_agc;                /**< 启用AGC */
-    voice_denoise_engine_t denoise_engine; /**< 降噪引擎 */
-    int denoise_level;              /**< 降噪级别 (0-100) */
+    /* DSP configuration */
+    bool enable_aec;                /**< Enable AEC */
+    bool enable_denoise;            /**< Enable denoising */
+    bool enable_agc;                /**< Enable AGC */
+    voice_denoise_engine_t denoise_engine; /**< Denoising engine */
+    int denoise_level;              /**< Denoising level (0-100) */
     
-    /* 编解码器配置 */
-    voice_codec_id_t codec;         /**< 编解码器 */
-    uint32_t bitrate;               /**< 比特率 */
-    bool enable_fec;                /**< 启用FEC */
+    /* Codec configuration */
+    voice_codec_id_t codec;         /**< Codec */
+    uint32_t bitrate;               /**< Bit rate */
+    bool enable_fec;                /**< Enable FEC */
     
-    /* 网络配置 */
-    bool enable_srtp;               /**< 启用SRTP */
-    srtp_profile_t srtp_profile;    /**< SRTP配置 */
+    /* Network configuration */
+    bool enable_srtp;               /**< Enable SRTP */
+    srtp_profile_t srtp_profile;    /**< SRTP profile */
     
-    /* Jitter Buffer 配置 */
+    /* Jitter Buffer configuration */
     uint32_t jitter_min_delay_ms;
     uint32_t jitter_max_delay_ms;
 } voice_pipeline_config_t;
 
 /* ============================================
- * 回调函数
+ * Callback Functions
  * ============================================ */
 
-/** 编码后数据回调 (用于发送) */
+/** Encoded data callback (for transmission) */
 typedef void (*pipeline_encoded_callback_t)(
     voice_pipeline_t *pipeline,
     const uint8_t *data,
@@ -97,7 +98,7 @@ typedef void (*pipeline_encoded_callback_t)(
     void *user_data
 );
 
-/** 解码后数据回调 */
+/** Decoded data callback */
 typedef void (*pipeline_decoded_callback_t)(
     voice_pipeline_t *pipeline,
     const int16_t *pcm,
@@ -105,14 +106,14 @@ typedef void (*pipeline_decoded_callback_t)(
     void *user_data
 );
 
-/** 状态变化回调 */
+/** State change callback */
 typedef void (*pipeline_state_callback_t)(
     voice_pipeline_t *pipeline,
     pipeline_state_t state,
     void *user_data
 );
 
-/** 错误回调 */
+/** Error callback */
 typedef void (*pipeline_error_callback_t)(
     voice_pipeline_t *pipeline,
     voice_error_t error,
@@ -121,23 +122,23 @@ typedef void (*pipeline_error_callback_t)(
 );
 
 /* ============================================
- * 管线统计
+ * Pipeline Statistics
  * ============================================ */
 
 typedef struct {
-    /* 采集统计 */
+    /* Capture statistics */
     uint64_t frames_captured;
     uint64_t frames_dropped_capture;
     
-    /* 播放统计 */
+    /* Playback statistics */
     uint64_t frames_played;
     uint64_t frames_dropped_playback;
     
-    /* 编解码统计 */
+    /* Codec statistics */
     uint64_t frames_encoded;
     uint64_t frames_decoded;
     
-    /* 网络统计 */
+    /* Network statistics */
     uint64_t packets_sent;
     uint64_t packets_received;
     uint64_t packets_lost;
@@ -145,48 +146,55 @@ typedef struct {
     uint32_t jitter_ms;
     uint32_t rtt_ms;
     
-    /* 音频质量 */
+    /* Audio quality */
     float capture_level_db;
     float playback_level_db;
     bool vad_active;
 } voice_pipeline_stats_t;
 
 /* ============================================
- * 管线 API
+ * Pipeline API
  * ============================================ */
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_config_init(voice_pipeline_config_t *config);
 
 /**
- * @brief 创建管线
+ * @brief Create pipeline
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_pipeline_t *voice_pipeline_create(const voice_pipeline_config_t *config);
 
 /**
- * @brief 销毁管线
+ * @brief Destroy pipeline
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_destroy(voice_pipeline_t *pipeline);
 
 /**
- * @brief 启动管线
+ * @brief Start pipeline
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_start(voice_pipeline_t *pipeline);
 
 /**
- * @brief 停止管线
+ * @brief Stop pipeline
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_stop(voice_pipeline_t *pipeline);
 
 /**
- * @brief 获取状态
+ * @brief Get state
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 pipeline_state_t voice_pipeline_get_state(voice_pipeline_t *pipeline);
 
 /**
- * @brief 设置编码数据回调
+ * @brief Set encoded data callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_set_encoded_callback(
     voice_pipeline_t *pipeline,
@@ -195,7 +203,8 @@ void voice_pipeline_set_encoded_callback(
 );
 
 /**
- * @brief 设置解码数据回调
+ * @brief Set decoded data callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_set_decoded_callback(
     voice_pipeline_t *pipeline,
@@ -204,7 +213,8 @@ void voice_pipeline_set_decoded_callback(
 );
 
 /**
- * @brief 设置状态回调
+ * @brief Set state callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_set_state_callback(
     voice_pipeline_t *pipeline,
@@ -213,7 +223,8 @@ void voice_pipeline_set_state_callback(
 );
 
 /**
- * @brief 设置错误回调
+ * @brief Set error callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_set_error_callback(
     voice_pipeline_t *pipeline,
@@ -222,7 +233,8 @@ void voice_pipeline_set_error_callback(
 );
 
 /**
- * @brief 输入接收的网络数据
+ * @brief Input received network data
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_receive_packet(
     voice_pipeline_t *pipeline,
@@ -231,7 +243,8 @@ voice_error_t voice_pipeline_receive_packet(
 );
 
 /**
- * @brief 输入本地PCM数据 (不使用设备采集时)
+ * @brief Input local PCM data (when not using device capture)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_push_capture(
     voice_pipeline_t *pipeline,
@@ -240,7 +253,8 @@ voice_error_t voice_pipeline_push_capture(
 );
 
 /**
- * @brief 获取播放PCM数据 (不使用设备播放时)
+ * @brief Get playback PCM data (when not using device playback)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_pull_playback(
     voice_pipeline_t *pipeline,
@@ -250,7 +264,8 @@ voice_error_t voice_pipeline_pull_playback(
 );
 
 /**
- * @brief 获取统计信息
+ * @brief Get statistics
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_get_stats(
     voice_pipeline_t *pipeline,
@@ -258,16 +273,18 @@ voice_error_t voice_pipeline_get_stats(
 );
 
 /**
- * @brief 重置统计
+ * @brief Reset statistics
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_reset_stats(voice_pipeline_t *pipeline);
 
 /* ============================================
- * 管线控制
+ * Pipeline Control
  * ============================================ */
 
 /**
- * @brief 启用/禁用AEC
+ * @brief Enable/disable AEC
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_aec_enabled(
     voice_pipeline_t *pipeline,
@@ -275,7 +292,8 @@ voice_error_t voice_pipeline_set_aec_enabled(
 );
 
 /**
- * @brief 启用/禁用降噪
+ * @brief Enable/disable denoising
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_denoise_enabled(
     voice_pipeline_t *pipeline,
@@ -283,7 +301,8 @@ voice_error_t voice_pipeline_set_denoise_enabled(
 );
 
 /**
- * @brief 设置降噪级别
+ * @brief Set denoising level
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_denoise_level(
     voice_pipeline_t *pipeline,
@@ -291,7 +310,8 @@ voice_error_t voice_pipeline_set_denoise_level(
 );
 
 /**
- * @brief 启用/禁用AGC
+ * @brief Enable/disable AGC
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_agc_enabled(
     voice_pipeline_t *pipeline,
@@ -299,7 +319,8 @@ voice_error_t voice_pipeline_set_agc_enabled(
 );
 
 /**
- * @brief 设置编码比特率
+ * @brief Set encoding bit rate
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_bitrate(
     voice_pipeline_t *pipeline,
@@ -307,7 +328,8 @@ voice_error_t voice_pipeline_set_bitrate(
 );
 
 /**
- * @brief 静音采集
+ * @brief Mute capture
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_capture_muted(
     voice_pipeline_t *pipeline,
@@ -315,7 +337,8 @@ voice_error_t voice_pipeline_set_capture_muted(
 );
 
 /**
- * @brief 静音播放
+ * @brief Mute playback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_playback_muted(
     voice_pipeline_t *pipeline,
@@ -323,7 +346,8 @@ voice_error_t voice_pipeline_set_playback_muted(
 );
 
 /**
- * @brief 设置播放音量
+ * @brief Set playback volume
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_playback_volume(
     voice_pipeline_t *pipeline,
@@ -331,11 +355,12 @@ voice_error_t voice_pipeline_set_playback_volume(
 );
 
 /* ============================================
- * SRTP 密钥设置
+ * SRTP Key Setup
  * ============================================ */
 
 /**
- * @brief 设置SRTP发送密钥
+ * @brief Set SRTP send key
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_srtp_send_key(
     voice_pipeline_t *pipeline,
@@ -346,7 +371,8 @@ voice_error_t voice_pipeline_set_srtp_send_key(
 );
 
 /**
- * @brief 设置SRTP接收密钥
+ * @brief Set SRTP receive key
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_srtp_recv_key(
     voice_pipeline_t *pipeline,

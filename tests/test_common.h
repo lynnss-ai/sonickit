@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file test_common.h
  * @brief Common test framework utilities
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef TEST_COMMON_H

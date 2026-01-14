@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file denoiser.c
  * @brief Audio denoiser implementation (SpeexDSP + RNNoise)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "dsp/denoiser.h"

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file sip_ua.c
  * @brief SIP User Agent Implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "sip/sip_ua.h"

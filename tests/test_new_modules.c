@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file test_new_modules.c
  * @brief 新增模块基本功能测试
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include <stdio.h>

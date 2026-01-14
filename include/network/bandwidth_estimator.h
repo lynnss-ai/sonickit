@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file bandwidth_estimator.h
  * @brief Network bandwidth estimation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 网络带宽估计器，用于自适应比特率控制
  */
@@ -92,21 +93,25 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_bwe_config_init(voice_bwe_config_t *config);
 
 /**
  * @brief 创建带宽估计器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_bwe_t *voice_bwe_create(const voice_bwe_config_t *config);
 
 /**
  * @brief 销毁带宽估计器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_bwe_destroy(voice_bwe_t *bwe);
 
 /**
  * @brief 更新发送统计
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_bwe_on_packet_sent(
     voice_bwe_t *bwe,
@@ -117,6 +122,7 @@ void voice_bwe_on_packet_sent(
 
 /**
  * @brief 处理接收反馈 (RTCP RR)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_bwe_on_feedback(
     voice_bwe_t *bwe,
@@ -125,6 +131,7 @@ voice_error_t voice_bwe_on_feedback(
 
 /**
  * @brief 获取带宽估计
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_bwe_get_estimate(
     voice_bwe_t *bwe,
@@ -133,21 +140,25 @@ voice_error_t voice_bwe_get_estimate(
 
 /**
  * @brief 获取建议比特率
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 uint32_t voice_bwe_get_target_bitrate(voice_bwe_t *bwe);
 
 /**
  * @brief 获取网络质量
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_network_quality_t voice_bwe_get_network_quality(voice_bwe_t *bwe);
 
 /**
  * @brief 重置估计器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_bwe_reset(voice_bwe_t *bwe);
 
 /**
  * @brief 带宽变化回调
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*voice_bwe_callback_t)(
     voice_bwe_t *bwe,

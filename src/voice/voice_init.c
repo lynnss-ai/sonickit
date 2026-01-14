@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file voice_init.c
  * @brief Voice library initialization and cleanup
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "voice/voice.h"

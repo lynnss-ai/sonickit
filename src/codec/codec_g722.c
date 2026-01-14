@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file codec_g722.c
  * @brief G.722 wideband codec implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * G.722 is a wideband audio codec (50-7000 Hz) using SB-ADPCM at 64kbps.
  * Sample rate: 16kHz (但RTP中声明为8kHz，历史原因)

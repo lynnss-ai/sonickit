@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file equalizer.c
  * @brief Multi-band parametric equalizer implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 使用 Biquad 滤波器实现各类均衡器
  */

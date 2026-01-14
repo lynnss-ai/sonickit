@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file test_codec.c
  * @brief Codec unit tests (G.711, G.722, Opus)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "test_common.h"

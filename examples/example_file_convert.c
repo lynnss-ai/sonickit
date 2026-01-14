@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file example_file_convert.c
  * @brief Audio file format conversion example
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 演示音频文件格式转换和处理:
  * - 格式转换 (WAV, MP3, FLAC)

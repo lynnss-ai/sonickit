@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file datachannel.c
  * @brief WebRTC DataChannel-style implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * Simplified SCTP-like protocol over UDP for reliable/unreliable messaging.
  */

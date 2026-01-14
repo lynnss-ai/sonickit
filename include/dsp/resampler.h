@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file resampler.h
  * @brief Audio resampler interface (SpeexDSP)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef DSP_RESAMPLER_H
@@ -32,6 +33,7 @@ typedef enum {
 
 /**
  * @brief 创建重采样器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param channels 通道数
  * @param in_rate 输入采样率
  * @param out_rate 输出采样率
@@ -47,12 +49,14 @@ voice_resampler_t *voice_resampler_create(
 
 /**
  * @brief 销毁重采样器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rs 重采样器句柄
  */
 void voice_resampler_destroy(voice_resampler_t *rs);
 
 /**
  * @brief 处理int16格式音频
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rs 重采样器句柄
  * @param in 输入数据
  * @param in_frames 输入帧数 (每通道样本数)
@@ -70,6 +74,7 @@ int voice_resampler_process_int16(
 
 /**
  * @brief 处理float格式音频
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rs 重采样器句柄
  * @param in 输入数据
  * @param in_frames 输入帧数 (每通道样本数)
@@ -87,6 +92,7 @@ int voice_resampler_process_float(
 
 /**
  * @brief 设置采样率
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rs 重采样器句柄
  * @param in_rate 输入采样率
  * @param out_rate 输出采样率
@@ -100,6 +106,7 @@ voice_error_t voice_resampler_set_rate(
 
 /**
  * @brief 设置质量
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rs 重采样器句柄
  * @param quality 质量等级 (0-10)
  * @return 错误码
@@ -108,6 +115,7 @@ voice_error_t voice_resampler_set_quality(voice_resampler_t *rs, int quality);
 
 /**
  * @brief 获取输入延迟
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rs 重采样器句柄
  * @return 输入延迟(样本数)
  */
@@ -115,6 +123,7 @@ int voice_resampler_get_input_latency(voice_resampler_t *rs);
 
 /**
  * @brief 获取输出延迟
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rs 重采样器句柄
  * @return 输出延迟(样本数)
  */
@@ -122,12 +131,14 @@ int voice_resampler_get_output_latency(voice_resampler_t *rs);
 
 /**
  * @brief 重置重采样器状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rs 重采样器句柄
  */
 void voice_resampler_reset(voice_resampler_t *rs);
 
 /**
  * @brief 计算输出帧数
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rs 重采样器句柄
  * @param in_frames 输入帧数
  * @return 预期输出帧数
@@ -136,6 +147,7 @@ size_t voice_resampler_get_output_frames(voice_resampler_t *rs, size_t in_frames
 
 /**
  * @brief 计算输入帧数
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rs 重采样器句柄
  * @param out_frames 需要的输出帧数
  * @return 需要的输入帧数

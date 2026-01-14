@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file test_buffer.c
  * @brief Audio buffer unit tests
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "test_common.h"

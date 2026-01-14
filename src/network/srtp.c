@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file srtp.c
  * @brief SRTP implementation using libsrtp2
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "network/srtp.h"

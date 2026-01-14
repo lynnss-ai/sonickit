@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file test_network.c
  * @brief Network module unit tests (RTP, Jitter Buffer, etc.)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "test_common.h"

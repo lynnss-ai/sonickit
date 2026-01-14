@@ -1,21 +1,22 @@
-/**
+﻿/**
  * @file voice.h
  * @brief Voice library main API header
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
- * 跨平台实时语音处理库
+ * Cross-platform real-time voice processing library
  * 
- * 功能特性:
- * - 音频采集和播放 (miniaudio)
- * - 回声消除 (SpeexDSP AEC)
- * - 噪声抑制 (SpeexDSP / RNNoise)
- * - 自动增益控制 (AGC)
- * - 多编解码器支持 (Opus / G.711 / G.722)
- * - RTP/RTCP 网络传输
- * - SRTP 加密 (AES-CM / AES-GCM)
- * - DTLS-SRTP 密钥交换
- * - 音频文件读写 (WAV / MP3 / FLAC)
+ * Features:
+ * - Audio capture and playback (miniaudio)
+ * - Acoustic echo cancellation (SpeexDSP AEC)
+ * - Noise suppression (SpeexDSP / RNNoise)
+ * - Automatic gain control (AGC)
+ * - Multi-codec support (Opus / G.711 / G.722)
+ * - RTP/RTCP network transport
+ * - SRTP encryption (AES-CM / AES-GCM)
+ * - DTLS-SRTP key exchange
+ * - Audio file I/O (WAV / MP3 / FLAC)
  * 
- * 支持平台:
+ * Supported platforms:
  * - Windows (WASAPI)
  * - Linux (ALSA / PulseAudio)
  * - macOS (Core Audio)
@@ -35,7 +36,7 @@ extern "C" {
 #endif
 
 /* ============================================
- * 版本信息
+ * Version Information
  * ============================================ */
 
 #define VOICE_VERSION_MAJOR 1
@@ -45,76 +46,83 @@ extern "C" {
 #define VOICE_VERSION_STRING "1.0.0"
 
 /**
- * @brief 获取版本字符串
- * @return 版本字符串
+ * @brief Get version string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @return Version string
  */
 const char *voice_version(void);
 
 /**
- * @brief 获取版本号
- * @param major 主版本号
- * @param minor 次版本号
- * @param patch 补丁号
+ * @brief Get version numbers
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param major Major version
+ * @param minor Minor version
+ * @param patch Patch version
  */
 void voice_version_get(int *major, int *minor, int *patch);
 
 /* ============================================
- * 库初始化
+ * Library Initialization
  * ============================================ */
 
 /**
- * @brief 初始化语音库
- * @param config 全局配置 (NULL使用默认配置)
- * @return 错误码
+ * @brief Initialize voice library
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Global configuration (NULL for defaults)
+ * @return Error code
  */
 voice_error_t voice_init(const voice_global_config_t *config);
 
 /**
- * @brief 释放语音库资源
+ * @brief Release voice library resources
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_deinit(void);
 
 /**
- * @brief 检查库是否已初始化
- * @return true 已初始化
+ * @brief Check if library is initialized
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @return true if initialized
  */
 bool voice_is_initialized(void);
 
 /* ============================================
- * 音频设备管理
+ * Audio Device Management
  * ============================================ */
 
-/** 设备类型 */
+/** Device type */
 typedef enum {
-    VOICE_DEVICE_TYPE_CAPTURE,      /**< 采集设备 */
-    VOICE_DEVICE_TYPE_PLAYBACK      /**< 播放设备 */
+    VOICE_DEVICE_TYPE_CAPTURE,      /**< Capture device */
+    VOICE_DEVICE_TYPE_PLAYBACK      /**< Playback device */
 } voice_device_type_t;
 
-/** 设备信息 */
+/** Device information */
 typedef struct {
-    char id[256];                   /**< 设备ID */
-    char name[256];                 /**< 设备名称 */
-    voice_device_type_t type;       /**< 设备类型 */
-    bool is_default;                /**< 是否默认设备 */
-    uint32_t min_sample_rate;       /**< 最小采样率 */
-    uint32_t max_sample_rate;       /**< 最大采样率 */
-    uint8_t min_channels;           /**< 最小通道数 */
-    uint8_t max_channels;           /**< 最大通道数 */
+    char id[256];                   /**< Device ID */
+    char name[256];                 /**< Device name */
+    voice_device_type_t type;       /**< Device type */
+    bool is_default;                /**< Is default device */
+    uint32_t min_sample_rate;       /**< Minimum sample rate */
+    uint32_t max_sample_rate;       /**< Maximum sample rate */
+    uint8_t min_channels;           /**< Minimum channels */
+    uint8_t max_channels;           /**< Maximum channels */
 } voice_device_info_t;
 
 /**
- * @brief 获取音频设备数量
- * @param type 设备类型
- * @return 设备数量
+ * @brief Get audio device count
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param type Device type
+ * @return Device count
  */
 int voice_device_get_count(voice_device_type_t type);
 
 /**
- * @brief 获取音频设备信息
- * @param type 设备类型
- * @param index 设备索引
- * @param info 设备信息输出
- * @return 错误码
+ * @brief Get audio device information
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param type Device type
+ * @param index Device index
+ * @param info Device information output
+ * @return Error code
  */
 voice_error_t voice_device_get_info(
     voice_device_type_t type,
@@ -123,10 +131,11 @@ voice_error_t voice_device_get_info(
 );
 
 /**
- * @brief 获取默认设备信息
- * @param type 设备类型
- * @param info 设备信息输出
- * @return 错误码
+ * @brief Get default device information
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param type Device type
+ * @param info Device information output
+ * @return Error code
  */
 voice_error_t voice_device_get_default(
     voice_device_type_t type,
@@ -134,51 +143,57 @@ voice_error_t voice_device_get_default(
 );
 
 /* ============================================
- * 音频处理管线
+ * Audio Processing Pipeline
  * ============================================ */
 
-/** 管线句柄 */
+/** Pipeline handle */
 typedef struct voice_pipeline_s voice_pipeline_t;
 
 /**
- * @brief 创建音频处理管线
- * @param config 管线配置
- * @return 管线句柄 (NULL表示失败)
+ * @brief Create audio processing pipeline
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Pipeline configuration
+ * @return Pipeline handle (NULL on failure)
  */
 voice_pipeline_t *voice_pipeline_create(const voice_pipeline_config_t *config);
 
 /**
- * @brief 销毁音频处理管线
- * @param pipeline 管线句柄
+ * @brief Destroy audio processing pipeline
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param pipeline Pipeline handle
  */
 void voice_pipeline_destroy(voice_pipeline_t *pipeline);
 
 /**
- * @brief 启动音频处理
- * @param pipeline 管线句柄
- * @return 错误码
+ * @brief Start audio processing
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param pipeline Pipeline handle
+ * @return Error code
  */
 voice_error_t voice_pipeline_start(voice_pipeline_t *pipeline);
 
 /**
- * @brief 停止音频处理
- * @param pipeline 管线句柄
- * @return 错误码
+ * @brief Stop audio processing
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param pipeline Pipeline handle
+ * @return Error code
  */
 voice_error_t voice_pipeline_stop(voice_pipeline_t *pipeline);
 
 /**
- * @brief 检查管线是否运行中
- * @param pipeline 管线句柄
- * @return true 运行中
+ * @brief Check if pipeline is running
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param pipeline Pipeline handle
+ * @return true if running
  */
 bool voice_pipeline_is_running(voice_pipeline_t *pipeline);
 
 /**
- * @brief 设置去噪引擎
- * @param pipeline 管线句柄
- * @param engine 去噪引擎类型
- * @return 错误码
+ * @brief Set denoising engine
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param pipeline Pipeline handle
+ * @param engine Denoising engine type
+ * @return Error code
  */
 voice_error_t voice_pipeline_set_denoise_engine(
     voice_pipeline_t *pipeline,
@@ -186,10 +201,11 @@ voice_error_t voice_pipeline_set_denoise_engine(
 );
 
 /**
- * @brief 设置编解码器
- * @param pipeline 管线句柄
- * @param type 编解码器类型
- * @return 错误码
+ * @brief Set codec
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param pipeline Pipeline handle
+ * @param type Codec type
+ * @return Error code
  */
 voice_error_t voice_pipeline_set_codec(
     voice_pipeline_t *pipeline,
@@ -197,10 +213,11 @@ voice_error_t voice_pipeline_set_codec(
 );
 
 /**
- * @brief 设置比特率
- * @param pipeline 管线句柄
- * @param bitrate 比特率 (bps)
- * @return 错误码
+ * @brief Set bit rate
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param pipeline Pipeline handle
+ * @param bitrate Bit rate (bps)
+ * @return Error code
  */
 voice_error_t voice_pipeline_set_bitrate(
     voice_pipeline_t *pipeline,
@@ -208,10 +225,11 @@ voice_error_t voice_pipeline_set_bitrate(
 );
 
 /**
- * @brief 启用/禁用回声消除
- * @param pipeline 管线句柄
- * @param enabled 是否启用
- * @return 错误码
+ * @brief Enable/disable echo cancellation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param pipeline Pipeline handle
+ * @param enabled Enable or not
+ * @return Error code
  */
 voice_error_t voice_pipeline_set_aec_enabled(
     voice_pipeline_t *pipeline,
@@ -219,10 +237,11 @@ voice_error_t voice_pipeline_set_aec_enabled(
 );
 
 /**
- * @brief 启用/禁用去噪
- * @param pipeline 管线句柄
- * @param enabled 是否启用
- * @return 错误码
+ * @brief Enable/disable denoising
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param pipeline Pipeline handle
+ * @param enabled Enable or not
+ * @return Error code
  */
 voice_error_t voice_pipeline_set_denoise_enabled(
     voice_pipeline_t *pipeline,
@@ -230,10 +249,11 @@ voice_error_t voice_pipeline_set_denoise_enabled(
 );
 
 /**
- * @brief 获取网络统计
- * @param pipeline 管线句柄
- * @param stats 统计信息输出
- * @return 错误码
+ * @brief Get network statistics
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param pipeline Pipeline handle
+ * @param stats Statistics output
+ * @return Error code
  */
 voice_error_t voice_pipeline_get_network_stats(
     voice_pipeline_t *pipeline,
@@ -241,20 +261,21 @@ voice_error_t voice_pipeline_get_network_stats(
 );
 
 /* ============================================
- * 简化API - 本地录音/播放
+ * Simplified API - Local Recording/Playback
  * ============================================ */
 
-/** 录音器句柄 */
+/** Recorder handle */
 typedef struct voice_recorder_s voice_recorder_t;
 
-/** 播放器句柄 */
+/** Player handle */
 typedef struct voice_player_s voice_player_t;
 
 /**
- * @brief 创建录音器
- * @param config 设备配置
- * @param output_file 输出文件路径 (NULL不保存文件)
- * @return 录音器句柄
+ * @brief Create recorder
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Device configuration
+ * @param output_file Output file path (NULL to not save file)
+ * @return Recorder handle
  */
 voice_recorder_t *voice_recorder_create(
     const voice_device_config_t *config,
@@ -262,30 +283,34 @@ voice_recorder_t *voice_recorder_create(
 );
 
 /**
- * @brief 销毁录音器
- * @param recorder 录音器句柄
+ * @brief Destroy recorder
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param recorder Recorder handle
  */
 void voice_recorder_destroy(voice_recorder_t *recorder);
 
 /**
- * @brief 开始录音
- * @param recorder 录音器句柄
- * @return 错误码
+ * @brief Start recording
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param recorder Recorder handle
+ * @return Error code
  */
 voice_error_t voice_recorder_start(voice_recorder_t *recorder);
 
 /**
- * @brief 停止录音
- * @param recorder 录音器句柄
- * @return 错误码
+ * @brief Stop recording
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param recorder Recorder handle
+ * @return Error code
  */
 voice_error_t voice_recorder_stop(voice_recorder_t *recorder);
 
 /**
- * @brief 设置录音数据回调
- * @param recorder 录音器句柄
- * @param callback 回调函数
- * @param user_data 用户数据
+ * @brief Set recording data callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param recorder Recorder handle
+ * @param callback Callback function
+ * @param user_data User data
  */
 void voice_recorder_set_callback(
     voice_recorder_t *recorder,
@@ -294,32 +319,36 @@ void voice_recorder_set_callback(
 );
 
 /**
- * @brief 创建播放器
- * @param config 设备配置
- * @return 播放器句柄
+ * @brief Create player
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param config Device configuration
+ * @return Player handle
  */
 voice_player_t *voice_player_create(const voice_device_config_t *config);
 
 /**
- * @brief 销毁播放器
- * @param player 播放器句柄
+ * @brief Destroy player
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param player Player handle
  */
 void voice_player_destroy(voice_player_t *player);
 
 /**
- * @brief 播放文件
- * @param player 播放器句柄
- * @param path 文件路径
- * @return 错误码
+ * @brief Play file
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param player Player handle
+ * @param path File path
+ * @return Error code
  */
 voice_error_t voice_player_play_file(voice_player_t *player, const char *path);
 
 /**
- * @brief 播放PCM数据
- * @param player 播放器句柄
- * @param data PCM数据
- * @param size 数据大小
- * @return 错误码
+ * @brief Play PCM data
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param player Player handle
+ * @param data PCM data
+ * @param size Data size
+ * @return Error code
  */
 voice_error_t voice_player_play_pcm(
     voice_player_t *player,
@@ -328,49 +357,56 @@ voice_error_t voice_player_play_pcm(
 );
 
 /**
- * @brief 停止播放
- * @param player 播放器句柄
- * @return 错误码
+ * @brief Stop playback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @param player Player handle
+ * @return Error code
  */
 voice_error_t voice_player_stop(voice_player_t *player);
 
 /* ============================================
- * 平台特定功能
+ * Platform-Specific Functions
  * ============================================ */
 
 /**
- * @brief 获取平台名称
- * @return 平台名称字符串
+ * @brief Get platform name
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @return Platform name string
  */
 const char *voice_platform_name(void);
 
 /**
- * @brief 获取CPU使用率
- * @return CPU使用率 (0-100)
+ * @brief Get CPU usage
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @return CPU usage (0-100)
  */
 float voice_platform_get_cpu_usage(void);
 
 /**
- * @brief 获取电池电量
- * @return 电池电量 (0-100, -1表示无电池)
+ * @brief Get battery level
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @return Battery level (0-100, -1 means no battery)
  */
 int voice_platform_get_battery_level(void);
 
 /**
- * @brief 检查是否使用电池供电
- * @return true 使用电池
+ * @brief Check if on battery power
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @return true if on battery
  */
 bool voice_platform_on_battery(void);
 
 /**
- * @brief 请求音频焦点 (移动端)
- * @return 错误码
+ * @brief Request audio focus (mobile)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @return Error code
  */
 voice_error_t voice_platform_request_audio_focus(void);
 
 /**
- * @brief 释放音频焦点 (移动端)
- * @return 错误码
+ * @brief Release audio focus (mobile)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @return Error code
  */
 voice_error_t voice_platform_release_audio_focus(void);
 

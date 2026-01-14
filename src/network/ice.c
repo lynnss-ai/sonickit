@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file ice.c
  * @brief ICE/STUN/TURN implementation (simplified)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 实现基本的 STUN 绑定和 ICE 候选收集
  * 完整的 ICE 实现需要更复杂的状态机

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file sip_ua.h
  * @brief SIP User Agent
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * Complete SIP User Agent implementation for making and receiving calls.
  * Handles:
@@ -30,6 +31,7 @@ extern "C" {
 
 /**
  * @brief Registration state
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     SIP_REG_UNREGISTERED,
@@ -41,6 +43,7 @@ typedef enum {
 
 /**
  * @brief Call state
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     SIP_CALL_IDLE,
@@ -56,6 +59,7 @@ typedef enum {
 
 /**
  * @brief Call direction
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     SIP_CALL_OUTGOING,
@@ -64,6 +68,7 @@ typedef enum {
 
 /**
  * @brief Transport type
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     SIP_TRANSPORT_UDP,
@@ -110,6 +115,7 @@ typedef struct {
 
 /**
  * @brief Registration state callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*sip_on_registration_state_t)(sip_ua_t *ua, 
                                              sip_registration_state_t state,
@@ -118,6 +124,7 @@ typedef void (*sip_on_registration_state_t)(sip_ua_t *ua,
 
 /**
  * @brief Incoming call callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*sip_on_incoming_call_t)(sip_ua_t *ua, 
                                         sip_call_t *call,
@@ -126,6 +133,7 @@ typedef void (*sip_on_incoming_call_t)(sip_ua_t *ua,
 
 /**
  * @brief Call state callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*sip_on_call_state_t)(sip_ua_t *ua, 
                                      sip_call_t *call,
@@ -134,6 +142,7 @@ typedef void (*sip_on_call_state_t)(sip_ua_t *ua,
 
 /**
  * @brief Media state callback (for RTP setup)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*sip_on_call_media_t)(sip_ua_t *ua,
                                      sip_call_t *call,
@@ -143,6 +152,7 @@ typedef void (*sip_on_call_media_t)(sip_ua_t *ua,
 
 /**
  * @brief DTMF callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*sip_on_dtmf_t)(sip_ua_t *ua,
                                sip_call_t *call,
@@ -200,31 +210,37 @@ typedef struct {
 
 /**
  * @brief Initialize UA config with defaults
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void sip_ua_config_init(sip_ua_config_t *config);
 
 /**
  * @brief Create SIP User Agent
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 sip_ua_t *sip_ua_create(const sip_ua_config_t *config);
 
 /**
  * @brief Destroy SIP User Agent
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void sip_ua_destroy(sip_ua_t *ua);
 
 /**
  * @brief Start the UA (begin listening and processing)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_ua_start(sip_ua_t *ua);
 
 /**
  * @brief Stop the UA
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_ua_stop(sip_ua_t *ua);
 
 /**
  * @brief Process pending events (call periodically)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_ua_process(sip_ua_t *ua, int timeout_ms);
 
@@ -234,21 +250,25 @@ voice_error_t sip_ua_process(sip_ua_t *ua, int timeout_ms);
 
 /**
  * @brief Register with SIP registrar
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_ua_register(sip_ua_t *ua);
 
 /**
  * @brief Unregister from SIP registrar
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_ua_unregister(sip_ua_t *ua);
 
 /**
  * @brief Get registration state
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 sip_registration_state_t sip_ua_get_registration_state(sip_ua_t *ua);
 
 /**
  * @brief Check if registered
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 bool sip_ua_is_registered(sip_ua_t *ua);
 
@@ -258,66 +278,79 @@ bool sip_ua_is_registered(sip_ua_t *ua);
 
 /**
  * @brief Make outgoing call
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 sip_call_t *sip_ua_make_call(sip_ua_t *ua, const char *destination);
 
 /**
  * @brief Answer incoming call
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_call_answer(sip_call_t *call, int status_code);
 
 /**
  * @brief Reject incoming call
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_call_reject(sip_call_t *call, int status_code);
 
 /**
  * @brief Hang up call
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_call_hangup(sip_call_t *call);
 
 /**
  * @brief Put call on hold
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_call_hold(sip_call_t *call);
 
 /**
  * @brief Resume held call
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_call_resume(sip_call_t *call);
 
 /**
  * @brief Send DTMF digit
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_call_send_dtmf(sip_call_t *call, char digit, int duration_ms);
 
 /**
  * @brief Transfer call (REFER)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_call_transfer(sip_call_t *call, const char *destination);
 
 /**
  * @brief Get call info
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_call_get_info(sip_call_t *call, sip_call_info_t *info);
 
 /**
  * @brief Get call state
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 sip_call_state_t sip_call_get_state(sip_call_t *call);
 
 /**
  * @brief Get call ID
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *sip_call_get_id(sip_call_t *call);
 
 /**
  * @brief Set local SDP
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_call_set_local_sdp(sip_call_t *call, const char *sdp);
 
 /**
  * @brief Get remote SDP
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *sip_call_get_remote_sdp(sip_call_t *call);
 
@@ -327,6 +360,7 @@ const char *sip_call_get_remote_sdp(sip_call_t *call);
 
 /**
  * @brief Generate basic audio SDP
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_generate_sdp(char *buffer, size_t size,
                                 const char *session_name,
@@ -337,6 +371,7 @@ voice_error_t sip_generate_sdp(char *buffer, size_t size,
 
 /**
  * @brief Parse SDP for RTP info
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_parse_sdp_rtp(const char *sdp,
                                  char *host, size_t host_size,
@@ -349,21 +384,25 @@ voice_error_t sip_parse_sdp_rtp(const char *sdp,
 
 /**
  * @brief Get call state as string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *sip_call_state_to_string(sip_call_state_t state);
 
 /**
  * @brief Get registration state as string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *sip_registration_state_to_string(sip_registration_state_t state);
 
 /**
  * @brief Get UA local URI
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_ua_get_local_uri(sip_ua_t *ua, char *buffer, size_t size);
 
 /**
  * @brief Get active call count
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 int sip_ua_get_call_count(sip_ua_t *ua);
 

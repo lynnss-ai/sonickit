@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file diagnostics.c
  * @brief Audio and network diagnostics implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "utils/diagnostics.h"

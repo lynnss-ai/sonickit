@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file test_resampler.c
  * @brief Resampler unit tests
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "test_common.h"

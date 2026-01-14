@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file device.h
  * @brief Audio device abstraction layer (miniaudio backend)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef AUDIO_DEVICE_H
@@ -23,17 +24,20 @@ typedef struct voice_device_context_s voice_device_context_t;
 
 /**
  * @brief 初始化设备上下文
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @return 错误码
  */
 voice_error_t voice_device_context_init(void);
 
 /**
  * @brief 销毁设备上下文
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_device_context_deinit(void);
 
 /**
  * @brief 获取设备上下文
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @return 设备上下文指针
  */
 voice_device_context_t *voice_device_context_get(void);
@@ -119,6 +123,7 @@ typedef struct {
 
 /**
  * @brief 初始化默认设备描述
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param desc 设备描述指针
  * @param mode 设备模式
  */
@@ -126,6 +131,7 @@ void voice_device_desc_init(voice_device_desc_t *desc, voice_device_mode_t mode)
 
 /**
  * @brief 创建音频设备
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param desc 设备描述
  * @return 设备句柄
  */
@@ -133,12 +139,14 @@ voice_device_t *voice_device_create(const voice_device_desc_t *desc);
 
 /**
  * @brief 销毁音频设备
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param device 设备句柄
  */
 void voice_device_destroy(voice_device_t *device);
 
 /**
  * @brief 启动设备
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param device 设备句柄
  * @return 错误码
  */
@@ -146,6 +154,7 @@ voice_error_t voice_device_start(voice_device_t *device);
 
 /**
  * @brief 停止设备
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param device 设备句柄
  * @return 错误码
  */
@@ -153,6 +162,7 @@ voice_error_t voice_device_stop(voice_device_t *device);
 
 /**
  * @brief 检查设备是否运行中
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param device 设备句柄
  * @return true 运行中
  */
@@ -160,6 +170,7 @@ bool voice_device_is_started(voice_device_t *device);
 
 /**
  * @brief 获取设备采样率
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param device 设备句柄
  * @return 采样率
  */
@@ -167,6 +178,7 @@ uint32_t voice_device_get_sample_rate(voice_device_t *device);
 
 /**
  * @brief 获取设备通道数
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param device 设备句柄
  * @param mode 设备模式 (采集/播放)
  * @return 通道数
@@ -175,6 +187,7 @@ uint8_t voice_device_get_channels(voice_device_t *device, voice_device_mode_t mo
 
 /**
  * @brief 获取设备格式
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param device 设备句柄
  * @param mode 设备模式
  * @return 格式
@@ -198,18 +211,21 @@ typedef struct {
 
 /**
  * @brief 获取采集设备数量
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @return 设备数量
  */
 uint32_t voice_device_get_capture_count(void);
 
 /**
  * @brief 获取播放设备数量
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @return 设备数量
  */
 uint32_t voice_device_get_playback_count(void);
 
 /**
  * @brief 获取采集设备信息
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param index 设备索引
  * @param info 设备信息输出
  * @return 错误码
@@ -218,6 +234,7 @@ voice_error_t voice_device_get_capture_info(uint32_t index, voice_device_enum_in
 
 /**
  * @brief 获取播放设备信息
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param index 设备索引
  * @param info 设备信息输出
  * @return 错误码
@@ -253,12 +270,14 @@ typedef struct {
 
 /**
  * @brief 初始化默认设备配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 配置结构指针
  */
 void voice_device_config_init(voice_device_config_t *config);
 
 /**
  * @brief 使用简化配置创建设备
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 简化配置
  * @return 设备句柄
  */
@@ -266,6 +285,7 @@ voice_device_t *voice_device_create_simple(const voice_device_config_t *config);
 
 /**
  * @brief 枚举设备 (兼容API)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param mode 设备模式
  * @param devices 设备信息数组
  * @param count 输入：数组大小，输出：实际设备数

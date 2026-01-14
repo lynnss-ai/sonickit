@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file codec.h
  * @brief Audio codec abstraction interface
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef CODEC_CODEC_H
@@ -97,16 +98,19 @@ typedef struct {
 
 /**
  * @brief 初始化默认Opus配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_opus_config_init(voice_opus_config_t *config);
 
 /**
  * @brief 初始化默认G.711配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_g711_config_init(voice_g711_config_t *config, bool use_alaw);
 
 /**
  * @brief 初始化默认G.722配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_g722_config_init(voice_g722_config_t *config);
 
@@ -116,6 +120,7 @@ void voice_g722_config_init(voice_g722_config_t *config);
 
 /**
  * @brief 创建编码器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 编解码器配置
  * @return 编码器句柄
  */
@@ -123,12 +128,14 @@ voice_encoder_t *voice_encoder_create(const voice_codec_config_t *config);
 
 /**
  * @brief 销毁编码器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param encoder 编码器句柄
  */
 void voice_encoder_destroy(voice_encoder_t *encoder);
 
 /**
  * @brief 编码音频帧
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param encoder 编码器句柄
  * @param pcm_input 输入PCM数据
  * @param pcm_samples 输入样本数
@@ -146,12 +153,14 @@ voice_error_t voice_encoder_encode(
 
 /**
  * @brief 重置编码器状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param encoder 编码器句柄
  */
 void voice_encoder_reset(voice_encoder_t *encoder);
 
 /**
  * @brief 获取编解码器信息
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param encoder 编码器句柄
  * @param info 输出信息结构
  * @return 错误码
@@ -163,6 +172,7 @@ voice_error_t voice_encoder_get_info(
 
 /**
  * @brief 设置比特率 (仅Opus)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param encoder 编码器句柄
  * @param bitrate 比特率(bps)
  * @return 错误码
@@ -174,6 +184,7 @@ voice_error_t voice_encoder_set_bitrate(
 
 /**
  * @brief 设置丢包率 (仅Opus)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param encoder 编码器句柄
  * @param packet_loss_perc 丢包率 (0-100)
  * @return 错误码
@@ -189,6 +200,7 @@ voice_error_t voice_encoder_set_packet_loss(
 
 /**
  * @brief 创建解码器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 编解码器配置
  * @return 解码器句柄
  */
@@ -196,12 +208,14 @@ voice_decoder_t *voice_decoder_create(const voice_codec_config_t *config);
 
 /**
  * @brief 销毁解码器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param decoder 解码器句柄
  */
 void voice_decoder_destroy(voice_decoder_t *decoder);
 
 /**
  * @brief 解码音频帧
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param decoder 解码器句柄
  * @param input 编码数据
  * @param input_size 编码数据字节数
@@ -219,6 +233,7 @@ voice_error_t voice_decoder_decode(
 
 /**
  * @brief 丢包补偿 (PLC)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param decoder 解码器句柄
  * @param pcm_output 输出PCM缓冲区
  * @param pcm_samples 请求样本数(输入)/输出样本数(输出)
@@ -232,12 +247,14 @@ voice_error_t voice_decoder_plc(
 
 /**
  * @brief 重置解码器状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param decoder 解码器句柄
  */
 void voice_decoder_reset(voice_decoder_t *decoder);
 
 /**
  * @brief 获取编解码器信息
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param decoder 解码器句柄
  * @param info 输出信息结构
  * @return 错误码
@@ -253,6 +270,7 @@ voice_error_t voice_decoder_get_info(
 
 /**
  * @brief 获取编解码器名称
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param codec_id 编解码器ID
  * @return 名称字符串
  */
@@ -260,6 +278,7 @@ const char *voice_codec_get_name(voice_codec_id_t codec_id);
 
 /**
  * @brief 获取RTP载荷类型
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param codec_id 编解码器ID
  * @return RTP载荷类型 (0-127)
  */
@@ -267,6 +286,7 @@ uint8_t voice_codec_get_rtp_payload_type(voice_codec_id_t codec_id);
 
 /**
  * @brief 从RTP载荷类型获取编解码器ID
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param payload_type RTP载荷类型
  * @return 编解码器ID
  */
@@ -274,6 +294,7 @@ voice_codec_id_t voice_codec_from_rtp_payload_type(uint8_t payload_type);
 
 /**
  * @brief 计算编码后最大字节数
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param codec_id 编解码器ID
  * @param samples 样本数
  * @return 最大字节数

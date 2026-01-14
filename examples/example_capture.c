@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file example_capture.c
  * @brief Simple audio capture to WAV file example
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 演示从麦克风采集音频并保存为WAV文件
  */

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file statistics.c
  * @brief Voice processing statistics collection implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "voice/statistics.h"

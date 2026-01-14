@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file effects.h
  * @brief Audio effects processing (reverb, delay, pitch shift, chorus, flanger)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef DSP_EFFECTS_H
@@ -43,21 +44,25 @@ typedef struct voice_reverb_s voice_reverb_t;
 
 /**
  * @brief 初始化默认混响配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_reverb_config_init(voice_reverb_config_t *config);
 
 /**
  * @brief 创建混响效果器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_reverb_t *voice_reverb_create(const voice_reverb_config_t *config);
 
 /**
  * @brief 销毁混响效果器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_reverb_destroy(voice_reverb_t *reverb);
 
 /**
  * @brief 处理音频 (原地)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_reverb_process(
     voice_reverb_t *reverb,
@@ -67,6 +72,7 @@ voice_error_t voice_reverb_process(
 
 /**
  * @brief 处理音频 (int16)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_reverb_process_int16(
     voice_reverb_t *reverb,
@@ -76,6 +82,7 @@ voice_error_t voice_reverb_process_int16(
 
 /**
  * @brief 设置混响参数
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_reverb_set_room_size(voice_reverb_t *reverb, float size);
 void voice_reverb_set_damping(voice_reverb_t *reverb, float damping);
@@ -84,6 +91,7 @@ void voice_reverb_set_dry_level(voice_reverb_t *reverb, float level);
 
 /**
  * @brief 重置混响状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_reverb_reset(voice_reverb_t *reverb);
 
@@ -116,21 +124,25 @@ typedef struct voice_delay_s voice_delay_t;
 
 /**
  * @brief 初始化默认延迟配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_delay_config_init(voice_delay_config_t *config);
 
 /**
  * @brief 创建延迟效果器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_delay_t *voice_delay_create(const voice_delay_config_t *config);
 
 /**
  * @brief 销毁延迟效果器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_delay_destroy(voice_delay_t *delay);
 
 /**
  * @brief 处理音频 (原地)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_delay_process(
     voice_delay_t *delay,
@@ -140,6 +152,7 @@ voice_error_t voice_delay_process(
 
 /**
  * @brief 处理音频 (int16)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_delay_process_int16(
     voice_delay_t *delay,
@@ -149,16 +162,19 @@ voice_error_t voice_delay_process_int16(
 
 /**
  * @brief 设置延迟时间
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_delay_set_time(voice_delay_t *delay, float delay_ms);
 
 /**
  * @brief 设置反馈量
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_delay_set_feedback(voice_delay_t *delay, float feedback);
 
 /**
  * @brief 重置延迟状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_delay_reset(voice_delay_t *delay);
 
@@ -181,21 +197,25 @@ typedef struct voice_pitch_shift_s voice_pitch_shift_t;
 
 /**
  * @brief 初始化默认音高变换配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pitch_shift_config_init(voice_pitch_shift_config_t *config);
 
 /**
  * @brief 创建音高变换器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_pitch_shift_t *voice_pitch_shift_create(const voice_pitch_shift_config_t *config);
 
 /**
  * @brief 销毁音高变换器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pitch_shift_destroy(voice_pitch_shift_t *pitch);
 
 /**
  * @brief 处理音频 (原地)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pitch_shift_process(
     voice_pitch_shift_t *pitch,
@@ -205,6 +225,7 @@ voice_error_t voice_pitch_shift_process(
 
 /**
  * @brief 处理音频 (int16)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pitch_shift_process_int16(
     voice_pitch_shift_t *pitch,
@@ -214,6 +235,7 @@ voice_error_t voice_pitch_shift_process_int16(
 
 /**
  * @brief 设置音高偏移
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param semitones 半音 (-12 到 +12)
  * @param cents 音分 (-100 到 +100)
  */
@@ -225,6 +247,7 @@ void voice_pitch_shift_set_shift(
 
 /**
  * @brief 重置音高变换器状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pitch_shift_reset(voice_pitch_shift_t *pitch);
 
@@ -248,21 +271,25 @@ typedef struct voice_chorus_s voice_chorus_t;
 
 /**
  * @brief 初始化默认合唱配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_chorus_config_init(voice_chorus_config_t *config);
 
 /**
  * @brief 创建合唱效果器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_chorus_t *voice_chorus_create(const voice_chorus_config_t *config);
 
 /**
  * @brief 销毁合唱效果器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_chorus_destroy(voice_chorus_t *chorus);
 
 /**
  * @brief 处理音频 (原地)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_chorus_process(
     voice_chorus_t *chorus,
@@ -272,6 +299,7 @@ voice_error_t voice_chorus_process(
 
 /**
  * @brief 处理音频 (int16)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_chorus_process_int16(
     voice_chorus_t *chorus,
@@ -281,6 +309,7 @@ voice_error_t voice_chorus_process_int16(
 
 /**
  * @brief 重置合唱状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_chorus_reset(voice_chorus_t *chorus);
 
@@ -303,21 +332,25 @@ typedef struct voice_flanger_s voice_flanger_t;
 
 /**
  * @brief 初始化默认镶边配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_flanger_config_init(voice_flanger_config_t *config);
 
 /**
  * @brief 创建镶边效果器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_flanger_t *voice_flanger_create(const voice_flanger_config_t *config);
 
 /**
  * @brief 销毁镶边效果器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_flanger_destroy(voice_flanger_t *flanger);
 
 /**
  * @brief 处理音频 (原地)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_flanger_process(
     voice_flanger_t *flanger,
@@ -327,6 +360,7 @@ voice_error_t voice_flanger_process(
 
 /**
  * @brief 处理音频 (int16)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_flanger_process_int16(
     voice_flanger_t *flanger,
@@ -336,6 +370,7 @@ voice_error_t voice_flanger_process_int16(
 
 /**
  * @brief 重置镶边状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_flanger_reset(voice_flanger_t *flanger);
 
@@ -357,16 +392,19 @@ typedef struct voice_effect_chain_s voice_effect_chain_t;
 
 /**
  * @brief 创建效果链
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_effect_chain_t *voice_effect_chain_create(uint32_t sample_rate);
 
 /**
  * @brief 销毁效果链
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_effect_chain_destroy(voice_effect_chain_t *chain);
 
 /**
  * @brief 添加效果到链
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_effect_chain_add(
     voice_effect_chain_t *chain,
@@ -376,6 +414,7 @@ voice_error_t voice_effect_chain_add(
 
 /**
  * @brief 移除效果
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_effect_chain_remove(
     voice_effect_chain_t *chain,
@@ -384,11 +423,13 @@ voice_error_t voice_effect_chain_remove(
 
 /**
  * @brief 清空效果链
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_effect_chain_clear(voice_effect_chain_t *chain);
 
 /**
  * @brief 处理音频通过效果链
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_effect_chain_process(
     voice_effect_chain_t *chain,
@@ -398,6 +439,7 @@ voice_error_t voice_effect_chain_process(
 
 /**
  * @brief 处理音频 (int16)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_effect_chain_process_int16(
     voice_effect_chain_t *chain,
@@ -407,11 +449,13 @@ voice_error_t voice_effect_chain_process_int16(
 
 /**
  * @brief 绕过效果链
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_effect_chain_set_bypass(voice_effect_chain_t *chain, bool bypass);
 
 /**
  * @brief 重置效果链
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_effect_chain_reset(voice_effect_chain_t *chain);
 

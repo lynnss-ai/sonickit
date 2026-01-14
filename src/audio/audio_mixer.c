@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file audio_mixer.c
  * @brief Multi-stream audio mixer implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "audio/audio_mixer.h"

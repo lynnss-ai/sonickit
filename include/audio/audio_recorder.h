@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file audio_recorder.h
  * @brief Audio recording and playback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 音频录制模块，支持录制到文件或内存缓冲区
  */
@@ -118,41 +119,49 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_recorder_config_init(voice_recorder_config_t *config);
 
 /**
  * @brief 创建录制器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_recorder_t *voice_recorder_create(const voice_recorder_config_t *config);
 
 /**
  * @brief 销毁录制器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_recorder_destroy(voice_recorder_t *recorder);
 
 /**
  * @brief 开始录制
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_recorder_start(voice_recorder_t *recorder);
 
 /**
  * @brief 停止录制
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_recorder_stop(voice_recorder_t *recorder);
 
 /**
  * @brief 暂停录制
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_recorder_pause(voice_recorder_t *recorder);
 
 /**
  * @brief 恢复录制
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_recorder_resume(voice_recorder_t *recorder);
 
 /**
  * @brief 写入音频数据
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_recorder_write(
     voice_recorder_t *recorder,
@@ -162,6 +171,7 @@ voice_error_t voice_recorder_write(
 
 /**
  * @brief 获取录制状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_recorder_get_status(
     voice_recorder_t *recorder,
@@ -170,6 +180,7 @@ voice_error_t voice_recorder_get_status(
 
 /**
  * @brief 获取录制的数据 (内存模式)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_recorder_get_data(
     voice_recorder_t *recorder,
@@ -179,6 +190,7 @@ voice_error_t voice_recorder_get_data(
 
 /**
  * @brief 保存到文件 (内存模式)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_recorder_save_to_file(
     voice_recorder_t *recorder,
@@ -192,11 +204,13 @@ voice_error_t voice_recorder_save_to_file(
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_player_config_init(voice_player_config_t *config);
 
 /**
  * @brief 从文件创建播放器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_player_t *voice_player_create_from_file(
     const char *filename,
@@ -205,6 +219,7 @@ voice_player_t *voice_player_create_from_file(
 
 /**
  * @brief 从内存创建播放器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_player_t *voice_player_create_from_memory(
     const int16_t *samples,
@@ -215,46 +230,55 @@ voice_player_t *voice_player_create_from_memory(
 
 /**
  * @brief 销毁播放器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_player_destroy(voice_player_t *player);
 
 /**
  * @brief 开始播放
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_player_play(voice_player_t *player);
 
 /**
  * @brief 停止播放
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_player_stop(voice_player_t *player);
 
 /**
  * @brief 暂停播放
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_player_pause(voice_player_t *player);
 
 /**
  * @brief 恢复播放
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_player_resume(voice_player_t *player);
 
 /**
  * @brief 跳转到指定位置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_player_seek(voice_player_t *player, uint64_t position_ms);
 
 /**
  * @brief 设置音量
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_player_set_volume(voice_player_t *player, float volume);
 
 /**
  * @brief 设置播放速度
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_player_set_speed(voice_player_t *player, float speed);
 
 /**
  * @brief 读取音频数据 (供 Pipeline 使用)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 size_t voice_player_read(
     voice_player_t *player,
@@ -264,6 +288,7 @@ size_t voice_player_read(
 
 /**
  * @brief 获取播放状态
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_player_get_status(
     voice_player_t *player,

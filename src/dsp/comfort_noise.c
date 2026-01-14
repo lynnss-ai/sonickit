@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file comfort_noise.c
  * @brief Comfort Noise Generation implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "dsp/comfort_noise.h"

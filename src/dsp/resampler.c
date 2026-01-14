@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file resampler.c
  * @brief SpeexDSP resampler wrapper implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "dsp/resampler.h"

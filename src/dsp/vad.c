@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file vad.c
  * @brief Voice Activity Detection implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "dsp/vad.h"

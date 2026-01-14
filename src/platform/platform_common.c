@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file platform_common.c
  * @brief Platform-independent implementations
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "voice/platform.h"

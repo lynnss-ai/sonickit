@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file codec_opus.c
  * @brief Opus codec implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "codec/codec.h"

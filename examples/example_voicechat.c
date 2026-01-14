@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file example_voicechat.c
  * @brief Full-duplex voice chat example
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 演示完整的语音通话流程:
  * - 双工音频采集/播放

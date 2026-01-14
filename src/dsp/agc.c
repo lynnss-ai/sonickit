@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file agc.c
  * @brief Automatic Gain Control implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "dsp/agc.h"

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file pipeline.c
  * @brief Audio processing pipeline implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "voice/pipeline.h"

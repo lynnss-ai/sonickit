@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file echo_canceller.c
  * @brief SpeexDSP AEC implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "dsp/echo_canceller.h"

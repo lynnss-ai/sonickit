@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file datachannel.h
  * @brief WebRTC DataChannel-style API
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * Provides a reliable/unreliable data channel abstraction similar to WebRTC
  * DataChannels, but with a simplified implementation suitable for voice
@@ -42,6 +43,7 @@ extern "C" {
 
 /**
  * @brief DataChannel state
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     DATACHANNEL_STATE_CONNECTING,   /**< Connection in progress */
@@ -52,6 +54,7 @@ typedef enum {
 
 /**
  * @brief DataChannel type (reliability mode)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     DATACHANNEL_RELIABLE,           /**< Reliable ordered delivery */
@@ -62,6 +65,7 @@ typedef enum {
 
 /**
  * @brief Message type
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     DATACHANNEL_MSG_BINARY,  /**< Binary data */
@@ -70,6 +74,7 @@ typedef enum {
 
 /**
  * @brief Channel priority
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     DATACHANNEL_PRIORITY_VERY_LOW = 0,
@@ -88,6 +93,7 @@ typedef struct datachannel_connection_s datachannel_connection_t;
 
 /**
  * @brief DataChannel configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     char label[DATACHANNEL_MAX_LABEL_SIZE];       /**< Channel label/name */
@@ -108,6 +114,7 @@ typedef struct {
 
 /**
  * @brief Channel statistics
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     uint64_t messages_sent;       /**< Messages sent */
@@ -126,16 +133,19 @@ typedef struct {
 
 /**
  * @brief Channel open callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*datachannel_on_open_t)(datachannel_t *channel, void *user_data);
 
 /**
  * @brief Channel close callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*datachannel_on_close_t)(datachannel_t *channel, void *user_data);
 
 /**
  * @brief Channel error callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*datachannel_on_error_t)(datachannel_t *channel, 
                                         const char *error,
@@ -143,6 +153,7 @@ typedef void (*datachannel_on_error_t)(datachannel_t *channel,
 
 /**
  * @brief Message received callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*datachannel_on_message_t)(datachannel_t *channel,
                                           const void *data,
@@ -152,12 +163,14 @@ typedef void (*datachannel_on_message_t)(datachannel_t *channel,
 
 /**
  * @brief Buffered amount low callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*datachannel_on_buffered_low_t)(datachannel_t *channel,
                                                void *user_data);
 
 /**
  * @brief New channel callback (for connection)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef void (*datachannel_on_channel_t)(datachannel_connection_t *conn,
                                           datachannel_t *channel,
@@ -169,6 +182,7 @@ typedef void (*datachannel_on_channel_t)(datachannel_connection_t *conn,
 
 /**
  * @brief Connection configuration
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     /* Local binding */
@@ -201,32 +215,38 @@ typedef struct {
 
 /**
  * @brief Initialize connection config with defaults
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void datachannel_connection_config_init(datachannel_connection_config_t *config);
 
 /**
  * @brief Create DataChannel connection
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 datachannel_connection_t *datachannel_connection_create(
     const datachannel_connection_config_t *config);
 
 /**
  * @brief Destroy connection
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void datachannel_connection_destroy(datachannel_connection_t *conn);
 
 /**
  * @brief Connect to remote peer
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t datachannel_connection_connect(datachannel_connection_t *conn);
 
 /**
  * @brief Close connection
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t datachannel_connection_close(datachannel_connection_t *conn);
 
 /**
  * @brief Process pending events
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param conn Connection instance
  * @param timeout_ms Maximum time to wait for events
  * @return VOICE_OK on success
@@ -236,11 +256,13 @@ voice_error_t datachannel_connection_process(datachannel_connection_t *conn,
 
 /**
  * @brief Check if connection is established
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 bool datachannel_connection_is_connected(datachannel_connection_t *conn);
 
 /**
  * @brief Get local port (useful if port was auto-assigned)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 uint16_t datachannel_connection_get_local_port(datachannel_connection_t *conn);
 
@@ -250,22 +272,26 @@ uint16_t datachannel_connection_get_local_port(datachannel_connection_t *conn);
 
 /**
  * @brief Initialize channel config with defaults
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void datachannel_config_init(datachannel_config_t *config);
 
 /**
  * @brief Create a new DataChannel
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 datachannel_t *datachannel_create(datachannel_connection_t *conn,
                                    const datachannel_config_t *config);
 
 /**
  * @brief Close a DataChannel
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t datachannel_close(datachannel_t *channel);
 
 /**
  * @brief Send binary data
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t datachannel_send(datachannel_t *channel,
                                 const void *data,
@@ -273,43 +299,51 @@ voice_error_t datachannel_send(datachannel_t *channel,
 
 /**
  * @brief Send text message
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t datachannel_send_text(datachannel_t *channel,
                                      const char *text);
 
 /**
  * @brief Get channel state
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 datachannel_state_t datachannel_get_state(datachannel_t *channel);
 
 /**
  * @brief Get channel ID
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 uint16_t datachannel_get_id(datachannel_t *channel);
 
 /**
  * @brief Get channel label
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *datachannel_get_label(datachannel_t *channel);
 
 /**
  * @brief Get channel protocol
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *datachannel_get_protocol(datachannel_t *channel);
 
 /**
  * @brief Get buffered amount (bytes waiting to send)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 uint32_t datachannel_get_buffered_amount(datachannel_t *channel);
 
 /**
  * @brief Set buffered amount low threshold
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void datachannel_set_buffered_amount_low_threshold(datachannel_t *channel,
                                                     uint32_t threshold);
 
 /**
  * @brief Get channel statistics
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t datachannel_get_stats(datachannel_t *channel,
                                      datachannel_stats_t *stats);
@@ -320,6 +354,7 @@ voice_error_t datachannel_get_stats(datachannel_t *channel,
 
 /**
  * @brief Set open callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void datachannel_set_on_open(datachannel_t *channel,
                               datachannel_on_open_t callback,
@@ -327,6 +362,7 @@ void datachannel_set_on_open(datachannel_t *channel,
 
 /**
  * @brief Set close callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void datachannel_set_on_close(datachannel_t *channel,
                                datachannel_on_close_t callback,
@@ -334,6 +370,7 @@ void datachannel_set_on_close(datachannel_t *channel,
 
 /**
  * @brief Set error callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void datachannel_set_on_error(datachannel_t *channel,
                                datachannel_on_error_t callback,
@@ -341,6 +378,7 @@ void datachannel_set_on_error(datachannel_t *channel,
 
 /**
  * @brief Set message callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void datachannel_set_on_message(datachannel_t *channel,
                                  datachannel_on_message_t callback,
@@ -348,6 +386,7 @@ void datachannel_set_on_message(datachannel_t *channel,
 
 /**
  * @brief Set buffered amount low callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void datachannel_set_on_buffered_low(datachannel_t *channel,
                                       datachannel_on_buffered_low_t callback,
@@ -359,11 +398,13 @@ void datachannel_set_on_buffered_low(datachannel_t *channel,
 
 /**
  * @brief Get state as string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *datachannel_state_to_string(datachannel_state_t state);
 
 /**
  * @brief Get type as string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *datachannel_type_to_string(datachannel_type_t type);
 
@@ -373,18 +414,21 @@ const char *datachannel_type_to_string(datachannel_type_t type);
 
 /**
  * @brief Create simple reliable channel
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 datachannel_t *datachannel_create_reliable(datachannel_connection_t *conn,
                                             const char *label);
 
 /**
  * @brief Create simple unreliable channel
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 datachannel_t *datachannel_create_unreliable(datachannel_connection_t *conn,
                                               const char *label);
 
 /**
  * @brief Create channel with max retransmits
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 datachannel_t *datachannel_create_with_retransmits(datachannel_connection_t *conn,
                                                     const char *label,
@@ -392,6 +436,7 @@ datachannel_t *datachannel_create_with_retransmits(datachannel_connection_t *con
 
 /**
  * @brief Create channel with max lifetime
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 datachannel_t *datachannel_create_with_lifetime(datachannel_connection_t *conn,
                                                  const char *label,

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file effects.c
  * @brief Audio effects implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "dsp/effects.h"

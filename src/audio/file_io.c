@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file file_io.c
  * @brief Audio file I/O implementation using miniaudio
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "audio/file_io.h"

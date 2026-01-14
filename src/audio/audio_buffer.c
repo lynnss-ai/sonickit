@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file audio_buffer.c
  * @brief Lock-free ring buffer implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "audio/audio_buffer.h"

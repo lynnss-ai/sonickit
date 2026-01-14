@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file compressor.c
  * @brief Dynamic range compressor implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "dsp/compressor.h"

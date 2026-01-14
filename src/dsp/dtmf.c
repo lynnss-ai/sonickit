@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file dtmf.c
  * @brief DTMF detection and generation implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 使用 Goertzel 算法进行 DTMF 检测
  */

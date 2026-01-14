@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file bandwidth_estimator.c
  * @brief Network bandwidth estimation implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 基于 AIMD (Additive Increase Multiplicative Decrease) 的带宽估计
  */

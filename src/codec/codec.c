@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file codec.c
  * @brief Codec interface implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "codec/codec.h"

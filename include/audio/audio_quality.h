@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file audio_quality.h
  * @brief Audio quality metrics and MOS estimation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 音频质量评估工具，包含 MOS (Mean Opinion Score) 估计
  */
@@ -80,11 +81,13 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_quality_config_init(voice_quality_config_t *config);
 
 /**
  * @brief 创建质量分析器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_quality_analyzer_t *voice_quality_analyzer_create(
     const voice_quality_config_t *config
@@ -92,11 +95,13 @@ voice_quality_analyzer_t *voice_quality_analyzer_create(
 
 /**
  * @brief 销毁分析器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_quality_analyzer_destroy(voice_quality_analyzer_t *analyzer);
 
 /**
  * @brief 分析音频帧
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_quality_analyze_frame(
     voice_quality_analyzer_t *analyzer,
@@ -106,6 +111,7 @@ voice_error_t voice_quality_analyze_frame(
 
 /**
  * @brief 更新网络指标
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_quality_update_network(
     voice_quality_analyzer_t *analyzer,
@@ -116,6 +122,7 @@ void voice_quality_update_network(
 
 /**
  * @brief 获取质量指标
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_quality_get_metrics(
     voice_quality_analyzer_t *analyzer,
@@ -124,6 +131,7 @@ voice_error_t voice_quality_get_metrics(
 
 /**
  * @brief 重置分析器
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_quality_reset(voice_quality_analyzer_t *analyzer);
 
@@ -133,6 +141,7 @@ void voice_quality_reset(voice_quality_analyzer_t *analyzer);
 
 /**
  * @brief 基于 E-Model (ITU-T G.107) 计算 R-Factor
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param delay_ms 单向延迟 (ms)
  * @param packet_loss_pct 丢包率 (百分比, 0-100)
  * @param codec_ie 编解码器损伤因子 (Opus约10, G.711约0)
@@ -146,6 +155,7 @@ float voice_calculate_r_factor(
 
 /**
  * @brief R-Factor 转 MOS
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param r_factor R值 (0-100)
  * @return MOS 分数 (1.0-5.0)
  */
@@ -153,6 +163,7 @@ float voice_r_factor_to_mos(float r_factor);
 
 /**
  * @brief 快速 MOS 估计
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 float voice_estimate_mos(
     uint32_t delay_ms,
@@ -162,11 +173,13 @@ float voice_estimate_mos(
 
 /**
  * @brief 获取质量描述
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *voice_mos_description(float mos);
 
 /**
  * @brief 获取 R-Factor 描述
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *voice_r_factor_description(float r_factor);
 

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file types.h
  * @brief Voice library common type definitions
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef VOICE_TYPES_H
@@ -15,26 +16,26 @@ extern "C" {
 #endif
 
 /* ============================================
- * 基本类型定义
+ * Basic Type Definitions
  * ============================================ */
 
-/** 采样格式 */
+/** Sample format */
 typedef enum {
     VOICE_FORMAT_UNKNOWN = 0,
-    VOICE_FORMAT_U8,        /**< 无符号8位 */
-    VOICE_FORMAT_S16,       /**< 有符号16位 (推荐) */
-    VOICE_FORMAT_S24,       /**< 有符号24位 */
-    VOICE_FORMAT_S32,       /**< 有符号32位 */
-    VOICE_FORMAT_F32        /**< 32位浮点 */
+    VOICE_FORMAT_U8,        /**< Unsigned 8-bit */
+    VOICE_FORMAT_S16,       /**< Signed 16-bit (recommended) */
+    VOICE_FORMAT_S24,       /**< Signed 24-bit */
+    VOICE_FORMAT_S32,       /**< Signed 32-bit */
+    VOICE_FORMAT_F32        /**< 32-bit float */
 } voice_format_t;
 
-/** 通道布局 */
+/** Channel layout */
 typedef enum {
     VOICE_CHANNEL_MONO = 1,
     VOICE_CHANNEL_STEREO = 2
 } voice_channel_t;
 
-/** 采样率 */
+/** Sample rate */
 typedef enum {
     VOICE_SAMPLE_RATE_8000 = 8000,
     VOICE_SAMPLE_RATE_16000 = 16000,
@@ -44,57 +45,57 @@ typedef enum {
     VOICE_SAMPLE_RATE_48000 = 48000
 } voice_sample_rate_t;
 
-/** 音频帧描述 */
+/** Audio frame description */
 typedef struct {
-    voice_format_t format;          /**< 采样格式 */
-    uint8_t channels;               /**< 通道数 */
-    uint32_t sample_rate;           /**< 采样率 */
-    uint32_t frame_size_ms;         /**< 帧时长(毫秒) */
+    voice_format_t format;          /**< Sample format */
+    uint8_t channels;               /**< Number of channels */
+    uint32_t sample_rate;           /**< Sample rate */
+    uint32_t frame_size_ms;         /**< Frame duration (milliseconds) */
 } voice_audio_format_t;
 
-/** 音频帧 */
+/** Audio frame */
 typedef struct {
-    void *data;                     /**< 音频数据 */
-    size_t size;                    /**< 数据大小(字节) */
-    uint32_t samples;               /**< 样本数(每通道) */
-    uint64_t timestamp;             /**< 时间戳(微秒) */
-    voice_audio_format_t format;    /**< 格式信息 */
+    void *data;                     /**< Audio data */
+    size_t size;                    /**< Data size (bytes) */
+    uint32_t samples;               /**< Number of samples (per channel) */
+    uint64_t timestamp;             /**< Timestamp (microseconds) */
+    voice_audio_format_t format;    /**< Format information */
 } voice_frame_t;
 
 /* ============================================
- * 编解码器类型
+ * Codec Types
  * ============================================ */
 
 typedef enum {
     VOICE_CODEC_NONE = 0,
-    VOICE_CODEC_PCM,            /**< 原始PCM */
-    VOICE_CODEC_OPUS,           /**< Opus (推荐) */
-    VOICE_CODEC_SPEEX,          /**< Speex (已废弃) */
+    VOICE_CODEC_PCM,            /**< Raw PCM */
+    VOICE_CODEC_OPUS,           /**< Opus (recommended) */
+    VOICE_CODEC_SPEEX,          /**< Speex (deprecated) */
     VOICE_CODEC_G711_ULAW,      /**< G.711 μ-law */
     VOICE_CODEC_G711_ALAW,      /**< G.711 A-law */
     VOICE_CODEC_G722,           /**< G.722 */
     VOICE_CODEC_COUNT
 } voice_codec_type_t;
 
-/** RTP Payload Type 映射 */
+/** RTP Payload Type mapping */
 #define VOICE_RTP_PT_PCMU       0   /* G.711 μ-law */
 #define VOICE_RTP_PT_PCMA       8   /* G.711 A-law */
 #define VOICE_RTP_PT_G722       9   /* G.722 */
-#define VOICE_RTP_PT_OPUS       111 /* Opus (动态) */
-#define VOICE_RTP_PT_SPEEX      97  /* Speex (动态) */
+#define VOICE_RTP_PT_OPUS       111 /* Opus (dynamic) */
+#define VOICE_RTP_PT_SPEEX      97  /* Speex (dynamic) */
 
 /* ============================================
- * 去噪引擎类型
+ * Denoising Engine Types
  * ============================================ */
 
 typedef enum {
     VOICE_DENOISE_NONE = 0,
-    VOICE_DENOISE_SPEEXDSP,     /**< SpeexDSP 传统DSP */
-    VOICE_DENOISE_RNNOISE,      /**< RNNoise 深度学习 */
-    VOICE_DENOISE_AUTO          /**< 自动选择 */
+    VOICE_DENOISE_SPEEXDSP,     /**< SpeexDSP traditional DSP */
+    VOICE_DENOISE_RNNOISE,      /**< RNNoise deep learning */
+    VOICE_DENOISE_AUTO          /**< Auto selection */
 } voice_denoise_engine_t;
 
-/* 兼容别名 - 示例代码使用 VOICE_DENOISE_SPEEX */
+/* Compatibility alias - example code uses VOICE_DENOISE_SPEEX */
 #define VOICE_DENOISE_SPEEX     VOICE_DENOISE_SPEEXDSP
 
 /* ============================================

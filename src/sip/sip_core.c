@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file sip_core.c
  * @brief SIP Protocol Core Implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "sip/sip_core.h"

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file watermark.c
  * @brief Audio watermarking implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * Implements spread spectrum watermarking with:
  * - PN (pseudo-noise) sequence generation

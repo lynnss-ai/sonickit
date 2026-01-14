@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file audio_buffer.h
  * @brief Lock-free ring buffer for audio data
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef AUDIO_BUFFER_H
@@ -29,6 +30,7 @@ typedef struct {
 
 /**
  * @brief 创建环形缓冲区
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param capacity 容量(字节)
  * @param frame_size 帧大小(字节)
  * @return 缓冲区指针
@@ -37,12 +39,14 @@ voice_ring_buffer_t *voice_ring_buffer_create(size_t capacity, size_t frame_size
 
 /**
  * @brief 销毁环形缓冲区
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rb 缓冲区指针
  */
 void voice_ring_buffer_destroy(voice_ring_buffer_t *rb);
 
 /**
  * @brief 写入数据
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rb 缓冲区指针
  * @param data 数据指针
  * @param size 数据大小(字节)
@@ -52,6 +56,7 @@ size_t voice_ring_buffer_write(voice_ring_buffer_t *rb, const void *data, size_t
 
 /**
  * @brief 读取数据
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rb 缓冲区指针
  * @param data 输出缓冲区
  * @param size 请求大小(字节)
@@ -61,6 +66,7 @@ size_t voice_ring_buffer_read(voice_ring_buffer_t *rb, void *data, size_t size);
 
 /**
  * @brief 获取可读取的字节数
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rb 缓冲区指针
  * @return 可读取的字节数
  */
@@ -68,6 +74,7 @@ size_t voice_ring_buffer_available(const voice_ring_buffer_t *rb);
 
 /**
  * @brief 获取可写入的字节数
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rb 缓冲区指针
  * @return 可写入的字节数
  */
@@ -75,12 +82,14 @@ size_t voice_ring_buffer_free_space(const voice_ring_buffer_t *rb);
 
 /**
  * @brief 清空缓冲区
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rb 缓冲区指针
  */
 void voice_ring_buffer_clear(voice_ring_buffer_t *rb);
 
 /**
  * @brief 查看数据(不移动读指针)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rb 缓冲区指针
  * @param data 输出缓冲区
  * @param size 请求大小(字节)
@@ -90,6 +99,7 @@ size_t voice_ring_buffer_peek(const voice_ring_buffer_t *rb, void *data, size_t 
 
 /**
  * @brief 跳过数据
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param rb 缓冲区指针
  * @param size 跳过的字节数
  * @return 实际跳过的字节数
@@ -109,6 +119,7 @@ typedef struct {
 
 /**
  * @brief 创建帧缓冲区
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param format 音频格式
  * @param max_frames 最大帧数
  * @return 帧缓冲区指针
@@ -120,12 +131,14 @@ voice_frame_buffer_t *voice_frame_buffer_create(
 
 /**
  * @brief 销毁帧缓冲区
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param fb 帧缓冲区指针
  */
 void voice_frame_buffer_destroy(voice_frame_buffer_t *fb);
 
 /**
  * @brief 写入一帧
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param fb 帧缓冲区指针
  * @param frame 帧数据
  * @return 错误码
@@ -134,6 +147,7 @@ voice_error_t voice_frame_buffer_write(voice_frame_buffer_t *fb, const voice_fra
 
 /**
  * @brief 读取一帧
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param fb 帧缓冲区指针
  * @param frame 输出帧
  * @return 错误码
@@ -142,6 +156,7 @@ voice_error_t voice_frame_buffer_read(voice_frame_buffer_t *fb, voice_frame_t *f
 
 /**
  * @brief 获取可读帧数
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param fb 帧缓冲区指针
  * @return 可读帧数
  */
@@ -149,6 +164,7 @@ size_t voice_frame_buffer_count(const voice_frame_buffer_t *fb);
 
 /**
  * @brief 清空帧缓冲区
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param fb 帧缓冲区指针
  */
 void voice_frame_buffer_clear(voice_frame_buffer_t *fb);

@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file jitter_buffer.c
  * @brief Jitter Buffer and PLC implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "network/jitter_buffer.h"

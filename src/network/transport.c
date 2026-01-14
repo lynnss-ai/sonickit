@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file transport.c
  * @brief Network transport layer implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "network/transport.h"

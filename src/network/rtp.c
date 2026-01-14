@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file rtp.c
  * @brief RTP/RTCP protocol implementation
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include "network/rtp.h"

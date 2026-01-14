@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file sip_core.h
  * @brief SIP Protocol Core Definitions
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * Core SIP (Session Initiation Protocol) support for voice applications.
  * Based on RFC 3261 with essential extensions for voice calls.
@@ -212,27 +213,32 @@ typedef struct {
 
 /**
  * @brief Create empty SIP message
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 sip_message_t *sip_message_create(void);
 
 /**
  * @brief Destroy SIP message
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void sip_message_destroy(sip_message_t *msg);
 
 /**
  * @brief Parse SIP message from buffer
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_message_parse(const char *buffer, size_t size, sip_message_t *msg);
 
 /**
  * @brief Serialize SIP message to buffer
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_message_serialize(const sip_message_t *msg, char *buffer, 
                                      size_t buffer_size, size_t *out_size);
 
 /**
  * @brief Create INVITE request
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_message_create_invite(sip_message_t *msg,
                                          const sip_uri_t *to,
@@ -243,12 +249,14 @@ voice_error_t sip_message_create_invite(sip_message_t *msg,
 
 /**
  * @brief Create ACK request
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_message_create_ack(sip_message_t *msg,
                                       const sip_message_t *invite);
 
 /**
  * @brief Create BYE request
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_message_create_bye(sip_message_t *msg,
                                       const char *call_id,
@@ -258,6 +266,7 @@ voice_error_t sip_message_create_bye(sip_message_t *msg,
 
 /**
  * @brief Create REGISTER request
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_message_create_register(sip_message_t *msg,
                                            const sip_uri_t *registrar,
@@ -267,6 +276,7 @@ voice_error_t sip_message_create_register(sip_message_t *msg,
 
 /**
  * @brief Create response to request
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_message_create_response(sip_message_t *response,
                                            const sip_message_t *request,
@@ -275,6 +285,7 @@ voice_error_t sip_message_create_response(sip_message_t *response,
 
 /**
  * @brief Add header to message
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_message_add_header(sip_message_t *msg,
                                       const char *name,
@@ -282,11 +293,13 @@ voice_error_t sip_message_add_header(sip_message_t *msg,
 
 /**
  * @brief Get header value
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *sip_message_get_header(const sip_message_t *msg, const char *name);
 
 /**
  * @brief Set message body
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_message_set_body(sip_message_t *msg,
                                     const char *content_type,
@@ -299,16 +312,19 @@ voice_error_t sip_message_set_body(sip_message_t *msg,
 
 /**
  * @brief Parse SIP URI
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_uri_parse(const char *str, sip_uri_t *uri);
 
 /**
  * @brief Format SIP URI to string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t sip_uri_to_string(const sip_uri_t *uri, char *buffer, size_t size);
 
 /**
  * @brief Compare two URIs
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 bool sip_uri_equals(const sip_uri_t *a, const sip_uri_t *b);
 
@@ -318,31 +334,37 @@ bool sip_uri_equals(const sip_uri_t *a, const sip_uri_t *b);
 
 /**
  * @brief Get method name as string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *sip_method_to_string(sip_method_t method);
 
 /**
  * @brief Parse method from string
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 sip_method_t sip_method_from_string(const char *str);
 
 /**
  * @brief Get response reason phrase
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 const char *sip_status_reason(int status_code);
 
 /**
  * @brief Generate unique Call-ID
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void sip_generate_call_id(char *buffer, size_t size, const char *host);
 
 /**
  * @brief Generate unique branch ID
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void sip_generate_branch(char *buffer, size_t size);
 
 /**
  * @brief Generate unique tag
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void sip_generate_tag(char *buffer, size_t size);
 

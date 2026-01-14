@@ -1,6 +1,7 @@
-/**
+﻿/**
  * @file error.h
  * @brief Voice library error codes and error handling
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #ifndef VOICE_ERROR_H
@@ -11,14 +12,14 @@ extern "C" {
 #endif
 
 /* ============================================
- * 错误码定义
+ * Error Code Definitions
  * ============================================ */
 
 typedef enum {
-    /* 成功 */
+    /* Success */
     VOICE_OK = 0,
     
-    /* 通用错误 (1-99) */
+    /* General errors (1-99) */
     VOICE_ERROR = -1,
     VOICE_ERROR_INVALID_PARAM = -2,
     VOICE_ERROR_NULL_POINTER = -3,
@@ -31,7 +32,7 @@ typedef enum {
     VOICE_ERROR_OVERFLOW = -10,
     VOICE_ERROR_UNDERFLOW = -11,
     
-    /* 音频设备错误 (100-199) */
+    /* Audio device errors (100-199) */
     VOICE_ERROR_DEVICE_NOT_FOUND = -100,
     VOICE_ERROR_DEVICE_OPEN_FAILED = -101,
     VOICE_ERROR_DEVICE_START_FAILED = -102,
@@ -39,14 +40,14 @@ typedef enum {
     VOICE_ERROR_DEVICE_FORMAT_NOT_SUPPORTED = -104,
     VOICE_ERROR_DEVICE_DISCONNECTED = -105,
     
-    /* 编解码器错误 (200-299) */
+    /* Codec errors (200-299) */
     VOICE_ERROR_CODEC_NOT_FOUND = -200,
     VOICE_ERROR_CODEC_INIT_FAILED = -201,
     VOICE_ERROR_CODEC_ENCODE_FAILED = -202,
     VOICE_ERROR_CODEC_DECODE_FAILED = -203,
     VOICE_ERROR_CODEC_INVALID_DATA = -204,
     
-    /* 网络错误 (300-399) */
+    /* Network errors (300-399) */
     VOICE_ERROR_NETWORK = -300,
     VOICE_ERROR_NETWORK_SOCKET = -301,
     VOICE_ERROR_NETWORK_CONNECT = -302,
@@ -55,12 +56,12 @@ typedef enum {
     VOICE_ERROR_NETWORK_TIMEOUT = -305,
     VOICE_ERROR_NETWORK_CLOSED = -306,
     
-    /* RTP/RTCP 错误 (400-499) */
+    /* RTP/RTCP errors (400-499) */
     VOICE_ERROR_RTP_INVALID_PACKET = -400,
     VOICE_ERROR_RTP_SEQUENCE_GAP = -401,
     VOICE_ERROR_RTCP_INVALID_PACKET = -402,
     
-    /* 加密错误 (500-599) */
+    /* Crypto errors (500-599) */
     VOICE_ERROR_CRYPTO = -500,
     VOICE_ERROR_CRYPTO_INIT_FAILED = -501,
     VOICE_ERROR_CRYPTO_ENCRYPT_FAILED = -502,
@@ -70,13 +71,13 @@ typedef enum {
     VOICE_ERROR_CRYPTO_KEY_EXPIRED = -506,
     VOICE_ERROR_DTLS_HANDSHAKE = -507,
     
-    /* DSP 错误 (600-699) */
+    /* DSP errors (600-699) */
     VOICE_ERROR_DSP = -600,
     VOICE_ERROR_DSP_RESAMPLE_FAILED = -601,
     VOICE_ERROR_DSP_DENOISE_FAILED = -602,
     VOICE_ERROR_DSP_AEC_FAILED = -603,
     
-    /* 文件 I/O 错误 (700-799) */
+    /* File I/O errors (700-799) */
     VOICE_ERROR_FILE = -700,
     VOICE_ERROR_FILE_OPEN_FAILED = -701,
     VOICE_ERROR_FILE_READ_FAILED = -702,
@@ -87,7 +88,7 @@ typedef enum {
 } voice_error_t;
 
 /* ============================================
- * 日志级别
+ * Log Level
  * ============================================ */
 
 typedef enum {
@@ -106,6 +107,7 @@ typedef enum {
 
 /**
  * @brief 获取错误码对应的错误信息
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param error 错误码
  * @return 错误信息字符串
  */
@@ -113,35 +115,41 @@ const char *voice_error_string(voice_error_t error);
 
 /**
  * @brief 获取最后一次错误码
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @return 错误码
  */
 voice_error_t voice_get_last_error(void);
 
 /**
  * @brief 设置最后一次错误码
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param error 错误码
  */
 void voice_set_last_error(voice_error_t error);
 
 /**
  * @brief 清除最后一次错误
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_clear_error(void);
 
 /**
  * @brief 设置日志级别
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param level 日志级别
  */
 void voice_set_log_level(voice_log_level_t level);
 
 /**
  * @brief 获取当前日志级别
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @return 日志级别
  */
 voice_log_level_t voice_get_log_level(void);
 
 /**
  * @brief 设置日志回调
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param callback 日志回调函数
  * @param user_data 用户数据
  */
@@ -152,6 +160,7 @@ void voice_set_log_callback(
 
 /**
  * @brief 输出日志
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param level 日志级别
  * @param fmt 格式字符串
  * @param ... 参数

@@ -1,8 +1,9 @@
-/**
+﻿/**
  * @file platform.h
  * @brief Cross-platform audio abstraction layer
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
- * 提供跨平台音频会话管理和设备控制
+ * Provides cross-platform audio session management and device control
  */
 
 #ifndef VOICE_PLATFORM_H
@@ -17,7 +18,7 @@ extern "C" {
 #endif
 
 /* ============================================
- * 平台类型
+ * Platform Types
  * ============================================ */
 
 typedef enum {
@@ -27,39 +28,40 @@ typedef enum {
     VOICE_PLATFORM_LINUX,
     VOICE_PLATFORM_IOS,
     VOICE_PLATFORM_ANDROID,
+    VOICE_PLATFORM_WASM,
 } voice_platform_t;
 
-/** 获取当前平台 */
+/** Get current platform */
 voice_platform_t voice_platform_get(void);
 
-/** 获取平台名称 */
+/** Get platform name */
 const char *voice_platform_name(voice_platform_t platform);
 
 /* ============================================
- * 音频会话 (主要用于移动平台)
+ * Audio Session (mainly for mobile platforms)
  * ============================================ */
 
-/** 音频会话类别 */
+/** Audio session category */
 typedef enum {
-    VOICE_SESSION_CATEGORY_AMBIENT,        /**< 可与其他音频混合 */
-    VOICE_SESSION_CATEGORY_SOLO_AMBIENT,   /**< 独占播放 */
-    VOICE_SESSION_CATEGORY_PLAYBACK,       /**< 媒体播放 */
-    VOICE_SESSION_CATEGORY_RECORD,         /**< 录音 */
-    VOICE_SESSION_CATEGORY_PLAY_AND_RECORD,/**< 录制和播放 (VoIP) */
-    VOICE_SESSION_CATEGORY_MULTI_ROUTE,    /**< 多路由 */
+    VOICE_SESSION_CATEGORY_AMBIENT,        /**< Can mix with other audio */
+    VOICE_SESSION_CATEGORY_SOLO_AMBIENT,   /**< Exclusive playback */
+    VOICE_SESSION_CATEGORY_PLAYBACK,       /**< Media playback */
+    VOICE_SESSION_CATEGORY_RECORD,         /**< Recording */
+    VOICE_SESSION_CATEGORY_PLAY_AND_RECORD,/**< Recording and playback (VoIP) */
+    VOICE_SESSION_CATEGORY_MULTI_ROUTE,    /**< Multi-route */
 } voice_session_category_t;
 
-/** 音频会话模式 */
+/** Audio session mode */
 typedef enum {
     VOICE_SESSION_MODE_DEFAULT,
-    VOICE_SESSION_MODE_VOICE_CHAT,     /**< VoIP优化 */
-    VOICE_SESSION_MODE_VIDEO_CHAT,     /**< 视频通话 */
-    VOICE_SESSION_MODE_GAME_CHAT,      /**< 游戏语音 */
-    VOICE_SESSION_MODE_VOICE_PROMPT,   /**< 语音提示 */
-    VOICE_SESSION_MODE_MEASUREMENT,    /**< 音频测量 */
+    VOICE_SESSION_MODE_VOICE_CHAT,     /**< VoIP optimized */
+    VOICE_SESSION_MODE_VIDEO_CHAT,     /**< Video chat */
+    VOICE_SESSION_MODE_GAME_CHAT,      /**< Game voice */
+    VOICE_SESSION_MODE_VOICE_PROMPT,   /**< Voice prompt */
+    VOICE_SESSION_MODE_MEASUREMENT,    /**< Audio measurement */
 } voice_session_mode_t;
 
-/** 音频会话选项 */
+/** Audio session options */
 typedef enum {
     VOICE_SESSION_OPTION_NONE                 = 0,
     VOICE_SESSION_OPTION_MIX_WITH_OTHERS      = 1 << 0,
@@ -69,7 +71,7 @@ typedef enum {
     VOICE_SESSION_OPTION_INTERRUPT_SPOKEN     = 1 << 4,
 } voice_session_options_t;
 
-/** 音频路由 */
+/** Audio route */
 typedef enum {
     VOICE_AUDIO_ROUTE_UNKNOWN = 0,
     VOICE_AUDIO_ROUTE_BUILTIN_SPEAKER,
@@ -86,31 +88,31 @@ typedef enum {
 } voice_audio_route_t;
 
 /* ============================================
- * 音频会话配置
+ * Audio Session Configuration
  * ============================================ */
 
 typedef struct {
     voice_session_category_t category;
     voice_session_mode_t mode;
-    uint32_t options;   /**< voice_session_options_t 组合 */
+    uint32_t options;   /**< Combination of voice_session_options_t */
     uint32_t preferred_sample_rate;
-    float preferred_io_buffer_duration; /**< 秒 */
+    float preferred_io_buffer_duration; /**< Seconds */
 } voice_session_config_t;
 
-/** 初始化默认配置 */
+/** Initialize default configuration */
 void voice_session_config_init(voice_session_config_t *config);
 
 /* ============================================
- * 音频会话回调
+ * Audio Session Callbacks
  * ============================================ */
 
-/** 中断类型 */
+/** Interrupt type */
 typedef enum {
-    VOICE_INTERRUPT_BEGAN,      /**< 中断开始 */
-    VOICE_INTERRUPT_ENDED,      /**< 中断结束 */
+    VOICE_INTERRUPT_BEGAN,      /**< Interrupt began */
+    VOICE_INTERRUPT_ENDED,      /**< Interrupt ended */
 } voice_interrupt_type_t;
 
-/** 中断原因 */
+/** Interrupt reason */
 typedef enum {
     VOICE_INTERRUPT_REASON_DEFAULT,
     VOICE_INTERRUPT_REASON_APP_SUSPENDED,
@@ -118,7 +120,7 @@ typedef enum {
     VOICE_INTERRUPT_REASON_ROUTE_CHANGE,
 } voice_interrupt_reason_t;
 
-/** 路由变化原因 */
+/** Route change reason */
 typedef enum {
     VOICE_ROUTE_CHANGE_UNKNOWN,
     VOICE_ROUTE_CHANGE_NEW_DEVICE,
@@ -130,7 +132,7 @@ typedef enum {
     VOICE_ROUTE_CHANGE_CONFIG_CHANGE,
 } voice_route_change_reason_t;
 
-/** 中断回调 */
+/** Interrupt callback */
 typedef void (*voice_interrupt_callback_t)(
     voice_interrupt_type_t type,
     voice_interrupt_reason_t reason,
@@ -138,7 +140,7 @@ typedef void (*voice_interrupt_callback_t)(
     void *user_data
 );
 
-/** 路由变化回调 */
+/** Route change callback */
 typedef void (*voice_route_change_callback_t)(
     voice_route_change_reason_t reason,
     voice_audio_route_t new_route,
@@ -146,37 +148,43 @@ typedef void (*voice_route_change_callback_t)(
 );
 
 /* ============================================
- * 音频会话 API
+ * Audio Session API
  * ============================================ */
 
 /**
- * @brief 配置音频会话
- * @note 在 iOS 上调用 AVAudioSession，其他平台为空操作
+ * @brief Configure audio session
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @note Calls AVAudioSession on iOS, no-op on other platforms
  */
 voice_error_t voice_session_configure(const voice_session_config_t *config);
 
 /**
- * @brief 激活音频会话
+ * @brief Activate audio session
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_session_activate(void);
 
 /**
- * @brief 停用音频会话
+ * @brief Deactivate audio session
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_session_deactivate(void);
 
 /**
- * @brief 获取当前音频路由
+ * @brief Get current audio route
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_audio_route_t voice_session_get_current_route(void);
 
 /**
- * @brief 覆盖输出端口
+ * @brief Override output port
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_session_override_output(voice_audio_route_t route);
 
 /**
- * @brief 设置中断回调
+ * @brief Set interrupt callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_session_set_interrupt_callback(
     voice_interrupt_callback_t callback,
@@ -184,7 +192,8 @@ void voice_session_set_interrupt_callback(
 );
 
 /**
- * @brief 设置路由变化回调
+ * @brief Set route change callback
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_session_set_route_change_callback(
     voice_route_change_callback_t callback,
@@ -192,8 +201,9 @@ void voice_session_set_route_change_callback(
 );
 
 /**
- * @brief 请求麦克风权限 (异步)
- * @return true 如果已有权限，false 表示需要等待回调
+ * @brief Request microphone permission (async)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
+ * @return true if already have permission, false means wait for callback
  */
 bool voice_session_request_mic_permission(
     void (*callback)(bool granted, void *user_data),
@@ -201,7 +211,8 @@ bool voice_session_request_mic_permission(
 );
 
 /**
- * @brief 检查麦克风权限状态
+ * @brief Check microphone permission status
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_PERMISSION_UNKNOWN,
@@ -213,16 +224,18 @@ typedef enum {
 voice_permission_status_t voice_session_get_mic_permission(void);
 
 /* ============================================
- * 移动平台低延迟优化
+ * Mobile Platform Low-Latency Optimization
  * ============================================ */
 
 /**
- * @brief 启用低延迟模式 (Android AAudio)
+ * @brief Enable low-latency mode (Android AAudio)
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_platform_enable_low_latency(bool enable);
 
 /**
- * @brief 获取实际的采样率和缓冲区大小
+ * @brief Get actual sample rate and buffer size
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_platform_get_optimal_parameters(
     uint32_t *sample_rate,
@@ -230,22 +243,25 @@ voice_error_t voice_platform_get_optimal_parameters(
 );
 
 /**
- * @brief 设置蓝牙SCO模式
+ * @brief Set Bluetooth SCO mode
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_platform_set_bluetooth_sco(bool enable);
 
 /* ============================================
- * CPU/电源管理
+ * CPU/Power Management
  * ============================================ */
 
 /**
- * @brief 获取/释放音频处理唤醒锁
+ * @brief Acquire/release audio processing wake lock
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_platform_acquire_wake_lock(void);
 voice_error_t voice_platform_release_wake_lock(void);
 
 /**
- * @brief 设置实时线程优先级
+ * @brief Set real-time thread priority
+ * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_platform_set_realtime_priority(void);
 
