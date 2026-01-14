@@ -96,25 +96,21 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_agc_config_init(voice_agc_config_t *config);
 
 /**
  * @brief 创建 AGC 实例
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_agc_t *voice_agc_create(const voice_agc_config_t *config);
 
 /**
  * @brief 销毁 AGC 实例
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_agc_destroy(voice_agc_t *agc);
 
 /**
  * @brief 处理音频帧 (int16)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param agc AGC 实例
  * @param samples 音频样本 (原地修改)
  * @param num_samples 样本数
@@ -128,7 +124,6 @@ voice_error_t voice_agc_process(
 
 /**
  * @brief 处理音频帧 (float)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_agc_process_float(
     voice_agc_t *agc,
@@ -138,13 +133,11 @@ voice_error_t voice_agc_process_float(
 
 /**
  * @brief 设置目标电平
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_agc_set_target_level(voice_agc_t *agc, float level_dbfs);
 
 /**
  * @brief 设置增益范围
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_agc_set_gain_range(
     voice_agc_t *agc,
@@ -154,25 +147,21 @@ voice_error_t voice_agc_set_gain_range(
 
 /**
  * @brief 设置模式
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_agc_set_mode(voice_agc_t *agc, voice_agc_mode_t mode);
 
 /**
  * @brief 获取当前状态
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_agc_get_state(voice_agc_t *agc, voice_agc_state_t *state);
 
 /**
  * @brief 重置 AGC 状态
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_agc_reset(voice_agc_t *agc);
 
 /**
  * @brief 分析音频电平 (不修改样本)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 float voice_agc_analyze_level(
     voice_agc_t *agc,

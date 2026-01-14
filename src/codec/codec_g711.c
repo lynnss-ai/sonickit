@@ -97,7 +97,6 @@ static const int16_t g_ulaw_decode_table[256] = {
 
 /**
  * @brief Linear to A-law encoding
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 static uint8_t linear_to_alaw(int16_t pcm)
 {
@@ -131,7 +130,6 @@ static uint8_t linear_to_alaw(int16_t pcm)
 
 /**
  * @brief Linear to μ-law encoding
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 static uint8_t linear_to_ulaw(int16_t pcm)
 {

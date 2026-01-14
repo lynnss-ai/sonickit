@@ -75,26 +75,22 @@ typedef struct {
 
 /**
  * @brief 初始化 SRTP 库
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @return 错误码
  */
 voice_error_t srtp_init(void);
 
 /**
  * @brief 清理 SRTP 库
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void srtp_shutdown(void);
 
 /**
  * @brief 初始化默认配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void srtp_config_init(srtp_config_t *config);
 
 /**
  * @brief 创建 SRTP 会话
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 配置
  * @return SRTP会话句柄
  */
@@ -102,13 +98,11 @@ srtp_session_t *srtp_session_create(const srtp_config_t *config);
 
 /**
  * @brief 销毁 SRTP 会话
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void srtp_session_destroy(srtp_session_t *session);
 
 /**
  * @brief 保护 RTP 包 (加密+认证)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * @param session SRTP会话
  * @param rtp_packet RTP包数据 (原地加密)
@@ -125,7 +119,6 @@ voice_error_t srtp_protect(
 
 /**
  * @brief 解保护 SRTP 包 (验证+解密)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * @param session SRTP会话
  * @param srtp_packet SRTP包数据 (原地解密)
@@ -140,7 +133,6 @@ voice_error_t srtp_unprotect(
 
 /**
  * @brief 保护 RTCP 包
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t srtcp_protect(
     srtp_session_t *session,
@@ -151,7 +143,6 @@ voice_error_t srtcp_protect(
 
 /**
  * @brief 解保护 SRTCP 包
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t srtcp_unprotect(
     srtp_session_t *session,
@@ -161,7 +152,6 @@ voice_error_t srtcp_unprotect(
 
 /**
  * @brief 更新 SRTP 密钥
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t srtp_session_update_key(
     srtp_session_t *session,
@@ -173,19 +163,16 @@ voice_error_t srtp_session_update_key(
 
 /**
  * @brief 获取认证标签长度
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 size_t srtp_get_auth_tag_len(srtp_profile_t profile);
 
 /**
  * @brief 获取密钥长度
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 size_t srtp_get_key_len(srtp_profile_t profile);
 
 /**
  * @brief 获取盐值长度
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 size_t srtp_get_salt_len(srtp_profile_t profile);
 
@@ -238,25 +225,21 @@ typedef int (*dtls_send_callback_t)(
 
 /**
  * @brief 初始化默认配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void dtls_srtp_config_init(dtls_srtp_config_t *config);
 
 /**
  * @brief 创建 DTLS-SRTP 会话
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 dtls_srtp_session_t *dtls_srtp_create(const dtls_srtp_config_t *config);
 
 /**
  * @brief 销毁 DTLS-SRTP 会话
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void dtls_srtp_destroy(dtls_srtp_session_t *session);
 
 /**
  * @brief 设置发送回调
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void dtls_srtp_set_send_callback(
     dtls_srtp_session_t *session,
@@ -266,7 +249,6 @@ void dtls_srtp_set_send_callback(
 
 /**
  * @brief 设置事件回调
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void dtls_srtp_set_event_callback(
     dtls_srtp_session_t *session,
@@ -276,13 +258,11 @@ void dtls_srtp_set_event_callback(
 
 /**
  * @brief 开始握手
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t dtls_srtp_start_handshake(dtls_srtp_session_t *session);
 
 /**
  * @brief 处理接收的 DTLS 数据
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t dtls_srtp_handle_incoming(
     dtls_srtp_session_t *session,
@@ -292,19 +272,16 @@ voice_error_t dtls_srtp_handle_incoming(
 
 /**
  * @brief 检查是否已连接
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 bool dtls_srtp_is_connected(dtls_srtp_session_t *session);
 
 /**
  * @brief 获取协商的 SRTP 配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 srtp_profile_t dtls_srtp_get_profile(dtls_srtp_session_t *session);
 
 /**
  * @brief 获取 SRTP 密钥材料
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t dtls_srtp_get_keys(
     dtls_srtp_session_t *session,
@@ -313,7 +290,6 @@ voice_error_t dtls_srtp_get_keys(
 
 /**
  * @brief 从 DTLS 会话创建 SRTP 会话
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 srtp_session_t *dtls_srtp_create_srtp_session(
     dtls_srtp_session_t *dtls,
@@ -323,7 +299,6 @@ srtp_session_t *dtls_srtp_create_srtp_session(
 
 /**
  * @brief 获取本地指纹
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t dtls_srtp_get_fingerprint(
     dtls_srtp_session_t *session,
@@ -333,7 +308,6 @@ voice_error_t dtls_srtp_get_fingerprint(
 
 /**
  * @brief 设置远端指纹 (用于验证)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t dtls_srtp_set_remote_fingerprint(
     dtls_srtp_session_t *session,

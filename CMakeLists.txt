@@ -22,7 +22,7 @@ option(SONICKIT_ENABLE_DTLS "Enable DTLS-SRTP key exchange" ON)
 if(WIN32)
     set(SONICKIT_PLATFORM "windows")
     add_compile_definitions(SONICKIT_PLATFORM_WINDOWS)
-    set(PLATFORM_LIBS ws2_32 winmm ole32 iphlpapi)
+    set(PLATFORM_LIBS ws2_32 winmm ole32 iphlpapi avrt)
 elseif(APPLE)
     if(IOS)
         set(SONICKIT_PLATFORM "ios")
@@ -35,9 +35,9 @@ elseif(APPLE)
     find_library(AUDIOTOOLBOX_LIB AudioToolbox)
     find_library(COREFOUNDATION_LIB CoreFoundation)
     find_library(AVFOUNDATION_LIB AVFoundation)
-    set(PLATFORM_LIBS 
-        ${COREAUDIO_LIB} 
-        ${AUDIOTOOLBOX_LIB} 
+    set(PLATFORM_LIBS
+        ${COREAUDIO_LIB}
+        ${AUDIOTOOLBOX_LIB}
         ${COREFOUNDATION_LIB}
         ${AVFOUNDATION_LIB}
     )
@@ -65,7 +65,7 @@ add_library(miniaudio STATIC
 )
 target_include_directories(miniaudio PUBLIC third_party/miniaudio)
 if(APPLE AND IOS)
-    set_source_files_properties(third_party/miniaudio/miniaudio.c 
+    set_source_files_properties(third_party/miniaudio/miniaudio.c
         PROPERTIES COMPILE_FLAGS "-x objective-c")
 endif()
 
@@ -81,11 +81,11 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/speexdsp/libspeexdsp/resample
         third_party/speexdsp/libspeexdsp/kiss_fftr.c
         third_party/speexdsp/libspeexdsp/jitter.c
     )
-    target_include_directories(speexdsp PUBLIC 
+    target_include_directories(speexdsp PUBLIC
         third_party/speexdsp/include
         third_party/speexdsp/libspeexdsp
     )
-    target_compile_definitions(speexdsp PRIVATE 
+    target_compile_definitions(speexdsp PRIVATE
         HAVE_CONFIG_H
         FLOATING_POINT
         USE_KISS_FFT
@@ -170,10 +170,10 @@ endif()
 # ============================================
 set(SONICKIT_SOURCES
     # 核心
-    src/voice/SONICKIT_init.c
+    src/voice/voice_init.c
     src/voice/pipeline.c
     src/voice/statistics.c
-    
+
     # 音频
     src/audio/audio_buffer.c
     src/audio/device.c
@@ -182,7 +182,7 @@ set(SONICKIT_SOURCES
     src/audio/audio_quality.c
     src/audio/audio_level.c
     src/audio/audio_recorder.c
-    
+
     # DSP
     src/dsp/resampler.c
     src/dsp/denoiser.c
@@ -195,11 +195,11 @@ set(SONICKIT_SOURCES
     src/dsp/compressor.c
     src/dsp/effects.c
     src/dsp/watermark.c
-    
+
     # 编解码器
     src/codec/codec.c
     src/codec/codec_g711.c
-    
+
     # 网络
     src/network/rtp.c
     src/network/srtp.c
@@ -208,14 +208,14 @@ set(SONICKIT_SOURCES
     src/network/ice.c
     src/network/transport.c
     src/network/datachannel.c
-    
+
     # SIP 协议
     src/sip/sip_core.c
     src/sip/sip_ua.c
-    
+
     # 平台通用
     src/platform/platform_common.c
-    
+
     # 工具
     src/utils/simd_utils.c
     src/utils/diagnostics.c
@@ -246,7 +246,7 @@ endif()
 # ============================================
 add_library(voice STATIC ${SONICKIT_SOURCES})
 
-target_include_directories(voice PUBLIC 
+target_include_directories(voice PUBLIC
     include
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
@@ -299,39 +299,69 @@ endif()
 # ============================================
 if(SONICKIT_BUILD_TESTS)
     enable_testing()
-    
+
     # 测试公共头文件目录
     set(TEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
-    
+
     # 音频缓冲区测试
     add_executable(test_buffer tests/test_buffer.c)
     target_include_directories(test_buffer PRIVATE ${TEST_INCLUDE_DIR})
     target_link_libraries(test_buffer voice)
     add_test(NAME test_buffer COMMAND test_buffer)
-    
+
     # 重采样器测试
     add_executable(test_resampler tests/test_resampler.c)
     target_include_directories(test_resampler PRIVATE ${TEST_INCLUDE_DIR})
     target_link_libraries(test_resampler voice)
     add_test(NAME test_resampler COMMAND test_resampler)
-    
+
     # 编解码器测试
     add_executable(test_codec tests/test_codec.c)
     target_include_directories(test_codec PRIVATE ${TEST_INCLUDE_DIR})
     target_link_libraries(test_codec voice)
     add_test(NAME test_codec COMMAND test_codec)
-    
+
     # DSP模块测试
     add_executable(test_dsp tests/test_dsp.c)
     target_include_directories(test_dsp PRIVATE ${TEST_INCLUDE_DIR})
     target_link_libraries(test_dsp voice)
     add_test(NAME test_dsp COMMAND test_dsp)
-    
+
     # 网络模块测试
     add_executable(test_network tests/test_network.c)
     target_include_directories(test_network PRIVATE ${TEST_INCLUDE_DIR})
     target_link_libraries(test_network voice)
     add_test(NAME test_network COMMAND test_network)
+
+    # 音频效果测试
+    add_executable(test_effects tests/test_effects.c)
+    target_include_directories(test_effects PRIVATE ${TEST_INCLUDE_DIR})
+    target_link_libraries(test_effects voice)
+    add_test(NAME test_effects COMMAND test_effects)
+
+    # 水印测试
+    add_executable(test_watermark tests/test_watermark.c)
+    target_include_directories(test_watermark PRIVATE ${TEST_INCLUDE_DIR})
+    target_link_libraries(test_watermark voice)
+    add_test(NAME test_watermark COMMAND test_watermark)
+
+    # 诊断测试
+    add_executable(test_diagnostics tests/test_diagnostics.c)
+    target_include_directories(test_diagnostics PRIVATE ${TEST_INCLUDE_DIR})
+    target_link_libraries(test_diagnostics voice)
+    add_test(NAME test_diagnostics COMMAND test_diagnostics)
+
+    # 数据通道测试
+    add_executable(test_datachannel tests/test_datachannel.c)
+    target_include_directories(test_datachannel PRIVATE ${TEST_INCLUDE_DIR})
+    target_link_libraries(test_datachannel voice)
+    add_test(NAME test_datachannel COMMAND test_datachannel)
+
+    # SIP协议测试
+    add_executable(test_sip tests/test_sip.c)
+    target_include_directories(test_sip PRIVATE ${TEST_INCLUDE_DIR})
+    target_link_libraries(test_sip voice)
+    add_test(NAME test_sip COMMAND test_sip)
 endif()
 
 # ============================================

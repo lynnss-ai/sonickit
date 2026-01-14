@@ -24,7 +24,6 @@ extern "C" {
 
 /**
  * @brief 滤波器类型
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_EQ_LOWPASS,       /**< 低通滤波器 */
@@ -38,7 +37,6 @@ typedef enum {
 
 /**
  * @brief 均衡器频段配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     bool enabled;                   /**< 频段是否启用 */
@@ -50,7 +48,6 @@ typedef struct {
 
 /**
  * @brief 预设类型
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_EQ_PRESET_FLAT,           /**< 平坦响应 */
@@ -65,7 +62,6 @@ typedef enum {
 
 /**
  * @brief 均衡器配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     uint32_t sample_rate;       /**< 采样率 */
@@ -86,13 +82,11 @@ typedef struct voice_eq_s voice_eq_t;
 
 /**
  * @brief 初始化均衡器配置为默认值
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_eq_config_init(voice_eq_config_t *config);
 
 /**
  * @brief 从预设加载配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_eq_config_from_preset(
     voice_eq_config_t *config,
@@ -106,13 +100,11 @@ voice_error_t voice_eq_config_from_preset(
 
 /**
  * @brief 创建均衡器实例
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_eq_t *voice_eq_create(const voice_eq_config_t *config);
 
 /**
  * @brief 销毁均衡器实例
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_eq_destroy(voice_eq_t *eq);
 
@@ -122,7 +114,6 @@ void voice_eq_destroy(voice_eq_t *eq);
 
 /**
  * @brief 处理音频数据 (原地处理)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_eq_process(
     voice_eq_t *eq,
@@ -132,7 +123,6 @@ voice_error_t voice_eq_process(
 
 /**
  * @brief 处理浮点音频数据
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_eq_process_float(
     voice_eq_t *eq,
@@ -146,7 +136,6 @@ voice_error_t voice_eq_process_float(
 
 /**
  * @brief 设置频段参数
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_eq_set_band(
     voice_eq_t *eq,
@@ -156,7 +145,6 @@ voice_error_t voice_eq_set_band(
 
 /**
  * @brief 获取频段参数
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_eq_get_band(
     voice_eq_t *eq,
@@ -166,7 +154,6 @@ voice_error_t voice_eq_get_band(
 
 /**
  * @brief 启用/禁用频段
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_eq_enable_band(
     voice_eq_t *eq,
@@ -176,13 +163,11 @@ voice_error_t voice_eq_enable_band(
 
 /**
  * @brief 设置主增益
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_eq_set_master_gain(voice_eq_t *eq, float gain_db);
 
 /**
  * @brief 应用预设
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_eq_apply_preset(
     voice_eq_t *eq,
@@ -195,7 +180,6 @@ voice_error_t voice_eq_apply_preset(
 
 /**
  * @brief 获取频率响应
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param frequencies 频率点数组 (Hz)
  * @param responses 响应数组 (dB)，输出参数
  * @param count 数组大小
@@ -209,7 +193,6 @@ voice_error_t voice_eq_get_frequency_response(
 
 /**
  * @brief 重置均衡器状态
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_eq_reset(voice_eq_t *eq);
 

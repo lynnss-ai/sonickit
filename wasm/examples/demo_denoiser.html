@@ -14,7 +14,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -24,7 +24,7 @@
             align-items: center;
             padding: 20px;
         }
-        
+
         .container {
             background: white;
             border-radius: 20px;
@@ -33,49 +33,49 @@
             max-width: 600px;
             width: 100%;
         }
-        
+
         h1 {
             color: #333;
             margin-bottom: 10px;
             font-size: 28px;
         }
-        
+
         .subtitle {
             color: #666;
             margin-bottom: 30px;
         }
-        
+
         .status {
             padding: 15px;
             border-radius: 10px;
             margin-bottom: 20px;
             font-weight: 500;
         }
-        
+
         .status.loading {
             background: #fff3cd;
             color: #856404;
         }
-        
+
         .status.ready {
             background: #d4edda;
             color: #155724;
         }
-        
+
         .status.error {
             background: #f8d7da;
             color: #721c24;
         }
-        
+
         .status.processing {
             background: #d1ecf1;
             color: #0c5460;
         }
-        
+
         .controls {
             margin-bottom: 30px;
         }
-        
+
         button {
             background: #667eea;
             color: white;
@@ -89,29 +89,29 @@
             width: 100%;
             margin-bottom: 10px;
         }
-        
+
         button:hover:not(:disabled) {
             background: #5568d3;
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-        
+
         button:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
-        
+
         .parameter {
             margin-bottom: 20px;
         }
-        
+
         .parameter label {
             display: block;
             margin-bottom: 8px;
             color: #555;
             font-weight: 500;
         }
-        
+
         .parameter select,
         .parameter input[type="range"] {
             width: 100%;
@@ -120,18 +120,18 @@
             border-radius: 8px;
             font-size: 14px;
         }
-        
+
         .parameter input[type="range"] {
             padding: 0;
         }
-        
+
         .value-display {
             display: inline-block;
             margin-left: 10px;
             color: #667eea;
             font-weight: 600;
         }
-        
+
         canvas {
             width: 100%;
             height: 100px;
@@ -139,7 +139,7 @@
             background: #f5f5f5;
             margin-top: 20px;
         }
-        
+
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -152,16 +152,16 @@
     <div class="container">
         <h1>🎙️ SonicKit WASM</h1>
         <p class="subtitle">实时音频降噪演示</p>
-        
+
         <div id="status" class="status loading">
             正在加载 WebAssembly 模块...
         </div>
-        
+
         <div class="controls">
             <button id="startBtn" disabled>开始处理</button>
             <button id="stopBtn" disabled>停止处理</button>
         </div>
-        
+
         <div class="parameter">
             <label for="engine">
                 降噪引擎:
@@ -172,7 +172,7 @@
                 <option value="2">RNNoise</option>
             </select>
         </div>
-        
+
         <div class="parameter">
             <label for="strength">
                 降噪强度:
@@ -180,9 +180,9 @@
             </label>
             <input type="range" id="strength" min="0" max="100" value="50">
         </div>
-        
+
         <canvas id="waveform"></canvas>
-        
+
         <div class="footer">
             Powered by SonicKit WebAssembly
         </div>
@@ -192,13 +192,13 @@
     <script>
         // SonicKit WASM 实时降噪演示
         // 作者: wangxuebing <lynnss.codeai@gmail.com>
-        
+
         let sonicKit = null;
         let denoiser = null;
         let audioContext = null;
         let audioWorkletNode = null;
         let isProcessing = false;
-        
+
         const statusEl = document.getElementById('status');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
@@ -207,24 +207,24 @@
         const strengthValue = document.getElementById('strengthValue');
         const canvas = document.getElementById('waveform');
         const canvasCtx = canvas.getContext('2d');
-        
+
         // 更新强度显示
         strengthSlider.addEventListener('input', (e) => {
             strengthValue.textContent = e.target.value + '%';
         });
-        
+
         // 初始化 WASM 模块
         async function initWasm() {
             try {
                 statusEl.textContent = '正在加载 WebAssembly 模块...';
                 statusEl.className = 'status loading';
-                
+
                 sonicKit = await createSonicKit();
-                
+
                 statusEl.textContent = '✓ WebAssembly 模块加载成功！';
                 statusEl.className = 'status ready';
                 startBtn.disabled = false;
-                
+
                 console.log('SonicKit WASM initialized successfully');
             } catch (error) {
                 statusEl.textContent = '✗ 加载失败: ' + error.message;
@@ -232,13 +232,13 @@
                 console.error('Failed to initialize SonicKit:', error);
             }
         }
-        
+
         // 开始音频处理
         startBtn.addEventListener('click', async () => {
             try {
                 statusEl.textContent = '正在初始化音频系统...';
                 statusEl.className = 'status loading';
-                
+
                 // 请求麦克风权限
                 const stream = await navigator.mediaDevices.getUserMedia({
                     audio: {
@@ -248,131 +248,168 @@
                         sampleRate: 48000
                     }
                 });
-                
+
                 // 创建音频上下文
                 audioContext = new (window.AudioContext || window.webkitAudioContext)({
                     sampleRate: 48000
                 });
-                
+
                 // 创建降噪器
                 const engine = parseInt(engineSelect.value);
-                const frameSize = 480; // 10ms @ 48kHz
-                denoiser = new sonicKit.Denoiser(48000, frameSize, engine);
-                
+                const denoiseFrameSize = 480; // 降噪器需要 10ms @ 48kHz
+                const bufferSize = 512; // ScriptProcessor 需要 2 的幂次方
+                denoiser = new sonicKit.Denoiser(48000, denoiseFrameSize, engine);
+
                 // 创建音频源
                 const source = audioContext.createMediaStreamSource(stream);
-                
+
                 // 创建 ScriptProcessor（简单演示用）
-                const processor = audioContext.createScriptProcessor(frameSize, 1, 1);
-                
+                const processor = audioContext.createScriptProcessor(bufferSize, 1, 1);
+
+                // 音频缓冲区，用于处理帧大小不匹配
+                let audioBuffer = new Int16Array(0);
+
                 processor.onaudioprocess = (e) => {
                     const inputData = e.inputBuffer.getChannelData(0);
-                    
-                    // 转换为 Int16
+
+                    // 转换为 Int16 并追加到缓冲区
                     const int16Input = new Int16Array(inputData.length);
                     for (let i = 0; i < inputData.length; i++) {
                         int16Input[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
                     }
-                    
-                    // 降噪处理
-                    let int16Output;
-                    try {
-                        int16Output = denoiser.process(int16Input);
-                    } catch (error) {
-                        console.error('Denoising failed:', error);
-                        return;
-                    }
-                    
-                    // 转换回 Float32
+
+                    // 合并缓冲区
+                    const newBuffer = new Int16Array(audioBuffer.length + int16Input.length);
+                    newBuffer.set(audioBuffer);
+                    newBuffer.set(int16Input, audioBuffer.length);
+                    audioBuffer = newBuffer;
+
+                    // 处理输出
                     const outputData = e.outputBuffer.getChannelData(0);
-                    for (let i = 0; i < outputData.length; i++) {
-                        outputData[i] = int16Output[i] / 32768.0;
+                    let outputOffset = 0;
+
+                    // 处理完整的降噪帧
+                    while (audioBuffer.length >= denoiseFrameSize && outputOffset < outputData.length) {
+                        const frame = audioBuffer.slice(0, denoiseFrameSize);
+                        audioBuffer = audioBuffer.slice(denoiseFrameSize);
+
+                        let processedFrame;
+                        try {
+                            processedFrame = denoiser.process(frame);
+                        } catch (error) {
+                            console.error('Denoising failed:', error);
+                            processedFrame = frame;
+                        }
+
+                        // 复制到输出（可能不完整）
+                        const copyLen = Math.min(processedFrame.length, outputData.length - outputOffset);
+                        for (let i = 0; i < copyLen; i++) {
+                            outputData[outputOffset + i] = processedFrame[i] / 32768.0;
+                        }
+                        outputOffset += copyLen;
+
+                        // 如果输出已满但帧还有剩余，放回缓冲区
+                        if (copyLen < processedFrame.length) {
+                            const remaining = new Int16Array(processedFrame.length - copyLen);
+                            for (let i = copyLen; i < processedFrame.length; i++) {
+                                remaining[i - copyLen] = processedFrame[i];
+                            }
+                            const tempBuffer = new Int16Array(remaining.length + audioBuffer.length);
+                            tempBuffer.set(remaining);
+                            tempBuffer.set(audioBuffer, remaining.length);
+                            audioBuffer = tempBuffer;
+                        }
                     }
-                    
+
+                    // 填充剩余输出为静音
+                    for (let i = outputOffset; i < outputData.length; i++) {
+                        outputData[i] = 0;
+                    }
+
                     // 绘制波形
                     drawWaveform(outputData);
                 };
-                
+
                 // 连接音频图
                 source.connect(processor);
                 processor.connect(audioContext.destination);
-                
+
                 isProcessing = true;
                 startBtn.disabled = true;
                 stopBtn.disabled = false;
                 engineSelect.disabled = true;
-                
+
                 statusEl.textContent = '🎤 正在处理音频...';
                 statusEl.className = 'status processing';
-                
+
             } catch (error) {
                 statusEl.textContent = '✗ 启动失败: ' + error.message;
                 statusEl.className = 'status error';
                 console.error('Failed to start audio processing:', error);
             }
         });
-        
+
         // 停止音频处理
         stopBtn.addEventListener('click', () => {
             if (audioContext) {
                 audioContext.close();
                 audioContext = null;
             }
-            
+
             if (denoiser) {
                 denoiser.delete();
                 denoiser = null;
             }
-            
+
             isProcessing = false;
             startBtn.disabled = false;
             stopBtn.disabled = true;
             engineSelect.disabled = false;
-            
+
             statusEl.textContent = '✓ 已停止处理';
             statusEl.className = 'status ready';
-            
+
             // 清空画布
             canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
         });
-        
+
         // 绘制波形
         function drawWaveform(data) {
             const width = canvas.width;
             const height = canvas.height;
-            
+
             canvasCtx.fillStyle = '#f5f5f5';
             canvasCtx.fillRect(0, 0, width, height);
-            
+
             canvasCtx.lineWidth = 2;
             canvasCtx.strokeStyle = '#667eea';
             canvasCtx.beginPath();
-            
+
             const sliceWidth = width / data.length;
             let x = 0;
-            
+
             for (let i = 0; i < data.length; i++) {
                 const v = data[i];
                 const y = (v + 1) * height / 2;
-                
+
                 if (i === 0) {
                     canvasCtx.moveTo(x, y);
                 } else {
                     canvasCtx.lineTo(x, y);
                 }
-                
+
                 x += sliceWidth;
             }
-            
+
             canvasCtx.stroke();
         }
-        
+
         // 初始化
         window.addEventListener('load', () => {
             // 设置画布分辨率
             canvas.width = canvas.offsetWidth * window.devicePixelRatio;
             canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-            
+
             // 初始化 WASM
             initWasm();
         });

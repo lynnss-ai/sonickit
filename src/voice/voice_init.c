@@ -16,7 +16,7 @@
 #endif
 
 /* ============================================
- * 全局状态
+ * Global State
  * ============================================ */
 
 static struct {
@@ -28,7 +28,7 @@ static struct {
 } g_voice_state = {0};
 
 /* ============================================
- * 版本信息
+ * Version Information
  * ============================================ */
 
 const char *voice_version(void)
@@ -44,7 +44,7 @@ void voice_version_get(int *major, int *minor, int *patch)
 }
 
 /* ============================================
- * 日志系统
+ * Logging System
  * ============================================ */
 
 static const char *log_level_names[] = {
@@ -84,13 +84,13 @@ void voice_log(voice_log_level_t level, const char *fmt, ...)
     if (g_voice_state.log_callback) {
         g_voice_state.log_callback(level, message, g_voice_state.log_user_data);
     } else {
-        /* 默认输出到 stderr */
+        /* Default output to stderr */
         fprintf(stderr, "[%s] %s\n", log_level_names[level], message);
     }
 }
 
 /* ============================================
- * 错误处理
+ * Error Handling
  * ============================================ */
 
 voice_error_t voice_get_last_error(void)
@@ -109,7 +109,7 @@ void voice_clear_error(void)
 }
 
 /* ============================================
- * 库初始化
+ * Library Initialization
  * ============================================ */
 
 voice_error_t voice_init(const voice_global_config_t *config)
@@ -125,9 +125,9 @@ voice_error_t voice_init(const voice_global_config_t *config)
         voice_set_log_level(config->log_level);
     }
     
-    /* 平台特定初始化 */
+    /* Platform-specific initialization */
 #ifdef _WIN32
-    /* COM 初始化 (用于 WASAPI) */
+    /* COM initialization (for WASAPI) */
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) {
         VOICE_LOG_E("Failed to initialize COM: 0x%08lX", hr);
@@ -162,7 +162,7 @@ bool voice_is_initialized(void)
 }
 
 /* ============================================
- * 错误信息
+ * Error Messages
  * ============================================ */
 
 const char *voice_error_string(voice_error_t error)

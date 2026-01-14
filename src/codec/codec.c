@@ -16,7 +16,7 @@
 void voice_opus_config_init(voice_opus_config_t *config)
 {
     if (!config) return;
-    
+
     memset(config, 0, sizeof(voice_opus_config_t));
     config->sample_rate = 48000;
     config->channels = 1;
@@ -33,7 +33,7 @@ void voice_opus_config_init(voice_opus_config_t *config)
 void voice_g711_config_init(voice_g711_config_t *config, bool use_alaw)
 {
     if (!config) return;
-    
+
     memset(config, 0, sizeof(voice_g711_config_t));
     config->sample_rate = 8000;
     config->use_alaw = use_alaw;
@@ -42,7 +42,7 @@ void voice_g711_config_init(voice_g711_config_t *config, bool use_alaw)
 void voice_g722_config_init(voice_g722_config_t *config)
 {
     if (!config) return;
-    
+
     memset(config, 0, sizeof(voice_g722_config_t));
     config->sample_rate = 16000;
     config->bitrate_mode = 0;         /* 64kbps */
@@ -52,27 +52,27 @@ void voice_g722_config_init(voice_g722_config_t *config)
  * 编码器API实现
  * ============================================ */
 
-voice_encoder_t *voice_encoder_create(const voice_codec_config_t *config)
+voice_encoder_t *voice_encoder_create(const voice_codec_detail_config_t *config)
 {
     if (!config) {
         return NULL;
     }
-    
+
     switch (config->codec_id) {
 #ifdef VOICE_HAVE_OPUS
     case VOICE_CODEC_OPUS:
         return voice_opus_encoder_create(&config->u.opus);
 #endif
-        
+
     case VOICE_CODEC_G711_ALAW:
     case VOICE_CODEC_G711_ULAW:
         return voice_g711_encoder_create(&config->u.g711);
-        
+
 #ifdef VOICE_HAVE_G722
     case VOICE_CODEC_G722:
         return voice_g722_encoder_create(&config->u.g722);
 #endif
-        
+
     default:
         VOICE_LOG_E("Unsupported codec: %d", config->codec_id);
         return NULL;
@@ -82,11 +82,11 @@ voice_encoder_t *voice_encoder_create(const voice_codec_config_t *config)
 void voice_encoder_destroy(voice_encoder_t *encoder)
 {
     if (!encoder) return;
-    
+
     if (encoder->vtable && encoder->vtable->destroy) {
         encoder->vtable->destroy(encoder->state);
     }
-    
+
     free(encoder);
 }
 
@@ -100,7 +100,7 @@ voice_error_t voice_encoder_encode(
     if (!encoder || !encoder->vtable || !encoder->vtable->encode) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     return encoder->vtable->encode(
         encoder->state,
         pcm_input,
@@ -135,11 +135,11 @@ voice_error_t voice_encoder_set_bitrate(
     if (!encoder || !encoder->vtable) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!encoder->vtable->set_bitrate) {
         return VOICE_ERROR_NOT_SUPPORTED;
     }
-    
+
     return encoder->vtable->set_bitrate(encoder->state, bitrate);
 }
 
@@ -150,11 +150,11 @@ voice_error_t voice_encoder_set_packet_loss(
     if (!encoder || !encoder->vtable) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!encoder->vtable->set_packet_loss) {
         return VOICE_ERROR_NOT_SUPPORTED;
     }
-    
+
     return encoder->vtable->set_packet_loss(encoder->state, packet_loss_perc);
 }
 
@@ -162,27 +162,27 @@ voice_error_t voice_encoder_set_packet_loss(
  * 解码器API实现
  * ============================================ */
 
-voice_decoder_t *voice_decoder_create(const voice_codec_config_t *config)
+voice_decoder_t *voice_decoder_create(const voice_codec_detail_config_t *config)
 {
     if (!config) {
         return NULL;
     }
-    
+
     switch (config->codec_id) {
 #ifdef VOICE_HAVE_OPUS
     case VOICE_CODEC_OPUS:
         return voice_opus_decoder_create(&config->u.opus);
 #endif
-        
+
     case VOICE_CODEC_G711_ALAW:
     case VOICE_CODEC_G711_ULAW:
         return voice_g711_decoder_create(&config->u.g711);
-        
+
 #ifdef VOICE_HAVE_G722
     case VOICE_CODEC_G722:
         return voice_g722_decoder_create(&config->u.g722);
 #endif
-        
+
     default:
         VOICE_LOG_E("Unsupported codec: %d", config->codec_id);
         return NULL;
@@ -192,11 +192,11 @@ voice_decoder_t *voice_decoder_create(const voice_codec_config_t *config)
 void voice_decoder_destroy(voice_decoder_t *decoder)
 {
     if (!decoder) return;
-    
+
     if (decoder->vtable && decoder->vtable->destroy) {
         decoder->vtable->destroy(decoder->state);
     }
-    
+
     free(decoder);
 }
 
@@ -210,7 +210,7 @@ voice_error_t voice_decoder_decode(
     if (!decoder || !decoder->vtable || !decoder->vtable->decode) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     return decoder->vtable->decode(
         decoder->state,
         input,
@@ -228,11 +228,11 @@ voice_error_t voice_decoder_plc(
     if (!decoder || !decoder->vtable) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!decoder->vtable->plc) {
         return VOICE_ERROR_NOT_SUPPORTED;
     }
-    
+
     return decoder->vtable->plc(decoder->state, pcm_output, pcm_samples);
 }
 
@@ -307,18 +307,18 @@ size_t voice_codec_get_max_encoded_size(
     switch (codec_id) {
     case VOICE_CODEC_PCM:
         return samples * sizeof(int16_t);
-        
+
     case VOICE_CODEC_OPUS:
         /* Opus max: 1275 bytes for 20ms @ 48kHz */
         return 1500;
-        
+
     case VOICE_CODEC_G711_ALAW:
     case VOICE_CODEC_G711_ULAW:
         return samples;  /* 1 byte per sample */
-        
+
     case VOICE_CODEC_G722:
         return samples / 2;  /* 4 bits per sample */
-        
+
     default:
         return samples * sizeof(int16_t);
     }

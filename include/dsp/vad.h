@@ -78,25 +78,21 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_vad_config_init(voice_vad_config_t *config);
 
 /**
  * @brief 创建VAD实例
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_vad_t *voice_vad_create(const voice_vad_config_t *config);
 
 /**
  * @brief 销毁VAD实例
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_vad_destroy(voice_vad_t *vad);
 
 /**
  * @brief 处理音频帧
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param vad VAD实例
  * @param samples 音频样本 (16-bit PCM)
  * @param num_samples 样本数
@@ -112,13 +108,11 @@ voice_error_t voice_vad_process(
 
 /**
  * @brief 重置VAD状态
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_vad_reset(voice_vad_t *vad);
 
 /**
  * @brief 设置激进程度
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_vad_set_aggressiveness(
     voice_vad_t *vad,
@@ -127,7 +121,6 @@ voice_error_t voice_vad_set_aggressiveness(
 
 /**
  * @brief 获取VAD统计信息
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     uint64_t total_frames;

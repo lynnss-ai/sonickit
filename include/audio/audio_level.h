@@ -2,7 +2,7 @@
  * @file audio_level.h
  * @brief Audio level metering and analysis
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
+ *
  * 音频电平测量和分析工具
  */
 
@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,25 +65,21 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_level_meter_config_init(voice_level_meter_config_t *config);
 
 /**
  * @brief 创建电平计
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_level_meter_t *voice_level_meter_create(const voice_level_meter_config_t *config);
 
 /**
  * @brief 销毁电平计
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_level_meter_destroy(voice_level_meter_t *meter);
 
 /**
  * @brief 处理音频样本
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_level_meter_process(
     voice_level_meter_t *meter,
@@ -93,7 +90,6 @@ voice_error_t voice_level_meter_process(
 
 /**
  * @brief 处理浮点音频样本
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_level_meter_process_float(
     voice_level_meter_t *meter,
@@ -104,13 +100,11 @@ voice_error_t voice_level_meter_process_float(
 
 /**
  * @brief 获取当前电平
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 float voice_level_meter_get_level_db(voice_level_meter_t *meter);
 
 /**
  * @brief 重置电平计
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_level_meter_reset(voice_level_meter_t *meter);
 
@@ -120,19 +114,16 @@ void voice_level_meter_reset(voice_level_meter_t *meter);
 
 /**
  * @brief 计算音频块的峰值电平 (dB)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 float voice_audio_peak_db(const int16_t *samples, size_t num_samples);
 
 /**
  * @brief 计算音频块的 RMS 电平 (dB)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 float voice_audio_rms_db(const int16_t *samples, size_t num_samples);
 
 /**
  * @brief 线性值转 dB
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 static inline float voice_linear_to_db(float linear) {
     if (linear <= 0.0f) return -96.0f;
@@ -142,7 +133,6 @@ static inline float voice_linear_to_db(float linear) {
 
 /**
  * @brief dB 转线性值
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 static inline float voice_db_to_linear(float db) {
     return powf(10.0f, db / 20.0f);
@@ -154,7 +144,6 @@ static inline float voice_db_to_linear(float db) {
 
 /**
  * @brief 计算 RTP 扩展头中的音频电平 (RFC 6464)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param samples 音频样本
  * @param num_samples 样本数
  * @return 音频电平 (0-127, 0 = 0dBov, 127 = -127dBov)
@@ -163,7 +152,6 @@ uint8_t voice_audio_level_rfc6464(const int16_t *samples, size_t num_samples);
 
 /**
  * @brief 解析 RFC 6464 音频电平
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param level RFC 6464 电平值
  * @return dBov 值 (0 到 -127)
  */

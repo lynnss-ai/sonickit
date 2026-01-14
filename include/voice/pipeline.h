@@ -2,7 +2,7 @@
  * @file pipeline.h
  * @brief Audio processing pipeline interface
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
+ *
  * Complete audio processing pipeline:
  * Capture -> Resampling -> AEC -> Denoising -> AGC -> Encoding -> RTP -> Network
  * Network -> RTP -> Jitter Buffer -> Decoding -> Resampling -> Playback
@@ -13,6 +13,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/config.h"
 #include "audio/device.h"
 #include "audio/audio_buffer.h"
 #include "dsp/resampler.h"
@@ -51,40 +52,39 @@ typedef enum {
 } pipeline_state_t;
 
 /* ============================================
- * Pipeline Configuration
+ * Pipeline Configuration (Extended)
  * ============================================ */
 
 typedef struct {
     pipeline_mode_t mode;
-    
+
     /* Audio device configuration */
     uint32_t sample_rate;           /**< Internal sample rate */
     uint8_t channels;               /**< Number of channels */
     uint32_t frame_duration_ms;     /**< Frame duration (ms) */
     const char *capture_device;     /**< Capture device ID (NULL=default) */
     const char *playback_device;    /**< Playback device ID (NULL=default) */
-    
+
     /* DSP configuration */
     bool enable_aec;                /**< Enable AEC */
     bool enable_denoise;            /**< Enable denoising */
     bool enable_agc;                /**< Enable AGC */
     voice_denoise_engine_t denoise_engine; /**< Denoising engine */
     int denoise_level;              /**< Denoising level (0-100) */
-    
+
     /* Codec configuration */
     voice_codec_id_t codec;         /**< Codec */
     uint32_t bitrate;               /**< Bit rate */
     bool enable_fec;                /**< Enable FEC */
-    
+
     /* Network configuration */
     bool enable_srtp;               /**< Enable SRTP */
     srtp_profile_t srtp_profile;    /**< SRTP profile */
-    
+
     /* Jitter Buffer configuration */
     uint32_t jitter_min_delay_ms;
     uint32_t jitter_max_delay_ms;
-} voice_pipeline_config_t;
-
+} voice_pipeline_ext_config_t;
 /* ============================================
  * Callback Functions
  * ============================================ */
@@ -129,15 +129,15 @@ typedef struct {
     /* Capture statistics */
     uint64_t frames_captured;
     uint64_t frames_dropped_capture;
-    
+
     /* Playback statistics */
     uint64_t frames_played;
     uint64_t frames_dropped_playback;
-    
+
     /* Codec statistics */
     uint64_t frames_encoded;
     uint64_t frames_decoded;
-    
+
     /* Network statistics */
     uint64_t packets_sent;
     uint64_t packets_received;
@@ -145,7 +145,7 @@ typedef struct {
     float packet_loss_rate;
     uint32_t jitter_ms;
     uint32_t rtt_ms;
-    
+
     /* Audio quality */
     float capture_level_db;
     float playback_level_db;
@@ -158,43 +158,36 @@ typedef struct {
 
 /**
  * @brief Initialize default configuration
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
-void voice_pipeline_config_init(voice_pipeline_config_t *config);
+void voice_pipeline_ext_config_init(voice_pipeline_ext_config_t *config);
 
 /**
  * @brief Create pipeline
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
-voice_pipeline_t *voice_pipeline_create(const voice_pipeline_config_t *config);
+voice_pipeline_t *voice_pipeline_create(const voice_pipeline_ext_config_t *config);
 
 /**
  * @brief Destroy pipeline
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_destroy(voice_pipeline_t *pipeline);
 
 /**
  * @brief Start pipeline
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_start(voice_pipeline_t *pipeline);
 
 /**
  * @brief Stop pipeline
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_stop(voice_pipeline_t *pipeline);
 
 /**
  * @brief Get state
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 pipeline_state_t voice_pipeline_get_state(voice_pipeline_t *pipeline);
 
 /**
  * @brief Set encoded data callback
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_set_encoded_callback(
     voice_pipeline_t *pipeline,
@@ -204,7 +197,6 @@ void voice_pipeline_set_encoded_callback(
 
 /**
  * @brief Set decoded data callback
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_set_decoded_callback(
     voice_pipeline_t *pipeline,
@@ -214,7 +206,6 @@ void voice_pipeline_set_decoded_callback(
 
 /**
  * @brief Set state callback
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_set_state_callback(
     voice_pipeline_t *pipeline,
@@ -224,7 +215,6 @@ void voice_pipeline_set_state_callback(
 
 /**
  * @brief Set error callback
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_set_error_callback(
     voice_pipeline_t *pipeline,
@@ -234,7 +224,6 @@ void voice_pipeline_set_error_callback(
 
 /**
  * @brief Input received network data
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_receive_packet(
     voice_pipeline_t *pipeline,
@@ -244,7 +233,6 @@ voice_error_t voice_pipeline_receive_packet(
 
 /**
  * @brief Input local PCM data (when not using device capture)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_push_capture(
     voice_pipeline_t *pipeline,
@@ -254,7 +242,6 @@ voice_error_t voice_pipeline_push_capture(
 
 /**
  * @brief Get playback PCM data (when not using device playback)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_pull_playback(
     voice_pipeline_t *pipeline,
@@ -265,7 +252,6 @@ voice_error_t voice_pipeline_pull_playback(
 
 /**
  * @brief Get statistics
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_get_stats(
     voice_pipeline_t *pipeline,
@@ -274,7 +260,6 @@ voice_error_t voice_pipeline_get_stats(
 
 /**
  * @brief Reset statistics
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_pipeline_reset_stats(voice_pipeline_t *pipeline);
 
@@ -284,7 +269,6 @@ void voice_pipeline_reset_stats(voice_pipeline_t *pipeline);
 
 /**
  * @brief Enable/disable AEC
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_aec_enabled(
     voice_pipeline_t *pipeline,
@@ -293,7 +277,6 @@ voice_error_t voice_pipeline_set_aec_enabled(
 
 /**
  * @brief Enable/disable denoising
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_denoise_enabled(
     voice_pipeline_t *pipeline,
@@ -302,7 +285,6 @@ voice_error_t voice_pipeline_set_denoise_enabled(
 
 /**
  * @brief Set denoising level
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_denoise_level(
     voice_pipeline_t *pipeline,
@@ -311,7 +293,6 @@ voice_error_t voice_pipeline_set_denoise_level(
 
 /**
  * @brief Enable/disable AGC
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_agc_enabled(
     voice_pipeline_t *pipeline,
@@ -320,7 +301,6 @@ voice_error_t voice_pipeline_set_agc_enabled(
 
 /**
  * @brief Set encoding bit rate
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_bitrate(
     voice_pipeline_t *pipeline,
@@ -329,7 +309,6 @@ voice_error_t voice_pipeline_set_bitrate(
 
 /**
  * @brief Mute capture
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_capture_muted(
     voice_pipeline_t *pipeline,
@@ -338,7 +317,6 @@ voice_error_t voice_pipeline_set_capture_muted(
 
 /**
  * @brief Mute playback
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_playback_muted(
     voice_pipeline_t *pipeline,
@@ -347,7 +325,6 @@ voice_error_t voice_pipeline_set_playback_muted(
 
 /**
  * @brief Set playback volume
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_playback_volume(
     voice_pipeline_t *pipeline,
@@ -360,7 +337,6 @@ voice_error_t voice_pipeline_set_playback_volume(
 
 /**
  * @brief Set SRTP send key
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_srtp_send_key(
     voice_pipeline_t *pipeline,
@@ -372,7 +348,6 @@ voice_error_t voice_pipeline_set_srtp_send_key(
 
 /**
  * @brief Set SRTP receive key
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_pipeline_set_srtp_recv_key(
     voice_pipeline_t *pipeline,

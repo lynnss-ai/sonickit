@@ -35,30 +35,30 @@ typedef pthread_mutex_t mutex_t;
  * ============================================ */
 
 struct voice_pipeline_s {
-    voice_pipeline_config_t config;
+    voice_pipeline_ext_config_t config;
     pipeline_state_t state;
     mutex_t state_mutex;
-    
+
     /* 音频设备 */
     voice_device_t *device;
-    
+
     /* DSP 模块 */
     voice_resampler_t *resampler_cap;   /* 采集重采样器 */
     voice_resampler_t *resampler_play;  /* 播放重采样器 */
     voice_denoiser_t *denoiser;
     voice_aec_t *aec;
-    
+
     /* 编解码器 */
     voice_encoder_t *encoder;
     voice_decoder_t *decoder;
-    
+
     /* 网络 */
     rtp_session_t *rtp_session;
     srtp_session_t *srtp_send;
     srtp_session_t *srtp_recv;
     jitter_buffer_t *jitter_buffer;
     voice_plc_t *plc;
-    
+
     /* 缓冲区 */
     voice_ring_buffer_t *capture_buffer;
     voice_ring_buffer_t *playback_buffer;
@@ -66,10 +66,10 @@ struct voice_pipeline_s {
     int16_t *output_buffer;
     uint8_t *encoded_buffer;
     size_t frame_samples;
-    
+
     /* 时间戳 */
     uint32_t rtp_timestamp;
-    
+
     /* 回调 */
     pipeline_encoded_callback_t encoded_cb;
     void *encoded_cb_data;
@@ -79,10 +79,10 @@ struct voice_pipeline_s {
     void *state_cb_data;
     pipeline_error_callback_t error_cb;
     void *error_cb_data;
-    
+
     /* 统计 */
     voice_pipeline_stats_t stats;
-    
+
     /* 控制标志 */
     bool capture_muted;
     bool playback_muted;
@@ -118,81 +118,81 @@ static void pipeline_set_state(voice_pipeline_t *pipeline, pipeline_state_t stat
  * 管线 API 实现
  * ============================================ */
 
-void voice_pipeline_config_init(voice_pipeline_config_t *config)
+void voice_pipeline_ext_config_init(voice_pipeline_ext_config_t *config)
 {
     if (!config) return;
-    
-    memset(config, 0, sizeof(voice_pipeline_config_t));
-    
+
+    memset(config, 0, sizeof(voice_pipeline_ext_config_t));
+
     config->mode = PIPELINE_MODE_DUPLEX;
     config->sample_rate = 48000;
     config->channels = 1;
     config->frame_duration_ms = 20;
-    
+
     config->enable_aec = true;
     config->enable_denoise = true;
     config->enable_agc = true;
     config->denoise_engine = VOICE_DENOISE_SPEEX;
     config->denoise_level = 50;
-    
+
     config->codec = VOICE_CODEC_OPUS;
     config->bitrate = 32000;
     config->enable_fec = true;
-    
+
     config->enable_srtp = false;
     config->srtp_profile = SRTP_PROFILE_AES128_CM_SHA1_80;
-    
+
     config->jitter_min_delay_ms = 20;
     config->jitter_max_delay_ms = 200;
 }
 
-voice_pipeline_t *voice_pipeline_create(const voice_pipeline_config_t *config)
+voice_pipeline_t *voice_pipeline_create(const voice_pipeline_ext_config_t *config)
 {
     if (!config) {
         return NULL;
     }
-    
+
     voice_pipeline_t *pipeline = (voice_pipeline_t *)calloc(1, sizeof(voice_pipeline_t));
     if (!pipeline) {
         return NULL;
     }
-    
+
     pipeline->config = *config;
     pipeline->state = PIPELINE_STATE_STOPPED;
     mutex_init(&pipeline->state_mutex);
-    
+
     pipeline->playback_volume = 1.0f;
     pipeline->aec_enabled = config->enable_aec;
     pipeline->denoise_enabled = config->enable_denoise;
     pipeline->agc_enabled = config->enable_agc;
-    
+
     /* 计算帧大小 */
     pipeline->frame_samples = config->sample_rate * config->frame_duration_ms / 1000;
-    
+
     /* 分配处理缓冲区 */
     pipeline->processing_buffer = (int16_t *)calloc(
         pipeline->frame_samples, sizeof(int16_t));
     pipeline->output_buffer = (int16_t *)calloc(
         pipeline->frame_samples, sizeof(int16_t));
     pipeline->encoded_buffer = (uint8_t *)malloc(1500);
-    
-    if (!pipeline->processing_buffer || !pipeline->output_buffer || 
+
+    if (!pipeline->processing_buffer || !pipeline->output_buffer ||
         !pipeline->encoded_buffer) {
         voice_pipeline_destroy(pipeline);
         return NULL;
     }
-    
+
     /* 创建环形缓冲区 */
     pipeline->capture_buffer = voice_ring_buffer_create(
-        pipeline->frame_samples * 10 * sizeof(int16_t));
+        pipeline->frame_samples * 10 * sizeof(int16_t), pipeline->frame_samples * sizeof(int16_t));
     pipeline->playback_buffer = voice_ring_buffer_create(
-        pipeline->frame_samples * 10 * sizeof(int16_t));
-    
+        pipeline->frame_samples * 10 * sizeof(int16_t), pipeline->frame_samples * sizeof(int16_t));
+
     if (!pipeline->capture_buffer || !pipeline->playback_buffer) {
         voice_pipeline_destroy(pipeline);
         return NULL;
     }
-    
+
     /* 创建降噪器 */
     if (config->enable_denoise) {
         voice_denoiser_config_t dn_config;
@@ -202,56 +202,59 @@ voice_pipeline_t *voice_pipeline_create(const voice_pipeline_config_t *config)
         dn_config.engine = config->denoise_engine;
         dn_config.denoise_enabled = true;
         dn_config.agc_enabled = config->enable_agc;
-        
+
         pipeline->denoiser = voice_denoiser_create(&dn_config);
     }
-    
+
     /* 创建AEC */
-    if (config->enable_aec && 
-        (config->mode == PIPELINE_MODE_DUPLEX || 
+    if (config->enable_aec &&
+        (config->mode == PIPELINE_MODE_DUPLEX ||
          config->mode == PIPELINE_MODE_LOOPBACK)) {
-        voice_aec_config_t aec_config;
-        voice_aec_config_init(&aec_config);
+        voice_aec_ext_config_t aec_config;
+        voice_aec_ext_config_init(&aec_config);
         aec_config.sample_rate = config->sample_rate;
         aec_config.frame_size = pipeline->frame_samples;
-        
+
         pipeline->aec = voice_aec_create(&aec_config);
     }
-    
+
     /* 创建编码器 */
-    voice_codec_config_t codec_config;
+    voice_codec_detail_config_t codec_config = {0};
     codec_config.codec_id = config->codec;
-    
+
+    /* 根据编解码器类型设置具体配置 */
     switch (config->codec) {
-    case VOICE_CODEC_OPUS:
-        voice_opus_config_init(&codec_config.u.opus);
-        codec_config.u.opus.sample_rate = config->sample_rate;
-        codec_config.u.opus.channels = config->channels;
-        codec_config.u.opus.bitrate = config->bitrate;
-        codec_config.u.opus.enable_fec = config->enable_fec;
-        break;
-        
-    case VOICE_CODEC_G711_ALAW:
-    case VOICE_CODEC_G711_ULAW:
-        voice_g711_config_init(&codec_config.u.g711, 
-            config->codec == VOICE_CODEC_G711_ALAW);
-        break;
-        
-    default:
-        break;
+        case VOICE_CODEC_OPUS:
+            codec_config.u.opus.sample_rate = config->sample_rate;
+            codec_config.u.opus.channels = config->channels;
+            codec_config.u.opus.bitrate = config->bitrate;
+            codec_config.u.opus.application = 2048; /* OPUS_APPLICATION_VOIP */
+            codec_config.u.opus.enable_fec = config->enable_fec;
+            break;
+        case VOICE_CODEC_G711_ALAW:
+            codec_config.u.g711.sample_rate = 8000;
+            codec_config.u.g711.use_alaw = true;
+            break;
+        case VOICE_CODEC_G711_ULAW:
+            codec_config.u.g711.sample_rate = 8000;
+            codec_config.u.g711.use_alaw = false;
+            break;
+        default:
+            /* 使用默认配置 */
+            break;
     }
-    
+
     pipeline->encoder = voice_encoder_create(&codec_config);
     pipeline->decoder = voice_decoder_create(&codec_config);
-    
+
     /* 创建 RTP 会话 */
     rtp_session_config_t rtp_config;
     rtp_session_config_init(&rtp_config);
     rtp_config.payload_type = voice_codec_get_rtp_payload_type(config->codec);
     rtp_config.clock_rate = config->sample_rate;
-    
+
     pipeline->rtp_session = rtp_session_create(&rtp_config);
-    
+
     /* 创建 Jitter Buffer */
     jitter_buffer_config_t jb_config;
     jitter_buffer_config_init(&jb_config);
@@ -259,98 +262,98 @@ voice_pipeline_t *voice_pipeline_create(const voice_pipeline_config_t *config)
     jb_config.frame_duration_ms = config->frame_duration_ms;
     jb_config.min_delay_ms = config->jitter_min_delay_ms;
     jb_config.max_delay_ms = config->jitter_max_delay_ms;
-    
+
     pipeline->jitter_buffer = jitter_buffer_create(&jb_config);
-    
+
     /* 创建 PLC */
     voice_plc_config_t plc_config;
     voice_plc_config_init(&plc_config);
     plc_config.sample_rate = config->sample_rate;
     plc_config.frame_size = pipeline->frame_samples;
-    
+
     pipeline->plc = voice_plc_create(&plc_config);
-    
+
     VOICE_LOG_I("Pipeline created: %uHz, %ums, codec=%s",
         config->sample_rate, config->frame_duration_ms,
         voice_codec_get_name(config->codec));
-    
+
     return pipeline;
 }
 
 void voice_pipeline_destroy(voice_pipeline_t *pipeline)
 {
     if (!pipeline) return;
-    
+
     voice_pipeline_stop(pipeline);
-    
+
     if (pipeline->device) {
         voice_device_destroy(pipeline->device);
     }
-    
+
     if (pipeline->denoiser) {
         voice_denoiser_destroy(pipeline->denoiser);
     }
-    
+
     if (pipeline->aec) {
         voice_aec_destroy(pipeline->aec);
     }
-    
+
     if (pipeline->encoder) {
         voice_encoder_destroy(pipeline->encoder);
     }
-    
+
     if (pipeline->decoder) {
         voice_decoder_destroy(pipeline->decoder);
     }
-    
+
     if (pipeline->rtp_session) {
         rtp_session_destroy(pipeline->rtp_session);
     }
-    
+
     if (pipeline->srtp_send) {
         srtp_session_destroy(pipeline->srtp_send);
     }
-    
+
     if (pipeline->srtp_recv) {
         srtp_session_destroy(pipeline->srtp_recv);
     }
-    
+
     if (pipeline->jitter_buffer) {
         jitter_buffer_destroy(pipeline->jitter_buffer);
     }
-    
+
     if (pipeline->plc) {
         voice_plc_destroy(pipeline->plc);
     }
-    
+
     if (pipeline->capture_buffer) {
         voice_ring_buffer_destroy(pipeline->capture_buffer);
     }
-    
+
     if (pipeline->playback_buffer) {
         voice_ring_buffer_destroy(pipeline->playback_buffer);
     }
-    
+
     if (pipeline->processing_buffer) {
         free(pipeline->processing_buffer);
     }
-    
+
     if (pipeline->output_buffer) {
         free(pipeline->output_buffer);
     }
-    
+
     if (pipeline->encoded_buffer) {
         free(pipeline->encoded_buffer);
     }
-    
+
     if (pipeline->resampler_cap) {
         voice_resampler_destroy(pipeline->resampler_cap);
     }
-    
+
     if (pipeline->resampler_play) {
         voice_resampler_destroy(pipeline->resampler_play);
     }
-    
+
     mutex_destroy(&pipeline->state_mutex);
     free(pipeline);
 }
@@ -360,37 +363,37 @@ voice_error_t voice_pipeline_start(voice_pipeline_t *pipeline)
     if (!pipeline) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     mutex_lock(&pipeline->state_mutex);
-    
+
     if (pipeline->state != PIPELINE_STATE_STOPPED) {
         mutex_unlock(&pipeline->state_mutex);
         return VOICE_ERROR_ALREADY_RUNNING;
     }
-    
+
     pipeline->state = PIPELINE_STATE_STARTING;
     mutex_unlock(&pipeline->state_mutex);
-    
+
     /* 创建音频设备 */
-    voice_device_config_t dev_config;
+    voice_device_ext_config_t dev_config;
     voice_device_config_init(&dev_config);
     dev_config.sample_rate = pipeline->config.sample_rate;
     dev_config.channels = pipeline->config.channels;
     dev_config.frame_size = pipeline->frame_samples;
-    
+
     switch (pipeline->config.mode) {
     case PIPELINE_MODE_CAPTURE:
         dev_config.mode = VOICE_DEVICE_MODE_CAPTURE;
         dev_config.capture_callback = pipeline_capture_callback;
         dev_config.capture_user_data = pipeline;
         break;
-        
+
     case PIPELINE_MODE_PLAYBACK:
         dev_config.mode = VOICE_DEVICE_MODE_PLAYBACK;
         dev_config.playback_callback = pipeline_playback_callback;
         dev_config.playback_user_data = pipeline;
         break;
-        
+
     case PIPELINE_MODE_DUPLEX:
     case PIPELINE_MODE_LOOPBACK:
         dev_config.mode = VOICE_DEVICE_MODE_DUPLEX;
@@ -400,13 +403,13 @@ voice_error_t voice_pipeline_start(voice_pipeline_t *pipeline)
         dev_config.playback_user_data = pipeline;
         break;
     }
-    
-    pipeline->device = voice_device_create(&dev_config);
+
+    pipeline->device = voice_device_create_simple(&dev_config);
     if (!pipeline->device) {
         pipeline_set_state(pipeline, PIPELINE_STATE_ERROR);
         return VOICE_ERROR_DEVICE_OPEN;
     }
-    
+
     voice_error_t err = voice_device_start(pipeline->device);
     if (err != VOICE_OK) {
         voice_device_destroy(pipeline->device);
@@ -414,9 +417,9 @@ voice_error_t voice_pipeline_start(voice_pipeline_t *pipeline)
         pipeline_set_state(pipeline, PIPELINE_STATE_ERROR);
         return err;
     }
-    
+
     pipeline_set_state(pipeline, PIPELINE_STATE_RUNNING);
-    
+
     VOICE_LOG_I("Pipeline started");
     return VOICE_OK;
 }
@@ -426,25 +429,25 @@ voice_error_t voice_pipeline_stop(voice_pipeline_t *pipeline)
     if (!pipeline) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     mutex_lock(&pipeline->state_mutex);
-    
+
     if (pipeline->state != PIPELINE_STATE_RUNNING) {
         mutex_unlock(&pipeline->state_mutex);
         return VOICE_OK;
     }
-    
+
     pipeline->state = PIPELINE_STATE_STOPPING;
     mutex_unlock(&pipeline->state_mutex);
-    
+
     if (pipeline->device) {
         voice_device_stop(pipeline->device);
         voice_device_destroy(pipeline->device);
         pipeline->device = NULL;
     }
-    
+
     pipeline_set_state(pipeline, PIPELINE_STATE_STOPPED);
-    
+
     VOICE_LOG_I("Pipeline stopped");
     return VOICE_OK;
 }
@@ -454,11 +457,11 @@ pipeline_state_t voice_pipeline_get_state(voice_pipeline_t *pipeline)
     if (!pipeline) {
         return PIPELINE_STATE_STOPPED;
     }
-    
+
     mutex_lock(&pipeline->state_mutex);
     pipeline_state_t state = pipeline->state;
     mutex_unlock(&pipeline->state_mutex);
-    
+
     return state;
 }
 
@@ -522,10 +525,10 @@ voice_error_t voice_pipeline_receive_packet(
     if (!pipeline || !data) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     const uint8_t *payload = data;
     size_t payload_size = size;
-    
+
     /* SRTP 解密 */
     if (pipeline->srtp_recv) {
         uint8_t *decrypt_buf = (uint8_t *)malloc(size);
@@ -533,28 +536,28 @@ voice_error_t voice_pipeline_receive_packet(
             return VOICE_ERROR_NO_MEMORY;
         }
         memcpy(decrypt_buf, data, size);
-        
+
         voice_error_t err = srtp_unprotect(pipeline->srtp_recv, decrypt_buf, &payload_size);
         if (err != VOICE_OK) {
             free(decrypt_buf);
             return err;
         }
-        
+
         payload = decrypt_buf;
     }
-    
+
     /* 解析 RTP */
     rtp_packet_t packet;
     voice_error_t err = rtp_session_parse_packet(pipeline->rtp_session, payload, payload_size, &packet);
-    
+
     if (pipeline->srtp_recv) {
         free((void *)payload);
     }
-    
+
     if (err != VOICE_OK) {
         return err;
     }
-    
+
     /* 添加到 Jitter Buffer */
     err = jitter_buffer_put(
         pipeline->jitter_buffer,
@@ -564,9 +567,9 @@ voice_error_t voice_pipeline_receive_packet(
         packet.header.sequence,
         packet.header.marker
     );
-    
+
     pipeline->stats.packets_received++;
-    
+
     return err;
 }
 
@@ -577,9 +580,9 @@ voice_error_t voice_pipeline_get_stats(
     if (!pipeline || !stats) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     *stats = pipeline->stats;
-    
+
     /* 添加 RTP 统计 */
     if (pipeline->rtp_session) {
         rtp_statistics_t rtp_stats;
@@ -590,7 +593,7 @@ voice_error_t voice_pipeline_get_stats(
         stats->jitter_ms = rtp_stats.jitter;
         stats->rtt_ms = rtp_stats.rtt_ms;
     }
-    
+
     return VOICE_OK;
 }
 
@@ -598,11 +601,11 @@ void voice_pipeline_reset_stats(voice_pipeline_t *pipeline)
 {
     if (pipeline) {
         memset(&pipeline->stats, 0, sizeof(voice_pipeline_stats_t));
-        
+
         if (pipeline->rtp_session) {
             rtp_session_reset_statistics(pipeline->rtp_session);
         }
-        
+
         if (pipeline->jitter_buffer) {
             jitter_buffer_reset_stats(pipeline->jitter_buffer);
         }
@@ -689,7 +692,7 @@ static void pipeline_set_state(voice_pipeline_t *pipeline, pipeline_state_t stat
     mutex_lock(&pipeline->state_mutex);
     pipeline->state = state;
     mutex_unlock(&pipeline->state_mutex);
-    
+
     if (pipeline->state_cb) {
         pipeline->state_cb(pipeline, state, pipeline->state_cb_data);
     }
@@ -702,20 +705,20 @@ static void pipeline_capture_callback(
     void *user_data)
 {
     voice_pipeline_t *pipeline = (voice_pipeline_t *)user_data;
-    
+
     if (!pipeline || pipeline->state != PIPELINE_STATE_RUNNING) {
         return;
     }
-    
+
     pipeline->stats.frames_captured += frame_count;
-    
+
     /* 静音处理 */
     if (pipeline->capture_muted) {
         memset(pipeline->processing_buffer, 0, frame_count * sizeof(int16_t));
     } else {
         memcpy(pipeline->processing_buffer, input, frame_count * sizeof(int16_t));
     }
-    
+
     /* AEC 处理 */
     if (pipeline->aec && pipeline->aec_enabled) {
         voice_aec_capture(
@@ -724,10 +727,10 @@ static void pipeline_capture_callback(
             pipeline->output_buffer,
             frame_count
         );
-        memcpy(pipeline->processing_buffer, pipeline->output_buffer, 
+        memcpy(pipeline->processing_buffer, pipeline->output_buffer,
             frame_count * sizeof(int16_t));
     }
-    
+
     /* 降噪处理 */
     if (pipeline->denoiser && pipeline->denoise_enabled) {
         voice_denoiser_process(
@@ -736,7 +739,7 @@ static void pipeline_capture_callback(
             frame_count
         );
     }
-    
+
     /* 编码 */
     if (pipeline->encoder) {
         size_t encoded_size = 1500;
@@ -747,14 +750,14 @@ static void pipeline_capture_callback(
             pipeline->encoded_buffer,
             &encoded_size
         );
-        
+
         if (err == VOICE_OK && encoded_size > 0) {
             pipeline->stats.frames_encoded++;
-            
+
             /* 创建 RTP 包 */
             uint8_t rtp_packet[1500];
             size_t rtp_size = sizeof(rtp_packet);
-            
+
             err = rtp_session_create_packet(
                 pipeline->rtp_session,
                 pipeline->encoded_buffer,
@@ -764,7 +767,7 @@ static void pipeline_capture_callback(
                 rtp_packet,
                 &rtp_size
             );
-            
+
             if (err == VOICE_OK) {
                 /* SRTP 加密 */
                 if (pipeline->srtp_send) {
@@ -774,7 +777,7 @@ static void pipeline_capture_callback(
                         rtp_size = srtp_size;
                     }
                 }
-                
+
                 /* 回调 */
                 if (err == VOICE_OK && pipeline->encoded_cb) {
                     pipeline->encoded_cb(
@@ -787,11 +790,11 @@ static void pipeline_capture_callback(
                     pipeline->stats.packets_sent++;
                 }
             }
-            
+
             pipeline->rtp_timestamp += frame_count;
         }
     }
-    
+
     /* 回环模式 */
     if (pipeline->config.mode == PIPELINE_MODE_LOOPBACK) {
         voice_ring_buffer_write(
@@ -809,17 +812,17 @@ static void pipeline_playback_callback(
     void *user_data)
 {
     voice_pipeline_t *pipeline = (voice_pipeline_t *)user_data;
-    
+
     if (!pipeline || pipeline->state != PIPELINE_STATE_RUNNING) {
         memset(output, 0, frame_count * sizeof(int16_t));
         return;
     }
-    
+
     /* 从 Jitter Buffer 获取数据 */
     jitter_packet_status_t status;
     size_t packet_size = 1500;
     uint8_t packet_data[1500];
-    
+
     voice_error_t err = jitter_buffer_get(
         pipeline->jitter_buffer,
         packet_data,
@@ -827,9 +830,9 @@ static void pipeline_playback_callback(
         &packet_size,
         &status
     );
-    
+
     bool have_audio = false;
-    
+
     if (err == VOICE_OK && status == JITTER_PACKET_OK && packet_size > 0) {
         /* 解码 */
         size_t decoded_samples = frame_count;
@@ -840,14 +843,14 @@ static void pipeline_playback_callback(
             pipeline->processing_buffer,
             &decoded_samples
         );
-        
+
         if (err == VOICE_OK) {
             have_audio = true;
             pipeline->stats.frames_decoded++;
-            
+
             /* 更新 PLC */
             voice_plc_update_good_frame(pipeline->plc, pipeline->processing_buffer, decoded_samples);
-            
+
             /* 回调 */
             if (pipeline->decoded_cb) {
                 pipeline->decoded_cb(
@@ -866,7 +869,7 @@ static void pipeline_playback_callback(
             have_audio = true;
         }
     }
-    
+
     /* 输出 */
     if (have_audio && !pipeline->playback_muted) {
         /* 应用音量 */
@@ -880,14 +883,62 @@ static void pipeline_playback_callback(
         } else {
             memcpy(output, pipeline->processing_buffer, frame_count * sizeof(int16_t));
         }
-        
+
         /* AEC 播放参考 */
         if (pipeline->aec && pipeline->aec_enabled) {
             voice_aec_playback(pipeline->aec, output, frame_count);
         }
-        
+
         pipeline->stats.frames_played += frame_count;
     } else {
         memset(output, 0, frame_count * sizeof(int16_t));
     }
+}
+
+/* ============================================
+ * SRTP Key Setup
+ * ============================================ */
+
+voice_error_t voice_pipeline_set_srtp_send_key(
+    voice_pipeline_t *pipeline,
+    const uint8_t *key,
+    size_t key_len,
+    const uint8_t *salt,
+    size_t salt_len)
+{
+    if (!pipeline) {
+        return VOICE_ERROR_INVALID_PARAM;
+    }
+
+    /* TODO: 实现 SRTP 发送密钥设置 */
+    /* 当启用 SONICKIT_ENABLE_SRTP 时实现完整功能 */
+    (void)key;
+    (void)key_len;
+    (void)salt;
+    (void)salt_len;
+
+    VOICE_LOG_W("SRTP send key setup not implemented (SRTP disabled)");
+    return VOICE_SUCCESS;
+}
+
+voice_error_t voice_pipeline_set_srtp_recv_key(
+    voice_pipeline_t *pipeline,
+    const uint8_t *key,
+    size_t key_len,
+    const uint8_t *salt,
+    size_t salt_len)
+{
+    if (!pipeline) {
+        return VOICE_ERROR_INVALID_PARAM;
+    }
+
+    /* TODO: 实现 SRTP 接收密钥设置 */
+    /* 当启用 SONICKIT_ENABLE_SRTP 时实现完整功能 */
+    (void)key;
+    (void)key_len;
+    (void)salt;
+    (void)salt_len;
+
+    VOICE_LOG_W("SRTP recv key setup not implemented (SRTP disabled)");
+    return VOICE_SUCCESS;
 }

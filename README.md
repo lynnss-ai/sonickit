@@ -1,194 +1,323 @@
 # SonicKit
 
-跨平台实时音频处理库，使用纯C语言编写。
+A cross-platform real-time audio processing library written in pure C.
 
-## 特性
+[中文文档](README_zh.md) | English
 
-### 音频处理
-- 🎙️ **音频采集/播放** - 基于 miniaudio，支持所有主流平台
-- 🔇 **降噪** - 双引擎 (SpeexDSP + RNNoise 神经网络)
-- 📢 **回声消除** (AEC) - SpeexDSP 实现
-- 🎚️ **自动增益控制** (AGC) - 固定/自适应/数字增益模式
-- 🔄 **高质量重采样** - SpeexDSP 重采样器 (质量 0-10)
-- 🎙️ **语音活动检测** (VAD) - 能量/过零率/谱熵分析
-- 🎛️ **音频电平监测** - RMS/峰值/VU/LUFS 多种测量
-- 📈 **音频质量分析** - POLQA/PESQ 风格 MOS 评分
+## Features
 
-### DSP 处理
-- 🔊 **均衡器** - 多频段参数均衡，7种滤波器类型，预设配置
-- 📉 **动态压缩器** - 压缩器/限制器/扩展器/门控，软拐点
-- 📞 **DTMF** - 双音多频检测 (Goertzel算法) 和生成
-- 🔉 **舒适噪声生成** (CNG) - 白/粉/棕/谱匹配噪声，RFC 3389 SID 帧
+### Audio Processing
+- 🎙️ **Audio Capture/Playback** - Based on miniaudio, supports all major platforms
+- 🔇 **Noise Reduction** - Dual engine (SpeexDSP + RNNoise neural network)
+- 📢 **Echo Cancellation** (AEC) - SpeexDSP implementation
+- 🎚️ **Automatic Gain Control** (AGC) - Fixed/adaptive/digital gain modes
+- 🔄 **High-Quality Resampling** - SpeexDSP resampler (quality 0-10)
+- 🎙️ **Voice Activity Detection** (VAD) - Energy/zero-crossing/spectral entropy analysis
+- 🎛️ **Audio Level Monitoring** - RMS/Peak/VU/LUFS measurements
+- 📈 **Audio Quality Analysis** - POLQA/PESQ style MOS scoring
 
-### 编解码器
-- 🎵 **Opus** - 高质量语音/音乐编码 (6-510 kbps)
-- 📞 **G.711** - A-law/μ-law 传统电话编码
-- 📡 **G.722** - 宽带语音编码 (16kHz)
+### DSP Processing
+- 🔊 **Equalizer** - Multi-band parametric EQ, 7 filter types, preset configurations
+- 📉 **Dynamic Compressor** - Compressor/limiter/expander/gate, soft knee
+- 📞 **DTMF** - Dual-tone multi-frequency detection (Goertzel algorithm) and generation
+- 🔉 **Comfort Noise Generation** (CNG) - White/pink/brown/spectral matching noise, RFC 3389 SID frames
 
-### 网络传输
-- 📦 **RTP/RTCP** - 实时传输协议
-- 🔐 **SRTP** - 加密传输 (AES-CM/AES-GCM)
-- 📊 **自适应抖动缓冲** - 动态延迟调整
-- 🔧 **丢包补偿** (PLC) - 多种算法
-- 📶 **带宽估计** - GCC/REMB/BBR 拥塞控制
-- 🌐 **ICE/STUN/TURN** - NAT 穿透和连接建立
-- 🚀 **传输层抽象** - UDP/TCP 套接字封装，QoS/DSCP
+### Codecs
+- 🎵 **Opus** - High-quality voice/music encoding (6-510 kbps)
+- 📞 **G.711** - A-law/μ-law traditional telephony encoding
+- 📡 **G.722** - Wideband voice encoding (16kHz)
 
-### 音频工具
-- 🎧 **音频混音器** - 多流混合，独立增益/静音
-- 📼 **音频录制器** - WAV/RAW 文件录制，内存缓冲，回放控制
-- 📊 **统计收集器** - 音频/编解码器/网络统计，MOS/R-Factor 计算
+### Network Transport
+- 📦 **RTP/RTCP** - Real-time Transport Protocol
+- 🔐 **SRTP** - Encrypted transport (AES-CM/AES-GCM)
+- 📊 **Adaptive Jitter Buffer** - Dynamic delay adjustment
+- 🔧 **Packet Loss Concealment** (PLC) - Multiple algorithms
+- 📶 **Bandwidth Estimation** - GCC/REMB/BBR congestion control
+- 🌐 **ICE/STUN/TURN** - NAT traversal and connection establishment
+- 🚀 **Transport Layer Abstraction** - UDP/TCP socket encapsulation, QoS/DSCP
 
-### 文件 I/O
-- 📁 **WAV** - 读写支持
-- 🎶 **MP3** - 解码支持
-- 🎼 **FLAC** - 无损音频支持
+### Audio Tools
+- 🎧 **Audio Mixer** - Multi-stream mixing, independent gain/mute
+- 📼 **Audio Recorder** - WAV/RAW file recording, memory buffering, playback control
+- 📊 **Statistics Collector** - Audio/codec/network statistics, MOS/R-Factor calculation
 
-### 平台支持
-| 平台 | 音频后端 | 状态 |
-|------|---------|------|
+### File I/O
+- 📁 **WAV** - Read/write support
+- 🎶 **MP3** - Decoding support
+- 🎼 **FLAC** - Lossless audio support
+
+### Platform Support
+| Platform | Audio Backend | Status |
+|----------|---------------|--------|
 | Windows | WASAPI | ✅ |
 | macOS | Core Audio | ✅ |
 | Linux | ALSA/PulseAudio | ✅ |
 | iOS | AVAudioSession + Core Audio | ✅ |
 | Android | AAudio/OpenSL ES | ✅ |
+| **WebAssembly** | Emscripten | ✅ |
 
-## 项目结构
+## Project Structure
 
 ```
 voice/
 ├── include/
-│   ├── voice/           # 核心头文件
-│   │   ├── types.h      # 基础类型定义
-│   │   ├── error.h      # 错误码和日志
-│   │   ├── config.h     # 配置结构
-│   │   ├── voice.h      # 主 API
-│   │   ├── pipeline.h   # 处理管线
-│   │   ├── platform.h   # 平台抽象
-│   │   └── statistics.h # 统计收集
-│   ├── audio/           # 音频模块
-│   │   ├── audio_buffer.h    # 环形缓冲区
-│   │   ├── device.h          # 设备管理
-│   │   ├── file_io.h         # 文件读写
-│   │   ├── audio_mixer.h     # 音频混音
-│   │   ├── audio_level.h     # 电平监测
-│   │   ├── audio_quality.h   # 质量分析
-│   │   └── audio_recorder.h  # 录制回放
-│   ├── dsp/             # DSP 模块
-│   │   ├── resampler.h       # 重采样
-│   │   ├── denoiser.h        # 降噪
-│   │   ├── echo_canceller.h  # 回声消除
-│   │   ├── vad.h             # 语音活动检测
-│   │   ├── agc.h             # 自动增益控制
-│   │   ├── comfort_noise.h   # 舒适噪声
-│   │   ├── dtmf.h            # DTMF检测/生成
-│   │   ├── equalizer.h       # 参数均衡器
-│   │   └── compressor.h      # 动态压缩器
-│   ├── codec/           # 编解码器
-│   │   ├── codec.h           # 编解码接口
-│   │   ├── g711.h            # G.711 编解码
-│   │   ├── g722.h            # G.722 编解码
-│   │   └── opus.h            # Opus 编解码
-│   └── network/         # 网络模块
-│       ├── rtp.h             # RTP 协议
-│       ├── srtp.h            # SRTP 加密
-│       ├── jitter_buffer.h   # 抖动缓冲
-│       ├── bandwidth_estimator.h  # 带宽估计
+│   ├── voice/           # Core headers
+│   │   ├── types.h      # Basic type definitions
+│   │   ├── error.h      # Error codes and logging
+│   │   ├── config.h     # Configuration structures
+│   │   ├── voice.h      # Main API
+│   │   ├── pipeline.h   # Processing pipeline
+│   │   ├── platform.h   # Platform abstraction
+│   │   └── statistics.h # Statistics collection
+│   ├── audio/           # Audio modules
+│   │   ├── audio_buffer.h    # Ring buffer
+│   │   ├── device.h          # Device management
+│   │   ├── file_io.h         # File read/write
+│   │   ├── audio_mixer.h     # Audio mixing
+│   │   ├── audio_level.h     # Level monitoring
+│   │   ├── audio_quality.h   # Quality analysis
+│   │   └── audio_recorder.h  # Recording/playback
+│   ├── dsp/             # DSP modules
+│   │   ├── resampler.h       # Resampling
+│   │   ├── denoiser.h        # Noise reduction
+│   │   ├── echo_canceller.h  # Echo cancellation
+│   │   ├── vad.h             # Voice activity detection
+│   │   ├── agc.h             # Automatic gain control
+│   │   ├── comfort_noise.h   # Comfort noise
+│   │   ├── dtmf.h            # DTMF detection/generation
+│   │   ├── equalizer.h       # Parametric equalizer
+│   │   └── compressor.h      # Dynamic compressor
+│   ├── codec/           # Codecs
+│   │   ├── codec.h           # Codec interface
+│   │   ├── g711.h            # G.711 codec
+│   │   ├── g722.h            # G.722 codec
+│   │   └── opus.h            # Opus codec
+│   └── network/         # Network modules
+│       ├── rtp.h             # RTP protocol
+│       ├── srtp.h            # SRTP encryption
+│       ├── jitter_buffer.h   # Jitter buffer
+│       ├── bandwidth_estimator.h  # Bandwidth estimation
 │       ├── ice.h             # ICE/STUN/TURN
-│       └── transport.h       # 传输层抽象
-├── src/                 # 实现文件
-├── examples/            # 示例程序
-├── docs/                # 文档
-│   └── NEW_FEATURES.md  # 新功能详细文档
-├── third_party/         # 第三方库
+│       └── transport.h       # Transport layer abstraction
+├── src/                 # Implementation files
+├── examples/            # Example programs
+├── docs/                # Documentation
+│   └── NEW_FEATURES.md  # New features documentation
+├── third_party/         # Third-party libraries
 └── CMakeLists.txt
 ```
 
-## 构建
+## Building
 
-### 依赖项
+### Dependencies
 
-**必需:**
-- CMake 3.14+
-- C11 编译器
+**Required:**
+- CMake 3.16+
+- C11 compiler (GCC, Clang, MSVC, or MinGW)
 
-**可选:**
-- SpeexDSP - 重采样、降噪、AEC
-- RNNoise - 神经网络降噪
-- Opus - Opus 编解码器
-- libsrtp2 - SRTP 加密
+**Optional (auto-detected or manually enabled):**
+- SpeexDSP - Resampling, noise reduction, AEC
+- RNNoise - Neural network noise reduction
+- Opus - Opus codec support
+- libsrtp2 - SRTP encryption
+- OpenSSL - DTLS-SRTP key exchange
 
-### 编译步骤
+### Quick Build (Minimal, No External Dependencies)
 
 ```bash
-# 克隆仓库
+# Clone repository
 git clone <repo>
-cd voice
+cd sonickit
 
-# 创建构建目录
+# Create build directory
 mkdir build && cd build
 
-# 配置 (启用所有可选功能)
-cmake .. -DVOICE_ENABLE_OPUS=ON \
-         -DVOICE_ENABLE_RNNOISE=ON \
-         -DVOICE_ENABLE_SRTP=ON
+# Configure with minimal features (no external dependencies required)
+cmake .. -DSONICKIT_ENABLE_OPUS=OFF \
+         -DSONICKIT_ENABLE_RNNOISE=OFF \
+         -DSONICKIT_ENABLE_SRTP=OFF \
+         -DSONICKIT_ENABLE_DTLS=OFF
 
-# 编译
+# Build
+cmake --build .
+```
+
+### Build with All Features
+
+```bash
+# Configure with all features (requires external dependencies)
+cmake .. -DSONICKIT_ENABLE_OPUS=ON \
+         -DSONICKIT_ENABLE_RNNOISE=ON \
+         -DSONICKIT_ENABLE_SRTP=ON \
+         -DSONICKIT_ENABLE_DTLS=ON \
+         -DSONICKIT_ENABLE_G722=ON
+
+# Build
 cmake --build . --config Release
 
-# 运行测试
+# Run tests
 ctest -C Release
 ```
 
-### CMake 选项
+### Platform-Specific Instructions
 
-| 选项 | 默认 | 描述 |
-|------|------|------|
-| `VOICE_ENABLE_OPUS` | ON | 启用 Opus 编解码器 |
-| `VOICE_ENABLE_G722` | ON | 启用 G.722 编解码器 |
-| `VOICE_ENABLE_RNNOISE` | OFF | 启用 RNNoise 神经网络降噪 |
-| `VOICE_ENABLE_SRTP` | OFF | 启用 SRTP 加密 |
-| `VOICE_BUILD_EXAMPLES` | ON | 构建示例程序 |
+#### Windows (MinGW)
 
-## 模块概览
+```powershell
+# Using MinGW Makefiles
+mkdir build; cd build
+cmake .. -G "MinGW Makefiles" -DSONICKIT_BUILD_TESTS=ON -DSONICKIT_BUILD_EXAMPLES=ON
+cmake --build .
+```
 
-| 模块 | 功能 | 主要特性 |
-|------|------|----------|
-| **audio_device** | 音频设备 | 采集/播放，跨平台 |
-| **audio_buffer** | 环形缓冲 | 线程安全，零拷贝 |
-| **audio_mixer** | 音频混音 | 多流混合，独立增益 |
-| **audio_level** | 电平监测 | RMS/峰值/VU/LUFS |
-| **audio_quality** | 质量分析 | MOS 评分，SNR 估计 |
-| **audio_recorder** | 录制回放 | WAV 文件，内存缓冲 |
-| **resampler** | 重采样 | 质量 0-10，任意比率 |
-| **denoiser** | 降噪 | SpeexDSP + RNNoise |
-| **echo_canceller** | 回声消除 | 自适应滤波 |
-| **vad** | 语音检测 | 能量/过零率/谱熵 |
-| **agc** | 增益控制 | 固定/自适应/数字 |
-| **comfort_noise** | 舒适噪声 | 白/粉/棕/谱匹配 |
-| **dtmf** | DTMF | Goertzel 检测/生成 |
-| **equalizer** | 均衡器 | 多频段，7种滤波器 |
-| **compressor** | 压缩器 | 软拐点，侧链 |
-| **codec** | 编解码 | Opus/G.711/G.722 |
-| **rtp** | RTP 协议 | 打包/解析，RTCP |
-| **srtp** | SRTP 加密 | AES-CM/AES-GCM |
-| **jitter_buffer** | 抖动缓冲 | 自适应，PLC |
-| **bandwidth_estimator** | 带宽估计 | GCC/REMB/BBR |
-| **ice** | NAT 穿透 | ICE/STUN/TURN |
-| **transport** | 传输层 | UDP/TCP，QoS |
-| **statistics** | 统计收集 | MOS/R-Factor，JSON |
+#### Windows (Visual Studio)
 
-## 快速开始
+```powershell
+mkdir build; cd build
+cmake .. -G "Visual Studio 17 2022" -A x64
+cmake --build . --config Release
+```
 
-### 简单采集
+#### Linux / macOS
+
+```bash
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build . -j$(nproc)
+```
+
+### CMake Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `SONICKIT_BUILD_EXAMPLES` | ON | Build example programs |
+| `SONICKIT_BUILD_TESTS` | ON | Build test programs |
+| `SONICKIT_ENABLE_OPUS` | ON | Enable Opus codec (requires libopus) |
+| `SONICKIT_ENABLE_G722` | OFF | Enable G.722 codec |
+| `SONICKIT_ENABLE_SPEEX` | OFF | Enable Speex codec |
+| `SONICKIT_ENABLE_RNNOISE` | ON | Enable RNNoise neural network noise reduction |
+| `SONICKIT_ENABLE_SRTP` | ON | Enable SRTP encryption (requires libsrtp2) |
+| `SONICKIT_ENABLE_DTLS` | ON | Enable DTLS-SRTP key exchange (requires OpenSSL) |
+
+### Build Outputs
+
+After a successful build, you will find:
+
+```
+build/
+├── libvoice.a              # Static library
+├── test_buffer.exe         # Ring buffer tests
+├── test_resampler.exe      # Resampler tests
+├── test_codec.exe          # Codec tests
+├── test_dsp.exe            # DSP module tests
+├── test_network.exe        # Network module tests
+├── test_effects.exe        # Audio effects tests
+├── test_watermark.exe      # Watermark tests
+├── test_diagnostics.exe    # Diagnostics tests
+├── test_datachannel.exe    # DataChannel tests
+├── test_sip.exe            # SIP protocol tests
+└── examples/
+    ├── example_capture.exe     # Audio capture demo
+    ├── example_playback.exe    # Audio playback demo
+    ├── example_file_convert.exe # File conversion demo
+    └── example_voicechat.exe   # Voice chat demo
+```
+
+### WebAssembly (Browser) Build
+
+SonicKit can be compiled to WebAssembly for real-time audio processing in browsers.
+
+**Prerequisites:**
+- [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html)
+
+```bash
+# Install Emscripten
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk
+./emsdk install latest
+./emsdk activate latest
+source ./emsdk_env.sh  # Linux/macOS
+# or emsdk_env.bat      # Windows
+
+# Build WASM
+cd sonickit/wasm
+mkdir build && cd build
+emcmake cmake .. -DWASM_ENABLE_OPUS=OFF -DWASM_ENABLE_RNNOISE=OFF
+emmake make -j8
+
+# Output files
+# build/sonickit.js
+# build/sonickit.wasm
+```
+
+**Browser Usage Example:**
+
+```javascript
+// Load SonicKit WASM
+const sonicKit = await Module();
+
+// Create denoiser (48kHz, 480 samples/frame)
+const denoiser = new sonicKit.Denoiser(48000, 480, 0);
+
+// Process audio (Int16Array)
+const processedSamples = denoiser.process(inputSamples);
+
+// Cleanup
+denoiser.delete();
+```
+
+**JavaScript API Classes:**
+
+| Class | Constructor | Methods |
+|-------|-------------|--------|
+| `Denoiser` | `(sampleRate, frameSize, engine)` | `process()`, `reset()` |
+| `EchoCanceller` | `(sampleRate, frameSize, filterLen)` | `process()`, `reset()` |
+| `AGC` | `(sampleRate, frameSize, mode, target)` | `process()`, `getGain()`, `reset()` |
+| `VAD` | `(sampleRate, frameSize, mode)` | `isSpeech()`, `getProbability()`, `reset()` |
+| `Resampler` | `(channels, inRate, outRate, quality)` | `process()`, `reset()` |
+| `G711Codec` | `(useAlaw)` | `encode()`, `decode()` |
+
+For more WASM details, see [wasm/README.md](wasm/README.md).
+
+## Module Overview
+
+| Module | Function | Key Features |
+|--------|----------|--------------|
+| **audio_device** | Audio device | Capture/playback, cross-platform |
+| **audio_buffer** | Ring buffer | Thread-safe, zero-copy |
+| **audio_mixer** | Audio mixing | Multi-stream mix, independent gain |
+| **audio_level** | Level monitoring | RMS/Peak/VU/LUFS |
+| **audio_quality** | Quality analysis | MOS scoring, SNR estimation |
+| **audio_recorder** | Recording/playback | WAV files, memory buffer |
+| **resampler** | Resampling | Quality 0-10, arbitrary ratio |
+| **denoiser** | Noise reduction | SpeexDSP + RNNoise |
+| **echo_canceller** | Echo cancellation | Adaptive filtering |
+| **vad** | Voice detection | Energy/zero-crossing/spectral entropy |
+| **agc** | Gain control | Fixed/adaptive/digital |
+| **comfort_noise** | Comfort noise | White/pink/brown/spectral matching |
+| **dtmf** | DTMF | Goertzel detection/generation |
+| **equalizer** | Equalizer | Multi-band, 7 filter types |
+| **compressor** | Compressor | Soft knee, sidechain |
+| **codec** | Encoding/decoding | Opus/G.711/G.722 |
+| **rtp** | RTP protocol | Packetization/parsing, RTCP |
+| **srtp** | SRTP encryption | AES-CM/AES-GCM |
+| **jitter_buffer** | Jitter buffer | Adaptive, PLC |
+| **bandwidth_estimator** | Bandwidth estimation | GCC/REMB/BBR |
+| **ice** | NAT traversal | ICE/STUN/TURN |
+| **transport** | Transport layer | UDP/TCP, QoS |
+| **statistics** | Statistics collection | MOS/R-Factor, JSON |
+
+## Quick Start
+
+### Simple Capture
 
 ```c
 #include "voice/voice.h"
 #include "audio/device.h"
 
-void capture_callback(voice_device_t *dev, const int16_t *input, 
+void capture_callback(voice_device_t *dev, const int16_t *input,
                      size_t samples, void *user_data) {
-    // 处理采集的音频数据
+    // Process captured audio data
 }
 
 int main() {
@@ -198,19 +327,19 @@ int main() {
     config.sample_rate = 48000;
     config.channels = 1;
     config.capture_callback = capture_callback;
-    
+
     voice_device_t *device = voice_device_create(&config);
     voice_device_start(device);
-    
-    // ... 运行 ...
-    
+
+    // ... run ...
+
     voice_device_stop(device);
     voice_device_destroy(device);
     return 0;
 }
 ```
 
-### 完整语音通话
+### Full Duplex Voice Chat
 
 ```c
 #include "voice/pipeline.h"
@@ -222,91 +351,91 @@ int main() {
     config.enable_aec = true;
     config.enable_denoise = true;
     config.codec = VOICE_CODEC_OPUS;
-    
+
     voice_pipeline_t *pipeline = voice_pipeline_create(&config);
-    
+
     voice_pipeline_set_encoded_callback(pipeline, on_send_packet, NULL);
     voice_pipeline_start(pipeline);
-    
-    // 接收远端数据
+
+    // Receive remote data
     voice_pipeline_receive_packet(pipeline, data, size);
-    
-    // ... 运行 ...
-    
+
+    // ... run ...
+
     voice_pipeline_stop(pipeline);
     voice_pipeline_destroy(pipeline);
     return 0;
 }
 ```
 
-## 示例程序
+## Example Programs
 
-- **example_capture** - 麦克风采集录音
-- **example_playback** - 音频文件播放
-- **example_file_convert** - 音频格式转换
-- **example_voicechat** - 完整双工语音通话
+- **example_capture** - Microphone capture recording
+- **example_playback** - Audio file playback
+- **example_file_convert** - Audio format conversion
+- **example_voicechat** - Full duplex voice chat
 
 ```bash
-# 录音 10 秒
+# Record for 10 seconds
 ./example_capture -o recording.wav -d 10
 
-# 播放音频
+# Play audio
 ./example_playback music.mp3
 
-# 格式转换 + 降噪
+# Format conversion + noise reduction
 ./example_file_convert input.mp3 output.wav -r 16000 -n
 
-# 语音通话 (两台机器)
-# 机器 A
+# Voice chat (two machines)
+# Machine A
 ./example_voicechat -p 5004
 
-# 机器 B
-./example_voicechat -p 5005 -c <机器A的IP> -r 5004
+# Machine B
+./example_voicechat -p 5005 -c <Machine_A_IP> -r 5004
 ```
 
-## API 文档
+## API Documentation
 
-### 音频设备
+### Audio Device
 
 ```c
-// 枚举设备
+// Enumerate devices
 voice_device_info_t devices[10];
 size_t count = 10;
 voice_device_enumerate(VOICE_DEVICE_MODE_CAPTURE, devices, &count);
 
-// 创建设备
+// Create device
 voice_device_t *device = voice_device_create(&config);
 voice_device_start(device);
 voice_device_stop(device);
 voice_device_destroy(device);
 ```
 
-### 降噪
+### Noise Reduction
 
 ```c
 voice_denoiser_config_t config;
 voice_denoiser_config_init(&config);
 config.sample_rate = 48000;
-config.engine = VOICE_DENOISE_RNNOISE;  // 或 VOICE_DENOISE_SPEEX
+config.engine = VOICE_DENOISE_RNNOISE;  // Or VOICE_DENOISE_SPEEX
 
 voice_denoiser_t *dn = voice_denoiser_create(&config);
 voice_denoiser_process(dn, pcm_buffer, sample_count);
 voice_denoiser_destroy(dn);
 ```
 
-### 编解码
+### Encoding/Decoding
 
 ```c
-// 编码
+// Encode
 voice_encoder_t *enc = voice_encoder_create(&codec_config);
 voice_encoder_encode(enc, pcm, samples, output, &output_size);
 
-// 解码
+// Decode
 voice_decoder_t *dec = voice_decoder_create(&codec_config);
 voice_decoder_decode(dec, input, input_size, pcm, &samples);
 ```
 
-### 网络
+### Network
 
 ```c
 // RTP
@@ -320,12 +449,12 @@ srtp_protect(srtp, packet, &size, max_size);
 srtp_unprotect(srtp, packet, &size);
 ```
 
-## 移动平台注意事项
+## Mobile Platform Notes
 
 ### iOS
 
 ```objc
-// 在使用音频前配置会话
+// Configure session before using audio
 voice_session_config_t config;
 voice_session_config_init(&config);
 config.category = VOICE_SESSION_CATEGORY_PLAY_AND_RECORD;
@@ -334,40 +463,40 @@ config.mode = VOICE_SESSION_MODE_VOICE_CHAT;
 voice_session_configure(&config);
 voice_session_activate();
 
-// 处理中断
+// Handle interruptions
 voice_session_set_interrupt_callback(on_interrupt, user_data);
 ```
 
 ### Android
 
-需要在 Java 层初始化:
+Initialization required in Java layer:
 
 ```java
 public class VoiceLib {
     static {
         System.loadLibrary("voice");
     }
-    
+
     public static native void nativeInit(Context context);
     public static native void nativeRelease();
 }
 
-// 初始化
+// Initialize
 VoiceLib.nativeInit(getApplicationContext());
 ```
 
-## 许可证
+## License
 
 MIT License
 
-## 贡献
+## Contributing
 
-欢迎提交 Issue 和 Pull Request!
+Issues and Pull Requests are welcome!
 
-## 详细文档
+## Detailed Documentation
 
-更多功能详情请参阅 [docs/NEW_FEATURES.md](docs/NEW_FEATURES.md)，包括：
-- 各模块详细 API 说明
-- 完整使用示例
-- 性能优化建议
-- 移动平台适配指南
+For more feature details, please refer to [docs/NEW_FEATURES.md](docs/NEW_FEATURES.md), including:
+- Detailed API documentation for each module
+- Complete usage examples
+- Performance optimization recommendations
+- Mobile platform adaptation guide

@@ -185,21 +185,18 @@ typedef struct {
 
 /**
  * @brief Initialize default global configuration
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config Configuration structure pointer
  */
 void voice_config_init_global(voice_global_config_t *config);
 
 /**
  * @brief Initialize default device configuration
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config Configuration structure pointer
  */
 void voice_config_init_device(voice_device_config_t *config);
 
 /**
  * @brief Initialize default codec configuration
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config Configuration structure pointer
  * @param type Codec type
  */
@@ -207,35 +204,30 @@ void voice_config_init_codec(voice_codec_config_t *config, voice_codec_type_t ty
 
 /**
  * @brief Initialize default denoising configuration
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config Configuration structure pointer
  */
 void voice_config_init_denoise(voice_denoise_config_t *config);
 
 /**
  * @brief Initialize default echo cancellation configuration
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config Configuration structure pointer
  */
 void voice_config_init_aec(voice_aec_config_t *config);
 
 /**
  * @brief Initialize default jitter buffer configuration
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config Configuration structure pointer
  */
 void voice_config_init_jitter_buffer(voice_jitter_buffer_config_t *config);
 
 /**
  * @brief Initialize default SRTP configuration
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config Configuration structure pointer
  */
 void voice_config_init_srtp(voice_srtp_config_t *config);
 
 /**
  * @brief Initialize default pipeline configuration
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config Configuration structure pointer
  */
 void voice_config_init_pipeline(voice_pipeline_config_t *config);

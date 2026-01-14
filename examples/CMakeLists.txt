@@ -16,16 +16,14 @@ target_link_libraries(example_file_convert PRIVATE voice)
 # Voice chat example
 add_executable(example_voicechat example_voicechat.c)
 target_link_libraries(example_voicechat PRIVATE voice)
-
-# Platform-specific linking
 if(WIN32)
     target_link_libraries(example_voicechat PRIVATE ws2_32)
 endif()
 
 # Install examples
-install(TARGETS 
-    example_capture 
-    example_playback 
+install(TARGETS
+    example_capture
+    example_playback
     example_file_convert
     example_voicechat
     RUNTIME DESTINATION bin/examples

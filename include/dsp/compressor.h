@@ -24,7 +24,6 @@ extern "C" {
 
 /**
  * @brief 处理器类型
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_DRC_COMPRESSOR,       /**< 压缩器 (减少动态范围) */
@@ -35,7 +34,6 @@ typedef enum {
 
 /**
  * @brief 检测模式
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_DRC_PEAK,             /**< 峰值检测 */
@@ -45,7 +43,6 @@ typedef enum {
 
 /**
  * @brief 拐点模式
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_DRC_HARD_KNEE,        /**< 硬拐点 */
@@ -54,7 +51,6 @@ typedef enum {
 
 /**
  * @brief 压缩器配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     /* 基本参数 */
@@ -87,7 +83,6 @@ typedef struct {
 
 /**
  * @brief 压缩器状态
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     float input_level_db;       /**< 输入电平 (dBFS) */
@@ -109,19 +104,16 @@ typedef struct voice_compressor_s voice_compressor_t;
 
 /**
  * @brief 初始化压缩器配置 (默认为语音压缩)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_compressor_config_init(voice_compressor_config_t *config);
 
 /**
  * @brief 初始化限制器配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_limiter_config_init(voice_compressor_config_t *config);
 
 /**
  * @brief 初始化噪声门配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_gate_config_init(voice_compressor_config_t *config);
 
@@ -131,13 +123,11 @@ void voice_gate_config_init(voice_compressor_config_t *config);
 
 /**
  * @brief 创建压缩器实例
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_compressor_t *voice_compressor_create(const voice_compressor_config_t *config);
 
 /**
  * @brief 销毁压缩器实例
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_compressor_destroy(voice_compressor_t *comp);
 
@@ -147,7 +137,6 @@ void voice_compressor_destroy(voice_compressor_t *comp);
 
 /**
  * @brief 处理音频数据 (原地处理)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_compressor_process(
     voice_compressor_t *comp,
@@ -157,7 +146,6 @@ voice_error_t voice_compressor_process(
 
 /**
  * @brief 处理浮点音频数据
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_compressor_process_float(
     voice_compressor_t *comp,
@@ -167,7 +155,6 @@ voice_error_t voice_compressor_process_float(
 
 /**
  * @brief 使用外部侧链信号处理
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_compressor_process_sidechain(
     voice_compressor_t *comp,
@@ -182,7 +169,6 @@ voice_error_t voice_compressor_process_sidechain(
 
 /**
  * @brief 设置阈值
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_compressor_set_threshold(
     voice_compressor_t *comp,
@@ -191,7 +177,6 @@ voice_error_t voice_compressor_set_threshold(
 
 /**
  * @brief 设置压缩比
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_compressor_set_ratio(
     voice_compressor_t *comp,
@@ -200,7 +185,6 @@ voice_error_t voice_compressor_set_ratio(
 
 /**
  * @brief 设置启动/释放时间
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_compressor_set_times(
     voice_compressor_t *comp,
@@ -210,7 +194,6 @@ voice_error_t voice_compressor_set_times(
 
 /**
  * @brief 设置补偿增益
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_compressor_set_makeup_gain(
     voice_compressor_t *comp,
@@ -223,7 +206,6 @@ voice_error_t voice_compressor_set_makeup_gain(
 
 /**
  * @brief 获取压缩器状态
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_compressor_get_state(
     voice_compressor_t *comp,
@@ -232,7 +214,6 @@ voice_error_t voice_compressor_get_state(
 
 /**
  * @brief 重置压缩器状态
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_compressor_reset(voice_compressor_t *comp);
 

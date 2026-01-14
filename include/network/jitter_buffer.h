@@ -78,25 +78,21 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void jitter_buffer_config_init(jitter_buffer_config_t *config);
 
 /**
  * @brief 创建抖动缓冲
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 jitter_buffer_t *jitter_buffer_create(const jitter_buffer_config_t *config);
 
 /**
  * @brief 销毁抖动缓冲
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void jitter_buffer_destroy(jitter_buffer_t *jb);
 
 /**
  * @brief 添加包到缓冲区
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * @param jb 抖动缓冲句柄
  * @param data 包数据
@@ -117,7 +113,6 @@ voice_error_t jitter_buffer_put(
 
 /**
  * @brief 从缓冲区获取包
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 此函数应定期调用，每次调用间隔等于 frame_duration_ms
  * 
@@ -138,7 +133,6 @@ voice_error_t jitter_buffer_get(
 
 /**
  * @brief 设置目标延迟
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t jitter_buffer_set_delay(
     jitter_buffer_t *jb,
@@ -147,13 +141,11 @@ voice_error_t jitter_buffer_set_delay(
 
 /**
  * @brief 获取当前延迟
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 uint32_t jitter_buffer_get_delay(jitter_buffer_t *jb);
 
 /**
  * @brief 获取统计信息
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t jitter_buffer_get_stats(
     jitter_buffer_t *jb,
@@ -162,19 +154,16 @@ voice_error_t jitter_buffer_get_stats(
 
 /**
  * @brief 重置统计信息
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void jitter_buffer_reset_stats(jitter_buffer_t *jb);
 
 /**
  * @brief 重置缓冲区
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void jitter_buffer_reset(jitter_buffer_t *jb);
 
 /**
  * @brief 获取缓冲区中的包数
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 size_t jitter_buffer_get_count(jitter_buffer_t *jb);
 
@@ -202,25 +191,21 @@ typedef struct {
 
 /**
  * @brief 初始化PLC默认配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_plc_config_init(voice_plc_config_t *config);
 
 /**
  * @brief 创建PLC处理器
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_plc_t *voice_plc_create(const voice_plc_config_t *config);
 
 /**
  * @brief 销毁PLC处理器
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_plc_destroy(voice_plc_t *plc);
 
 /**
  * @brief 更新好帧 (用于PLC参考)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_plc_update_good_frame(
     voice_plc_t *plc,
@@ -230,7 +215,6 @@ void voice_plc_update_good_frame(
 
 /**
  * @brief 生成丢包补偿帧
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_plc_generate(
     voice_plc_t *plc,
@@ -240,7 +224,6 @@ voice_error_t voice_plc_generate(
 
 /**
  * @brief 重置PLC状态
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_plc_reset(voice_plc_t *plc);
 

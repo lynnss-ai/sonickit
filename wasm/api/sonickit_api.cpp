@@ -1,110 +1,97 @@
 /**
  * @file sonickit_api.cpp
- * @brief SonicKit WebAssembly JavaScript API（使用 Emscripten Embind）
+ * @brief SonicKit WebAssembly API (Embind bindings)
  * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 #include <vector>
-#include <memory>
+#include <string>
 #include <stdexcept>
+#include <cstring>
+#include <cmath>
 
 extern "C" {
-    #include "dsp/denoiser.h"
-    #include "dsp/echo_canceller.h"
-    #include "dsp/agc.h"
-    #include "dsp/vad.h"
-    #include "dsp/resampler.h"
-    #include "dsp/equalizer.h"
-    #include "dsp/compressor.h"
-    #include "dsp/dtmf.h"
-    #include "codec/codec.h"
-    #include "audio/audio_buffer.h"
-    #include "audio/audio_mixer.h"
-    #include "audio/audio_quality.h"
-    #include "audio/audio_level.h"
+#include "dsp/denoiser.h"
+#include "dsp/echo_canceller.h"
+#include "dsp/agc.h"
+#include "dsp/vad.h"
+#include "dsp/resampler.h"
+#include "codec/codec.h"
+#include "audio/audio_buffer.h"
+#include "voice/error.h"
 }
 
 using namespace emscripten;
 
 /* ============================================
- * 辅助函数
+ * Utility Functions
  * ============================================ */
 
-// 将 JavaScript Int16Array 转换为 C++ vector
-std::vector<int16_t> jsArrayToVector(const val& jsArray) {
-    unsigned int length = jsArray["length"].as<unsigned int>();
+static std::vector<int16_t> jsArrayToVector(const val& arr) {
+    unsigned int length = arr["length"].as<unsigned int>();
     std::vector<int16_t> vec(length);
-    
-    val memory = val::module_property("HEAP16");
-    val buffer = memory["buffer"];
-    
-    // 使用 JavaScript TypedArray.set() 方法
+
     for (unsigned int i = 0; i < length; i++) {
-        vec[i] = jsArray[i].as<int16_t>();
+        vec[i] = arr[i].as<int16_t>();
     }
-    
+
     return vec;
 }
 
-// 将 C++ vector 转换为 JavaScript Int16Array
-val vectorToJsArray(const std::vector<int16_t>& vec) {
-    val Int16Array = val::global("Int16Array");
-    val jsArray = Int16Array.new_(vec.size());
-    
+static val vectorToJsArray(const std::vector<int16_t>& vec) {
+    val arr = val::array();
     for (size_t i = 0; i < vec.size(); i++) {
-        jsArray.set(i, vec[i]);
+        arr.call<void>("push", vec[i]);
     }
-    
-    return jsArray;
+    return arr;
 }
 
 /* ============================================
- * 降噪器封装
+ * Denoiser Wrapper
  * ============================================ */
 
 class WasmDenoiser {
 private:
     voice_denoiser_t* denoiser;
     int frame_size;
-    
+    std::vector<int16_t> buffer;
+
 public:
-    WasmDenoiser(int sample_rate, int frame_size, int engine_type = 0) 
-        : denoiser(nullptr), frame_size(frame_size) {
-        
+    WasmDenoiser(int sample_rate, int frame_size, int engine_type = 0)
+        : denoiser(nullptr), frame_size(frame_size), buffer(frame_size) {
+
         voice_denoiser_config_t config;
         voice_denoiser_config_init(&config);
         config.sample_rate = sample_rate;
         config.frame_size = frame_size;
-        config.engine = static_cast<voice_denoiser_engine_t>(engine_type);
-        
+        config.engine = static_cast<voice_denoise_engine_t>(engine_type);
+
         denoiser = voice_denoiser_create(&config);
         if (!denoiser) {
             throw std::runtime_error("Failed to create denoiser");
         }
     }
-    
+
     ~WasmDenoiser() {
         if (denoiser) {
             voice_denoiser_destroy(denoiser);
         }
     }
-    
+
     val process(const val& input) {
         auto vec = jsArrayToVector(input);
         if (vec.size() != static_cast<size_t>(frame_size)) {
             throw std::runtime_error("Invalid input size");
         }
-        
-        voice_error_t err = voice_denoiser_process(denoiser, vec.data(), vec.size());
-        if (err != VOICE_ERROR_NONE) {
-            throw std::runtime_error("Denoiser processing failed");
-        }
-        
+
+        // voice_denoiser_process 返回 VAD 概率，不是错误码
+        voice_denoiser_process(denoiser, vec.data(), vec.size());
+
         return vectorToJsArray(vec);
     }
-    
+
     void reset() {
         if (denoiser) {
             voice_denoiser_reset(denoiser);
@@ -113,55 +100,55 @@ public:
 };
 
 /* ============================================
- * 回声消除器封装
+ * Echo Canceller Wrapper
  * ============================================ */
 
 class WasmEchoCanceller {
 private:
     voice_aec_t* aec;
     int frame_size;
-    
+
 public:
-    WasmEchoCanceller(int sample_rate, int frame_size, int filter_length = 200) 
+    WasmEchoCanceller(int sample_rate, int frame_size, int filter_length = 2000)
         : aec(nullptr), frame_size(frame_size) {
-        
-        voice_aec_config_t config;
-        voice_aec_config_init(&config);
+
+        voice_aec_ext_config_t config;
+        voice_aec_ext_config_init(&config);
         config.sample_rate = sample_rate;
         config.frame_size = frame_size;
-        config.filter_length_ms = filter_length;
-        
+        config.filter_length = filter_length;
+
         aec = voice_aec_create(&config);
         if (!aec) {
             throw std::runtime_error("Failed to create echo canceller");
         }
     }
-    
+
     ~WasmEchoCanceller() {
         if (aec) {
             voice_aec_destroy(aec);
         }
     }
-    
+
     val process(const val& captured, const val& playback) {
         auto cap_vec = jsArrayToVector(captured);
         auto play_vec = jsArrayToVector(playback);
-        
-        if (cap_vec.size() != static_cast<size_t>(frame_size) || 
+
+        if (cap_vec.size() != static_cast<size_t>(frame_size) ||
             play_vec.size() != static_cast<size_t>(frame_size)) {
             throw std::runtime_error("Invalid input size");
         }
-        
+
         std::vector<int16_t> output(frame_size);
-        voice_error_t err = voice_aec_process(aec, cap_vec.data(), play_vec.data(), 
+        voice_error_t err = voice_aec_process(aec, cap_vec.data(), play_vec.data(),
                                               output.data(), frame_size);
-        if (err != VOICE_ERROR_NONE) {
+        if (err != VOICE_SUCCESS) {
             throw std::runtime_error("AEC processing failed");
         }
-        
+
         return vectorToJsArray(output);
     }
-    
+
     void reset() {
         if (aec) {
             voice_aec_reset(aec);
@@ -170,67 +157,71 @@ public:
 };
 
 /* ============================================
- * AGC 封装
+ * AGC Wrapper
  * ============================================ */
 
 class WasmAGC {
 private:
     voice_agc_t* agc;
     int frame_size;
-    
+
 public:
-    WasmAGC(int sample_rate, int frame_size, int mode = 1, float target_level = -3.0f) 
+    WasmAGC(int sample_rate, int frame_size, int mode = 1, float target_level = -3.0f)
         : agc(nullptr), frame_size(frame_size) {
-        
+
         voice_agc_config_t config;
         voice_agc_config_init(&config);
         config.sample_rate = sample_rate;
         config.frame_size = frame_size;
         config.mode = static_cast<voice_agc_mode_t>(mode);
         config.target_level_dbfs = target_level;
-        
+
         agc = voice_agc_create(&config);
         if (!agc) {
             throw std::runtime_error("Failed to create AGC");
         }
     }
-    
+
     ~WasmAGC() {
         if (agc) {
             voice_agc_destroy(agc);
         }
     }
-    
+
     val process(const val& input) {
         auto vec = jsArrayToVector(input);
         if (vec.size() != static_cast<size_t>(frame_size)) {
             throw std::runtime_error("Invalid input size");
         }
-        
+
         voice_error_t err = voice_agc_process(agc, vec.data(), vec.size());
-        if (err != VOICE_ERROR_NONE) {
+        if (err != VOICE_SUCCESS) {
             throw std::runtime_error("AGC processing failed");
         }
-        
+
         return vectorToJsArray(vec);
     }
-    
-    void setTargetLevel(float level_dbfs) {
-        if (agc) {
-            voice_agc_set_target_level(agc, level_dbfs);
-        }
-    }
-    
+
     float getGain() {
         if (agc) {
-            return voice_agc_get_gain(agc);
+            voice_agc_state_t state;
+            if (voice_agc_get_state(agc, &state) == VOICE_SUCCESS) {
+                // 将 dB 转换为线性增益
+                return powf(10.0f, state.current_gain_db / 20.0f);
+            }
         }
         return 1.0f;
+    }
+
+    void reset() {
+        if (agc) {
+            voice_agc_reset(agc);
+        }
     }
 };
 
 /* ============================================
- * 重采样器封装
+ * Resampler Wrapper
  * ============================================ */
 
 class WasmResampler {
@@ -238,49 +229,41 @@ private:
     voice_resampler_t* resampler;
     int in_rate;
     int out_rate;
-    int channels;
-    
+
 public:
-    WasmResampler(int input_rate, int output_rate, int num_channels = 1, int quality = 5) 
-        : resampler(nullptr), in_rate(input_rate), out_rate(output_rate), channels(num_channels) {
-        
-        voice_resampler_config_t config;
-        voice_resampler_config_init(&config);
-        config.input_rate = input_rate;
-        config.output_rate = output_rate;
-        config.channels = num_channels;
-        config.quality = quality;
-        
-        resampler = voice_resampler_create(&config);
+    WasmResampler(int channels, int in_rate, int out_rate, int quality = 5)
+        : resampler(nullptr), in_rate(in_rate), out_rate(out_rate) {
+
+        resampler = voice_resampler_create(channels, in_rate, out_rate, quality);
         if (!resampler) {
             throw std::runtime_error("Failed to create resampler");
         }
     }
-    
+
     ~WasmResampler() {
         if (resampler) {
             voice_resampler_destroy(resampler);
         }
     }
-    
-    val process(const val& input, int input_frames) {
+
+    val process(const val& input) {
         auto in_vec = jsArrayToVector(input);
-        
+
         // 计算输出大小
-        int output_frames = (input_frames * out_rate) / in_rate + 10; // 加一些余量
-        std::vector<int16_t> output(output_frames * channels);
-        
-        int actual_output;
-        voice_error_t err = voice_resampler_process(resampler, in_vec.data(), input_frames,
-                                                     output.data(), output_frames, &actual_output);
-        if (err != VOICE_ERROR_NONE) {
+        size_t output_frames = (in_vec.size() * out_rate + in_rate - 1) / in_rate;
+        std::vector<int16_t> out_vec(output_frames);
+
+        int result = voice_resampler_process_int16(resampler, in_vec.data(), in_vec.size(),
+                                                   out_vec.data(), output_frames);
+
+        if (result < 0) {
             throw std::runtime_error("Resampler processing failed");
         }
-        
-        output.resize(actual_output * channels);
-        return vectorToJsArray(output);
+
+        out_vec.resize(result);
+        return vectorToJsArray(out_vec);
     }
-    
+
     void reset() {
         if (resampler) {
             voice_resampler_reset(resampler);
@@ -289,204 +272,164 @@ public:
 };
 
 /* ============================================
- * VAD 封装
+ * VAD Wrapper
  * ============================================ */
 
 class WasmVAD {
 private:
     voice_vad_t* vad;
     int frame_size;
-    
+    voice_vad_result_t last_result;
+
 public:
-    WasmVAD(int sample_rate, int frame_size, int mode = 1) 
+    WasmVAD(int sample_rate, int frame_size, int mode = 1)
         : vad(nullptr), frame_size(frame_size) {
-        
+
+        memset(&last_result, 0, sizeof(last_result));
+
         voice_vad_config_t config;
         voice_vad_config_init(&config);
         config.sample_rate = sample_rate;
-        config.frame_size = frame_size;
         config.mode = static_cast<voice_vad_mode_t>(mode);
-        
+
         vad = voice_vad_create(&config);
         if (!vad) {
             throw std::runtime_error("Failed to create VAD");
         }
     }
-    
+
     ~WasmVAD() {
         if (vad) {
             voice_vad_destroy(vad);
         }
     }
-    
+
     bool isSpeech(const val& input) {
         auto vec = jsArrayToVector(input);
-        if (vec.size() != static_cast<size_t>(frame_size)) {
-            throw std::runtime_error("Invalid input size");
-        }
-        
-        return voice_vad_is_speech(vad, vec.data(), vec.size());
+        voice_vad_process(vad, vec.data(), vec.size(), &last_result);
+        return last_result.is_speech;
     }
-    
+
     float getProbability() {
+        return last_result.speech_probability;
+    }
+
+    void reset() {
         if (vad) {
-            return voice_vad_get_probability(vad);
+            voice_vad_reset(vad);
         }
-        return 0.0f;
+        memset(&last_result, 0, sizeof(last_result));
     }
 };
 
 /* ============================================
- * Opus 编码器封装
+ * G.711 Codec Wrapper
  * ============================================ */
 
-#ifdef SONICKIT_HAVE_OPUS
-
-class WasmOpusEncoder {
+class WasmG711Codec {
 private:
     voice_encoder_t* encoder;
-    std::vector<uint8_t> output_buffer;
-    
-public:
-    WasmOpusEncoder(int sample_rate, int channels, int bitrate = 64000) 
-        : encoder(nullptr), output_buffer(4000) {
-        
-        voice_encoder_config_t config;
-        voice_encoder_config_init(&config);
-        config.codec = VOICE_CODEC_OPUS;
-        config.sample_rate = sample_rate;
-        config.channels = channels;
-        config.bitrate = bitrate;
-        
-        encoder = voice_encoder_create(&config);
-        if (!encoder) {
-            throw std::runtime_error("Failed to create Opus encoder");
-        }
-    }
-    
-    ~WasmOpusEncoder() {
-        if (encoder) {
-            voice_encoder_destroy(encoder);
-        }
-    }
-    
-    val encode(const val& input, int num_samples) {
-        auto vec = jsArrayToVector(input);
-        
-        int encoded_size = voice_encoder_encode(encoder, vec.data(), num_samples,
-                                                output_buffer.data(), output_buffer.size());
-        if (encoded_size < 0) {
-            throw std::runtime_error("Encoding failed");
-        }
-        
-        val Uint8Array = val::global("Uint8Array");
-        val result = Uint8Array.new_(encoded_size);
-        for (int i = 0; i < encoded_size; i++) {
-            result.set(i, output_buffer[i]);
-        }
-        
-        return result;
-    }
-    
-    void setBitrate(int bitrate) {
-        if (encoder) {
-            voice_encoder_set_bitrate(encoder, bitrate);
-        }
-    }
-};
-
-class WasmOpusDecoder {
-private:
     voice_decoder_t* decoder;
-    std::vector<int16_t> output_buffer;
-    
+    bool use_alaw;
+
 public:
-    WasmOpusDecoder(int sample_rate, int channels) 
-        : decoder(nullptr), output_buffer(5760 * channels) { // 120ms @ 48kHz
-        
-        voice_decoder_config_t config;
-        voice_decoder_config_init(&config);
-        config.codec = VOICE_CODEC_OPUS;
-        config.sample_rate = sample_rate;
-        config.channels = channels;
-        
+    WasmG711Codec(bool use_alaw = true)
+        : encoder(nullptr), decoder(nullptr), use_alaw(use_alaw) {
+
+        voice_codec_detail_config_t config;
+        memset(&config, 0, sizeof(config));
+        config.codec_id = use_alaw ? VOICE_CODEC_G711_ALAW : VOICE_CODEC_G711_ULAW;
+        config.u.g711.sample_rate = 8000;
+        config.u.g711.use_alaw = use_alaw;
+
+        encoder = voice_encoder_create(&config);
         decoder = voice_decoder_create(&config);
-        if (!decoder) {
-            throw std::runtime_error("Failed to create Opus decoder");
+
+        if (!encoder || !decoder) {
+            if (encoder) voice_encoder_destroy(encoder);
+            if (decoder) voice_decoder_destroy(decoder);
+            throw std::runtime_error("Failed to create G.711 codec");
         }
     }
-    
-    ~WasmOpusDecoder() {
-        if (decoder) {
-            voice_decoder_destroy(decoder);
-        }
+
+    ~WasmG711Codec() {
+        if (encoder) voice_encoder_destroy(encoder);
+        if (decoder) voice_decoder_destroy(decoder);
     }
-    
-    val decode(const val& input, int input_size) {
-        std::vector<uint8_t> in_vec(input_size);
-        for (int i = 0; i < input_size; i++) {
-            in_vec[i] = input[i].as<uint8_t>();
+
+    val encode(const val& input) {
+        auto vec = jsArrayToVector(input);
+        std::vector<uint8_t> encoded(vec.size());
+
+        size_t encoded_size = encoded.size();
+        voice_error_t err = voice_encoder_encode(encoder, vec.data(), vec.size(),
+                                                  encoded.data(), &encoded_size);
+        if (err != VOICE_SUCCESS) {
+            throw std::runtime_error("G.711 encode failed");
         }
-        
-        int decoded_samples = voice_decoder_decode(decoder, in_vec.data(), input_size,
-                                                    output_buffer.data(), output_buffer.size());
-        if (decoded_samples < 0) {
-            throw std::runtime_error("Decoding failed");
+
+        val arr = val::array();
+        for (size_t i = 0; i < encoded_size; i++) {
+            arr.call<void>("push", encoded[i]);
         }
-        
-        output_buffer.resize(decoded_samples);
-        return vectorToJsArray(output_buffer);
+        return arr;
+    }
+
+    val decode(const val& input) {
+        unsigned int length = input["length"].as<unsigned int>();
+        std::vector<uint8_t> encoded(length);
+        for (unsigned int i = 0; i < length; i++) {
+            encoded[i] = input[i].as<uint8_t>();
+        }
+
+        std::vector<int16_t> decoded(length);
+        size_t decoded_size = decoded.size();
+
+        voice_error_t err = voice_decoder_decode(decoder, encoded.data(), length,
+                                                  decoded.data(), &decoded_size);
+        if (err != VOICE_SUCCESS) {
+            throw std::runtime_error("G.711 decode failed");
+        }
+
+        decoded.resize(decoded_size);
+        return vectorToJsArray(decoded);
     }
 };
-
-#endif // SONICKIT_HAVE_OPUS
 
 /* ============================================
- * Embind 绑定
+ * Embind Bindings
  * ============================================ */
 
 EMSCRIPTEN_BINDINGS(sonickit) {
-    // 降噪器
     class_<WasmDenoiser>("Denoiser")
         .constructor<int, int, int>()
         .function("process", &WasmDenoiser::process)
         .function("reset", &WasmDenoiser::reset);
-    
-    // 回声消除
+
     class_<WasmEchoCanceller>("EchoCanceller")
         .constructor<int, int, int>()
         .function("process", &WasmEchoCanceller::process)
         .function("reset", &WasmEchoCanceller::reset);
-    
-    // AGC
+
     class_<WasmAGC>("AGC")
         .constructor<int, int, int, float>()
         .function("process", &WasmAGC::process)
-        .function("setTargetLevel", &WasmAGC::setTargetLevel)
-        .function("getGain", &WasmAGC::getGain);
-    
-    // 重采样器
+        .function("getGain", &WasmAGC::getGain)
+        .function("reset", &WasmAGC::reset);
+
     class_<WasmResampler>("Resampler")
         .constructor<int, int, int, int>()
         .function("process", &WasmResampler::process)
         .function("reset", &WasmResampler::reset);
-    
-    // VAD
+
     class_<WasmVAD>("VAD")
         .constructor<int, int, int>()
         .function("isSpeech", &WasmVAD::isSpeech)
-        .function("getProbability", &WasmVAD::getProbability);
-    
-#ifdef SONICKIT_HAVE_OPUS
-    // Opus 编码器
-    class_<WasmOpusEncoder>("OpusEncoder")
-        .constructor<int, int, int>()
-        .function("encode", &WasmOpusEncoder::encode)
-        .function("setBitrate", &WasmOpusEncoder::setBitrate);
-    
-    // Opus 解码器
-    class_<WasmOpusDecoder>("OpusDecoder")
-        .constructor<int, int>()
-        .function("decode", &WasmOpusDecoder::decode);
-#endif
+        .function("getProbability", &WasmVAD::getProbability)
+        .function("reset", &WasmVAD::reset);
+
+    class_<WasmG711Codec>("G711Codec")
+        .constructor<bool>()
+        .function("encode", &WasmG711Codec::encode)
+        .function("decode", &WasmG711Codec::decode);
 }

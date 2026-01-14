@@ -153,38 +153,32 @@ typedef void (*voice_route_change_callback_t)(
 
 /**
  * @brief Configure audio session
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @note Calls AVAudioSession on iOS, no-op on other platforms
  */
 voice_error_t voice_session_configure(const voice_session_config_t *config);
 
 /**
  * @brief Activate audio session
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_session_activate(void);
 
 /**
  * @brief Deactivate audio session
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_session_deactivate(void);
 
 /**
  * @brief Get current audio route
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_audio_route_t voice_session_get_current_route(void);
 
 /**
  * @brief Override output port
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_session_override_output(voice_audio_route_t route);
 
 /**
  * @brief Set interrupt callback
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_session_set_interrupt_callback(
     voice_interrupt_callback_t callback,
@@ -193,7 +187,6 @@ void voice_session_set_interrupt_callback(
 
 /**
  * @brief Set route change callback
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_session_set_route_change_callback(
     voice_route_change_callback_t callback,
@@ -202,7 +195,6 @@ void voice_session_set_route_change_callback(
 
 /**
  * @brief Request microphone permission (async)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @return true if already have permission, false means wait for callback
  */
 bool voice_session_request_mic_permission(
@@ -212,7 +204,6 @@ bool voice_session_request_mic_permission(
 
 /**
  * @brief Check microphone permission status
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef enum {
     VOICE_PERMISSION_UNKNOWN,
@@ -229,13 +220,11 @@ voice_permission_status_t voice_session_get_mic_permission(void);
 
 /**
  * @brief Enable low-latency mode (Android AAudio)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_platform_enable_low_latency(bool enable);
 
 /**
  * @brief Get actual sample rate and buffer size
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_platform_get_optimal_parameters(
     uint32_t *sample_rate,
@@ -244,7 +233,6 @@ voice_error_t voice_platform_get_optimal_parameters(
 
 /**
  * @brief Set Bluetooth SCO mode
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_platform_set_bluetooth_sco(bool enable);
 
@@ -254,14 +242,12 @@ voice_error_t voice_platform_set_bluetooth_sco(bool enable);
 
 /**
  * @brief Acquire/release audio processing wake lock
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_platform_acquire_wake_lock(void);
 voice_error_t voice_platform_release_wake_lock(void);
 
 /**
  * @brief Set real-time thread priority
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_platform_set_realtime_priority(void);
 

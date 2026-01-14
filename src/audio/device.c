@@ -4,7 +4,6 @@
  * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 
-#define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 
 #include "audio/device.h"
@@ -19,7 +18,7 @@
 struct voice_device_context_s {
     ma_context context;
     bool initialized;
-    
+
     /* 设备枚举缓存 */
     ma_device_info *capture_devices;
     uint32_t capture_count;
@@ -46,20 +45,20 @@ voice_error_t voice_device_context_init(void)
     if (g_device_context) {
         return VOICE_ERROR_ALREADY_INITIALIZED;
     }
-    
+
     g_device_context = (voice_device_context_t *)calloc(1, sizeof(voice_device_context_t));
     if (!g_device_context) {
         return VOICE_ERROR_OUT_OF_MEMORY;
     }
-    
+
     ma_context_config config = ma_context_config_init();
-    
+
     if (ma_context_init(NULL, 0, &config, &g_device_context->context) != MA_SUCCESS) {
         free(g_device_context);
         g_device_context = NULL;
         return VOICE_ERROR_DEVICE_OPEN_FAILED;
     }
-    
+
     /* 枚举设备 */
     ma_result result = ma_context_get_devices(
         &g_device_context->context,
@@ -68,14 +67,14 @@ voice_error_t voice_device_context_init(void)
         &g_device_context->capture_devices,
         &g_device_context->capture_count
     );
-    
+
     if (result != MA_SUCCESS) {
         VOICE_LOG_W("Failed to enumerate devices");
     }
-    
+
     g_device_context->initialized = true;
     VOICE_LOG_I("Audio device context initialized");
-    
+
     return VOICE_OK;
 }
 
@@ -158,20 +157,20 @@ static void device_stop_callback(ma_device *pDevice)
 void voice_device_desc_init(voice_device_desc_t *desc, voice_device_mode_t mode)
 {
     if (!desc) return;
-    
+
     memset(desc, 0, sizeof(voice_device_desc_t));
     desc->mode = mode;
-    
+
     /* 默认采集配置 */
     desc->capture.format = VOICE_FORMAT_S16;
     desc->capture.channels = 1;
     desc->capture.sample_rate = 48000;
-    
+
     /* 默认播放配置 */
     desc->playback.format = VOICE_FORMAT_S16;
     desc->playback.channels = 1;
     desc->playback.sample_rate = 48000;
-    
+
     desc->period_size_frames = 480;  /* 10ms @ 48kHz */
     desc->periods = 2;
 }
@@ -181,21 +180,21 @@ voice_device_t *voice_device_create(const voice_device_desc_t *desc)
     if (!desc) {
         return NULL;
     }
-    
+
     if (!g_device_context || !g_device_context->initialized) {
         VOICE_LOG_E("Device context not initialized");
         return NULL;
     }
-    
+
     voice_device_t *device = (voice_device_t *)calloc(1, sizeof(voice_device_t));
     if (!device) {
         return NULL;
     }
-    
+
     device->desc = *desc;
-    
+
     ma_device_config config;
-    
+
     switch (desc->mode) {
         case VOICE_DEVICE_CAPTURE:
             config = ma_device_config_init(ma_device_type_capture);
@@ -208,35 +207,35 @@ voice_device_t *voice_device_create(const voice_device_desc_t *desc)
             config = ma_device_config_init(ma_device_type_duplex);
             break;
     }
-    
+
     /* 采集配置 */
     if (desc->mode == VOICE_DEVICE_CAPTURE || desc->mode == VOICE_DEVICE_DUPLEX) {
         config.capture.format = voice_format_to_ma(desc->capture.format);
         config.capture.channels = desc->capture.channels;
     }
-    
+
     /* 播放配置 */
     if (desc->mode == VOICE_DEVICE_PLAYBACK || desc->mode == VOICE_DEVICE_DUPLEX) {
         config.playback.format = voice_format_to_ma(desc->playback.format);
         config.playback.channels = desc->playback.channels;
     }
-    
+
     config.sampleRate = desc->capture.sample_rate;  /* 使用采集采样率 */
     config.periodSizeInFrames = desc->period_size_frames;
     config.periods = desc->periods;
     config.dataCallback = device_data_callback;
     config.stopCallback = device_stop_callback;
     config.pUserData = device;
-    
+
     if (ma_device_init(&g_device_context->context, &config, &device->device) != MA_SUCCESS) {
         VOICE_LOG_E("Failed to initialize audio device");
         free(device);
         return NULL;
     }
-    
+
     device->initialized = true;
     VOICE_LOG_I("Audio device created: %s", device->device.playback.name);
-    
+
     return device;
 }
 
@@ -258,18 +257,18 @@ voice_error_t voice_device_start(voice_device_t *device)
     if (!device || !device->initialized) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (device->started) {
         return VOICE_OK;
     }
-    
+
     if (ma_device_start(&device->device) != MA_SUCCESS) {
         return VOICE_ERROR_DEVICE_START_FAILED;
     }
-    
+
     device->started = true;
     VOICE_LOG_I("Audio device started");
-    
+
     return VOICE_OK;
 }
 
@@ -278,18 +277,18 @@ voice_error_t voice_device_stop(voice_device_t *device)
     if (!device || !device->initialized) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!device->started) {
         return VOICE_OK;
     }
-    
+
     if (ma_device_stop(&device->device) != MA_SUCCESS) {
         return VOICE_ERROR_DEVICE_STOP_FAILED;
     }
-    
+
     device->started = false;
     VOICE_LOG_I("Audio device stopped");
-    
+
     return VOICE_OK;
 }
 
@@ -311,7 +310,7 @@ uint8_t voice_device_get_channels(voice_device_t *device, voice_device_mode_t mo
     if (!device || !device->initialized) {
         return 0;
     }
-    
+
     if (mode == VOICE_DEVICE_CAPTURE) {
         return device->device.capture.channels;
     } else {
@@ -324,7 +323,7 @@ voice_format_t voice_device_get_format(voice_device_t *device, voice_device_mode
     if (!device || !device->initialized) {
         return VOICE_FORMAT_UNKNOWN;
     }
-    
+
     if (mode == VOICE_DEVICE_CAPTURE) {
         return ma_format_to_voice(device->device.capture.format);
     } else {
@@ -353,21 +352,22 @@ voice_error_t voice_device_get_capture_info(uint32_t index, voice_device_enum_in
     if (!g_device_context || !info) {
         return VOICE_ERROR_INVALID_PARAM;
     }
-    
+
     if (index >= g_device_context->capture_count) {
         return VOICE_ERROR_DEVICE_NOT_FOUND;
     }
-    
+
     ma_device_info *ma_info = &g_device_context->capture_devices[index];
-    
-    strncpy(info->id, ma_info->id.custom, sizeof(info->id) - 1);
+
+    /* miniaudio device ID is a union, use name as fallback ID */
+    strncpy(info->id, ma_info->name, sizeof(info->id) - 1);
     strncpy(info->name, ma_info->name, sizeof(info->name) - 1);
     info->is_default = ma_info->isDefault;
     info->min_channels = 1;
     info->max_channels = 2;
     info->min_sample_rate = 8000;
     info->max_sample_rate = 48000;
-    
+
     return VOICE_OK;
 }
 
@@ -376,21 +376,22 @@ voice_error_t voice_device_get_playback_info(uint32_t index, voice_device_enum_i
     if (!g_device_context || !info) {
         return VOICE_ERROR_INVALID_PARAM;
     }
-    
+
     if (index >= g_device_context->playback_count) {
         return VOICE_ERROR_DEVICE_NOT_FOUND;
     }
-    
+
     ma_device_info *ma_info = &g_device_context->playback_devices[index];
-    
-    strncpy(info->id, ma_info->id.custom, sizeof(info->id) - 1);
+
+    /* miniaudio device ID is a union, use name as fallback ID */
+    strncpy(info->id, ma_info->name, sizeof(info->id) - 1);
     strncpy(info->name, ma_info->name, sizeof(info->name) - 1);
     info->is_default = ma_info->isDefault;
     info->min_channels = 1;
     info->max_channels = 2;
     info->min_sample_rate = 8000;
     info->max_sample_rate = 48000;
-    
+
     return VOICE_OK;
 }
 
@@ -418,66 +419,65 @@ static void simple_data_callback(
 {
     simple_callback_data_t *cb_data = (simple_callback_data_t *)user_data;
     if (!cb_data) return;
-    
+
     /* 采集回调 */
     if (pInput && cb_data->capture_cb) {
         cb_data->capture_cb(device, (const int16_t *)pInput, frameCount, cb_data->capture_user_data);
     }
-    
+
     /* 播放回调 */
     if (pOutput && cb_data->playback_cb) {
         cb_data->playback_cb(device, (int16_t *)pOutput, frameCount, cb_data->playback_user_data);
     }
 }
 
-void voice_device_config_init(voice_device_config_t *config)
+void voice_device_config_init(voice_device_ext_config_t *config)
 {
     if (!config) return;
-    
-    memset(config, 0, sizeof(voice_device_config_t));
+
+    memset(config, 0, sizeof(voice_device_ext_config_t));
     config->mode = VOICE_DEVICE_CAPTURE;
     config->sample_rate = 48000;
     config->channels = 1;
     config->frame_size = 960;  /* 20ms @ 48kHz */
 }
 
-voice_device_t *voice_device_create_simple(const voice_device_config_t *config)
+voice_device_t *voice_device_create_simple(const voice_device_ext_config_t *config)
 {
     if (!config) return NULL;
-    
+
     /* 分配回调数据 */
     if (g_simple_callback_count >= 16) {
         VOICE_LOG_E("Too many simple devices created");
         return NULL;
     }
-    
+
     simple_callback_data_t *cb_data = &g_simple_callbacks[g_simple_callback_count++];
     cb_data->capture_cb = config->capture_callback;
     cb_data->capture_user_data = config->capture_user_data;
     cb_data->playback_cb = config->playback_callback;
     cb_data->playback_user_data = config->playback_user_data;
-    
+
     /* 转换为 voice_device_desc_t */
     voice_device_desc_t desc;
     voice_device_desc_init(&desc, config->mode);
-    
+
     desc.capture.sample_rate = config->sample_rate;
     desc.capture.channels = config->channels;
     desc.capture.format = VOICE_FORMAT_S16;
-    
+
     desc.playback.sample_rate = config->sample_rate;
     desc.playback.channels = config->channels;
     desc.playback.format = VOICE_FORMAT_S16;
-    
+
     desc.period_size_frames = config->frame_size;
     desc.periods = 2;
-    
+
     desc.data_callback = simple_data_callback;
     desc.user_data = cb_data;
-    
+
     return voice_device_create(&desc);
 }
-
 voice_error_t voice_device_enumerate(
     voice_device_mode_t mode,
     voice_device_info_t *devices,
@@ -486,7 +486,7 @@ voice_error_t voice_device_enumerate(
     if (!devices || !count) {
         return VOICE_ERROR_INVALID_PARAM;
     }
-    
+
     if (!g_device_context) {
         /* 自动初始化上下文 */
         voice_error_t err = voice_device_context_init();
@@ -494,15 +494,15 @@ voice_error_t voice_device_enumerate(
             return err;
         }
     }
-    
+
     size_t max_count = *count;
     size_t actual_count = 0;
-    
+
     if (mode == VOICE_DEVICE_CAPTURE || mode == VOICE_DEVICE_DUPLEX) {
         /* 枚举采集设备 */
         for (uint32_t i = 0; i < g_device_context->capture_count && actual_count < max_count; i++) {
             ma_device_info *ma_info = &g_device_context->capture_devices[i];
-            strncpy(devices[actual_count].id, ma_info->id.custom, sizeof(devices[actual_count].id) - 1);
+            strncpy(devices[actual_count].id, ma_info->name, sizeof(devices[actual_count].id) - 1);
             strncpy(devices[actual_count].name, ma_info->name, sizeof(devices[actual_count].name) - 1);
             devices[actual_count].is_default = ma_info->isDefault;
             actual_count++;
@@ -511,13 +511,13 @@ voice_error_t voice_device_enumerate(
         /* 枚举播放设备 */
         for (uint32_t i = 0; i < g_device_context->playback_count && actual_count < max_count; i++) {
             ma_device_info *ma_info = &g_device_context->playback_devices[i];
-            strncpy(devices[actual_count].id, ma_info->id.custom, sizeof(devices[actual_count].id) - 1);
+            strncpy(devices[actual_count].id, ma_info->name, sizeof(devices[actual_count].id) - 1);
             strncpy(devices[actual_count].name, ma_info->name, sizeof(devices[actual_count].name) - 1);
             devices[actual_count].is_default = ma_info->isDefault;
             actual_count++;
         }
     }
-    
+
     *count = actual_count;
     return VOICE_OK;
 }

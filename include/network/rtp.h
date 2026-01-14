@@ -173,25 +173,21 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void rtp_session_config_init(rtp_session_config_t *config);
 
 /**
  * @brief 创建 RTP 会话
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 rtp_session_t *rtp_session_create(const rtp_session_config_t *config);
 
 /**
  * @brief 销毁 RTP 会话
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void rtp_session_destroy(rtp_session_t *session);
 
 /**
  * @brief 创建 RTP 包
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * @param session RTP会话
  * @param payload 载荷数据
@@ -214,7 +210,6 @@ voice_error_t rtp_session_create_packet(
 
 /**
  * @brief 解析 RTP 包
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * @param session RTP会话 (可为NULL)
  * @param data 包数据
@@ -231,7 +226,6 @@ voice_error_t rtp_session_parse_packet(
 
 /**
  * @brief 处理接收的 RTP 包
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * 
  * 更新接收统计，处理序列号等
  */
@@ -242,7 +236,6 @@ voice_error_t rtp_session_process_received(
 
 /**
  * @brief 获取统计信息
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t rtp_session_get_statistics(
     rtp_session_t *session,
@@ -251,19 +244,16 @@ voice_error_t rtp_session_get_statistics(
 
 /**
  * @brief 重置统计信息
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void rtp_session_reset_statistics(rtp_session_t *session);
 
 /**
  * @brief 获取 SSRC
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 uint32_t rtp_session_get_ssrc(rtp_session_t *session);
 
 /**
  * @brief 设置 SSRC
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void rtp_session_set_ssrc(rtp_session_t *session, uint32_t ssrc);
 
@@ -273,7 +263,6 @@ void rtp_session_set_ssrc(rtp_session_t *session, uint32_t ssrc);
 
 /**
  * @brief 创建 RTCP SR 包
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t rtcp_create_sr(
     rtp_session_t *session,
@@ -283,7 +272,6 @@ voice_error_t rtcp_create_sr(
 
 /**
  * @brief 创建 RTCP RR 包
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t rtcp_create_rr(
     rtp_session_t *session,
@@ -293,7 +281,6 @@ voice_error_t rtcp_create_rr(
 
 /**
  * @brief 创建 RTCP BYE 包
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t rtcp_create_bye(
     rtp_session_t *session,
@@ -304,7 +291,6 @@ voice_error_t rtcp_create_bye(
 
 /**
  * @brief 解析 RTCP 包
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t rtcp_parse(
     const uint8_t *data,
@@ -314,7 +300,6 @@ voice_error_t rtcp_parse(
 
 /**
  * @brief 处理接收的 RTCP SR
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t rtcp_process_sr(
     rtp_session_t *session,
@@ -324,7 +309,6 @@ voice_error_t rtcp_process_sr(
 
 /**
  * @brief 处理接收的 RTCP RR
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t rtcp_process_rr(
     rtp_session_t *session,
@@ -338,25 +322,21 @@ voice_error_t rtcp_process_rr(
 
 /**
  * @brief 生成随机 SSRC
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 uint32_t rtp_generate_ssrc(void);
 
 /**
  * @brief 生成随机初始序列号
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 uint16_t rtp_generate_sequence(void);
 
 /**
  * @brief 获取当前 NTP 时间戳
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void rtp_get_ntp_timestamp(uint32_t *ntp_sec, uint32_t *ntp_frac);
 
 /**
  * @brief 计算序列号差值 (处理回绕)
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 int32_t rtp_sequence_diff(uint16_t seq1, uint16_t seq2);
 

@@ -74,25 +74,21 @@ typedef struct {
 
 /**
  * @brief 初始化默认配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_mixer_config_init(voice_mixer_config_t *config);
 
 /**
  * @brief 创建混音器
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_mixer_t *voice_mixer_create(const voice_mixer_config_t *config);
 
 /**
  * @brief 销毁混音器
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 void voice_mixer_destroy(voice_mixer_t *mixer);
 
 /**
  * @brief 添加音源
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @return 音源ID，失败返回 MIXER_INVALID_SOURCE_ID
  */
 mixer_source_id_t voice_mixer_add_source(
@@ -102,7 +98,6 @@ mixer_source_id_t voice_mixer_add_source(
 
 /**
  * @brief 移除音源
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_mixer_remove_source(
     voice_mixer_t *mixer,
@@ -111,7 +106,6 @@ voice_error_t voice_mixer_remove_source(
 
 /**
  * @brief 向音源推送音频数据
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_mixer_push_audio(
     voice_mixer_t *mixer,
@@ -122,7 +116,6 @@ voice_error_t voice_mixer_push_audio(
 
 /**
  * @brief 混合并获取输出
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param mixer 混音器
  * @param output 输出缓冲区
  * @param num_samples 请求的样本数
@@ -137,7 +130,6 @@ voice_error_t voice_mixer_get_output(
 
 /**
  * @brief 设置音源增益
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_mixer_set_source_gain(
     voice_mixer_t *mixer,
@@ -147,7 +139,6 @@ voice_error_t voice_mixer_set_source_gain(
 
 /**
  * @brief 设置音源静音
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_mixer_set_source_muted(
     voice_mixer_t *mixer,
@@ -157,7 +148,6 @@ voice_error_t voice_mixer_set_source_muted(
 
 /**
  * @brief 设置主增益
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 voice_error_t voice_mixer_set_master_gain(
     voice_mixer_t *mixer,
@@ -166,13 +156,11 @@ voice_error_t voice_mixer_set_master_gain(
 
 /**
  * @brief 获取活跃音源数
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 size_t voice_mixer_get_active_sources(voice_mixer_t *mixer);
 
 /**
  * @brief 混音器统计
- * @author wangxuebing <lynnss.codeai@gmail.com>
  */
 typedef struct {
     size_t active_sources;

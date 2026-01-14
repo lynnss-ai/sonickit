@@ -5,6 +5,7 @@
  */
 
 #include "network/srtp.h"
+#include <string.h>
 
 #ifdef VOICE_HAVE_SRTP
 
@@ -60,16 +61,16 @@ voice_error_t srtp_init(void)
     if (g_srtp_initialized) {
         return VOICE_OK;
     }
-    
+
     srtp_err_status_t status = srtp_init();
     if (status != srtp_err_status_ok) {
         VOICE_LOG_E("Failed to initialize libsrtp: %d", status);
         return VOICE_ERROR_CRYPTO_FAILED;
     }
-    
+
     g_srtp_initialized = true;
     VOICE_LOG_I("SRTP library initialized");
-    
+
     return VOICE_OK;
 }
 
@@ -88,7 +89,7 @@ void srtp_shutdown(void)
 void srtp_config_init(srtp_config_t *config)
 {
     if (!config) return;
-    
+
     memset(config, 0, sizeof(srtp_config_t));
     config->profile = SRTP_PROFILE_AES128_CM_SHA1_80;
     config->master_key_len = SRTP_MASTER_KEY_LEN;
@@ -101,34 +102,34 @@ srtp_session_t *srtp_session_create(const srtp_config_t *config)
     if (!config) {
         return NULL;
     }
-    
+
     if (!g_srtp_initialized) {
         if (srtp_init() != VOICE_OK) {
             return NULL;
         }
     }
-    
+
     srtp_session_t *session = (srtp_session_t *)calloc(1, sizeof(srtp_session_t));
     if (!session) {
         return NULL;
     }
-    
+
     session->config = *config;
-    
+
     /* 设置策略 */
     memset(&session->policy, 0, sizeof(srtp_policy_t));
-    
+
     /* 从配置选择加密套件 */
     srtp_crypto_policy_set_from_profile_for_rtp(
         &session->policy.rtp,
         ours_profile_to_libsrtp(config->profile)
     );
-    
+
     srtp_crypto_policy_set_from_profile_for_rtcp(
         &session->policy.rtcp,
         ours_profile_to_libsrtp(config->profile)
     );
-    
+
     /* 设置密钥 */
     size_t key_len = config->master_key_len + config->master_salt_len;
     uint8_t *key_salt = (uint8_t *)malloc(key_len);
@@ -136,46 +137,46 @@ srtp_session_t *srtp_session_create(const srtp_config_t *config)
         free(session);
         return NULL;
     }
-    
+
     memcpy(key_salt, config->master_key, config->master_key_len);
-    memcpy(key_salt + config->master_key_len, 
+    memcpy(key_salt + config->master_key_len,
            config->master_salt, config->master_salt_len);
-    
+
     session->policy.key = key_salt;
     session->policy.ssrc.type = config->ssrc ? ssrc_specific : ssrc_any_inbound;
     session->policy.ssrc.value = config->ssrc;
     session->policy.window_size = (unsigned long)config->replay_window_size;
     session->policy.allow_repeat_tx = 0;
     session->policy.next = NULL;
-    
+
     /* 创建 SRTP 上下文 */
     srtp_err_status_t status = srtp_create(&session->srtp_ctx, &session->policy);
-    
+
     /* 不再需要密钥缓冲区 */
     free(key_salt);
     session->policy.key = NULL;
-    
+
     if (status != srtp_err_status_ok) {
         VOICE_LOG_E("Failed to create SRTP context: %d", status);
         free(session);
         return NULL;
     }
-    
+
     session->initialized = true;
     VOICE_LOG_I("SRTP session created: SSRC=0x%08X, profile=%d",
         config->ssrc, config->profile);
-    
+
     return session;
 }
 
 void srtp_session_destroy(srtp_session_t *session)
 {
     if (!session) return;
-    
+
     if (session->initialized && session->srtp_ctx) {
         srtp_dealloc(session->srtp_ctx);
     }
-    
+
     free(session);
 }
 
@@ -192,25 +193,25 @@ voice_error_t srtp_protect(
     if (!session || !session->initialized) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!rtp_packet || !rtp_len) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     /* 检查缓冲区是否足够大 */
     size_t auth_tag_len = srtp_get_auth_tag_len(session->config.profile);
     if (*rtp_len + auth_tag_len > max_len) {
         return VOICE_ERROR_BUFFER_TOO_SMALL;
     }
-    
+
     int len = (int)*rtp_len;
     srtp_err_status_t status = srtp_protect(session->srtp_ctx, rtp_packet, &len);
-    
+
     if (status != srtp_err_status_ok) {
         VOICE_LOG_E("SRTP protect failed: %d", status);
         return VOICE_ERROR_CRYPTO_FAILED;
     }
-    
+
     *rtp_len = (size_t)len;
     return VOICE_OK;
 }
@@ -223,14 +224,14 @@ voice_error_t srtp_unprotect(
     if (!session || !session->initialized) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!srtp_packet || !srtp_len) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     int len = (int)*srtp_len;
     srtp_err_status_t status = srtp_unprotect(session->srtp_ctx, srtp_packet, &len);
-    
+
     if (status != srtp_err_status_ok) {
         if (status == srtp_err_status_replay_fail) {
             return VOICE_ERROR_REPLAY_ATTACK;
@@ -241,7 +242,7 @@ voice_error_t srtp_unprotect(
         VOICE_LOG_E("SRTP unprotect failed: %d", status);
         return VOICE_ERROR_CRYPTO_FAILED;
     }
-    
+
     *srtp_len = (size_t)len;
     return VOICE_OK;
 }
@@ -255,25 +256,25 @@ voice_error_t srtcp_protect(
     if (!session || !session->initialized) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!rtcp_packet || !rtcp_len) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     /* SRTCP 需要额外空间: auth tag + index (4 bytes) */
     size_t extra = srtp_get_auth_tag_len(session->config.profile) + 4;
     if (*rtcp_len + extra > max_len) {
         return VOICE_ERROR_BUFFER_TOO_SMALL;
     }
-    
+
     int len = (int)*rtcp_len;
     srtp_err_status_t status = srtp_protect_rtcp(session->srtp_ctx, rtcp_packet, &len);
-    
+
     if (status != srtp_err_status_ok) {
         VOICE_LOG_E("SRTCP protect failed: %d", status);
         return VOICE_ERROR_CRYPTO_FAILED;
     }
-    
+
     *rtcp_len = (size_t)len;
     return VOICE_OK;
 }
@@ -286,14 +287,14 @@ voice_error_t srtcp_unprotect(
     if (!session || !session->initialized) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!srtcp_packet || !srtcp_len) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     int len = (int)*srtcp_len;
     srtp_err_status_t status = srtp_unprotect_rtcp(session->srtp_ctx, srtcp_packet, &len);
-    
+
     if (status != srtp_err_status_ok) {
         if (status == srtp_err_status_replay_fail) {
             return VOICE_ERROR_REPLAY_ATTACK;
@@ -304,7 +305,7 @@ voice_error_t srtcp_unprotect(
         VOICE_LOG_E("SRTCP unprotect failed: %d", status);
         return VOICE_ERROR_CRYPTO_FAILED;
     }
-    
+
     *srtcp_len = (size_t)len;
     return VOICE_OK;
 }
@@ -319,46 +320,46 @@ voice_error_t srtp_session_update_key(
     if (!session || !session->initialized) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!master_key || !master_salt) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     /* 更新密钥需要重建会话 */
     srtp_config_t new_config = session->config;
     memcpy(new_config.master_key, master_key, key_len);
     new_config.master_key_len = key_len;
     memcpy(new_config.master_salt, master_salt, salt_len);
     new_config.master_salt_len = salt_len;
-    
+
     /* 销毁旧上下文 */
     if (session->srtp_ctx) {
         srtp_dealloc(session->srtp_ctx);
         session->srtp_ctx = NULL;
     }
-    
+
     /* 创建新上下文 */
     size_t total_key_len = key_len + salt_len;
     uint8_t *key_salt = (uint8_t *)malloc(total_key_len);
     if (!key_salt) {
         return VOICE_ERROR_NO_MEMORY;
     }
-    
+
     memcpy(key_salt, master_key, key_len);
     memcpy(key_salt + key_len, master_salt, salt_len);
-    
+
     session->policy.key = key_salt;
-    
+
     srtp_err_status_t status = srtp_create(&session->srtp_ctx, &session->policy);
-    
+
     free(key_salt);
     session->policy.key = NULL;
-    
+
     if (status != srtp_err_status_ok) {
         VOICE_LOG_E("Failed to update SRTP key: %d", status);
         return VOICE_ERROR_CRYPTO_FAILED;
     }
-    
+
     session->config = new_config;
     return VOICE_OK;
 }

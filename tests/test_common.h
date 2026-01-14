@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 /* ============================================
  * Test framework macros
@@ -89,7 +91,7 @@ static int g_tests_failed = 0;
  * ============================================ */
 
 /** Generate sine wave test signal */
-static inline void generate_sine_wave(int16_t *buffer, size_t samples, 
+static inline void generate_sine_wave(int16_t *buffer, size_t samples,
                                        float frequency, uint32_t sample_rate)
 {
     for (size_t i = 0; i < samples; i++) {
@@ -117,7 +119,7 @@ static inline void generate_noise(int16_t *buffer, size_t samples, int16_t ampli
 static inline float calculate_rms(const int16_t *buffer, size_t samples)
 {
     if (samples == 0) return 0.0f;
-    
+
     double sum = 0.0;
     for (size_t i = 0; i < samples; i++) {
         sum += (double)buffer[i] * buffer[i];
@@ -126,7 +128,7 @@ static inline float calculate_rms(const int16_t *buffer, size_t samples)
 }
 
 /** Compare two buffers */
-static inline int compare_buffers(const int16_t *a, const int16_t *b, 
+static inline int compare_buffers(const int16_t *a, const int16_t *b,
                                   size_t samples, int16_t tolerance)
 {
     for (size_t i = 0; i < samples; i++) {

@@ -9,6 +9,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +22,7 @@ extern "C" {
 /** 回声消除器句柄 */
 typedef struct voice_aec_s voice_aec_t;
 
-/** 回声消除器配置 */
+/** 回声消除器扩展配置 (包含额外选项) */
 typedef struct {
     uint32_t sample_rate;               /**< 采样率 */
     uint32_t frame_size;                /**< 帧大小(样本数) */
@@ -30,36 +31,32 @@ typedef struct {
     int echo_suppress_active_db;        /**< 近端活跃时抑制量 */
     bool enable_residual_echo_suppress; /**< 启用残余回声抑制 */
     bool enable_comfort_noise;          /**< 启用舒适噪声 */
-} voice_aec_config_t;
+} voice_aec_ext_config_t;
 
 /**
  * @brief 初始化默认配置
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 配置结构指针
  */
-void voice_aec_config_init(voice_aec_config_t *config);
+void voice_aec_ext_config_init(voice_aec_ext_config_t *config);
 
 /**
  * @brief 创建回声消除器
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param config 配置
  * @return 回声消除器句柄
  */
-voice_aec_t *voice_aec_create(const voice_aec_config_t *config);
+voice_aec_t *voice_aec_create(const voice_aec_ext_config_t *config);
 
 /**
  * @brief 销毁回声消除器
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  */
 void voice_aec_destroy(voice_aec_t *aec);
 
 /**
  * @brief 处理回声消除 (同步模式)
- * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
+ *
  * 要求播放信号和麦克风信号时间对齐
- * 
+ *
  * @param aec 回声消除器句柄
  * @param mic_input 麦克风输入 (含回声)
  * @param speaker_ref 扬声器参考信号
@@ -77,10 +74,9 @@ voice_error_t voice_aec_process(
 
 /**
  * @brief 播放端回调 (异步模式)
- * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
+ *
  * 在播放线程中调用，缓存播放数据用于AEC
- * 
+ *
  * @param aec 回声消除器句柄
  * @param speaker_data 扬声器数据
  * @param frame_count 帧数
@@ -94,10 +90,9 @@ voice_error_t voice_aec_playback(
 
 /**
  * @brief 采集端回调 (异步模式)
- * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
+ *
  * 在采集线程中调用，处理回声消除
- * 
+ *
  * @param aec 回声消除器句柄
  * @param mic_input 麦克风输入
  * @param output 输出
@@ -113,7 +108,6 @@ voice_error_t voice_aec_capture(
 
 /**
  * @brief 设置回声抑制量
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  * @param suppress_db 抑制量 (负dB)
  * @param suppress_active_db 近端活跃时抑制量
@@ -127,7 +121,6 @@ voice_error_t voice_aec_set_suppress(
 
 /**
  * @brief 启用/禁用回声消除
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  * @param enabled 是否启用
  * @return 错误码
@@ -136,7 +129,6 @@ voice_error_t voice_aec_set_enabled(voice_aec_t *aec, bool enabled);
 
 /**
  * @brief 检查是否启用
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  * @return true 已启用
  */
@@ -144,14 +136,12 @@ bool voice_aec_is_enabled(voice_aec_t *aec);
 
 /**
  * @brief 重置回声消除器状态
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  */
 void voice_aec_reset(voice_aec_t *aec);
 
 /**
  * @brief 获取滤波器延迟估计
- * @author wangxuebing <lynnss.codeai@gmail.com>
  * @param aec 回声消除器句柄
  * @return 延迟(样本数)
  */
