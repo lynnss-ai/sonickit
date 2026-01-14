@@ -295,6 +295,172 @@ static void float_to_int16_neon(const float *src, int16_t *dst, size_t count) {
 }
 #endif
 
+/* ============================================
+ * AVX2 实现 (Phase 1 新增)
+ * ============================================ */
+
+#if defined(VOICE_HAS_AVX2)
+static void int16_to_float_avx2(const int16_t *src, float *dst, size_t count) {
+    const __m256 scale = _mm256_set1_ps(1.0f / 32768.0f);
+    size_t i = 0;
+
+    /* AVX2: 每次处理 16 个样本 */
+    for (; i + 16 <= count; i += 16) {
+        /* 加载 16 个 int16 */
+        __m256i s16 = _mm256_loadu_si256((const __m256i *)(src + i));
+
+        /* 符号扩展到 int32 (低 8 个) */
+        __m128i lo_128 = _mm256_castsi256_si128(s16);
+        __m256i lo_32 = _mm256_cvtepi16_epi32(lo_128);
+        __m256 flo = _mm256_cvtepi32_ps(lo_32);
+        flo = _mm256_mul_ps(flo, scale);
+        _mm256_storeu_ps(dst + i, flo);
+
+        /* 符号扩展到 int32 (高 8 个) */
+        __m128i hi_128 = _mm256_extracti128_si256(s16, 1);
+        __m256i hi_32 = _mm256_cvtepi16_epi32(hi_128);
+        __m256 fhi = _mm256_cvtepi32_ps(hi_32);
+        fhi = _mm256_mul_ps(fhi, scale);
+        _mm256_storeu_ps(dst + i + 8, fhi);
+    }
+
+    /* 处理剩余 (使用 SSE2) */
+    for (; i + 8 <= count; i += 8) {
+        __m128i s16_128 = _mm_loadu_si128((const __m128i *)(src + i));
+        __m256i s32 = _mm256_cvtepi16_epi32(s16_128);
+        __m256 f = _mm256_cvtepi32_ps(s32);
+        f = _mm256_mul_ps(f, scale);
+        _mm256_storeu_ps(dst + i, f);
+    }
+
+    /* 标量处理剩余 */
+    for (; i < count; i++) {
+        dst[i] = (float)src[i] * (1.0f / 32768.0f);
+    }
+}
+
+static void float_to_int16_avx2(const float *src, int16_t *dst, size_t count) {
+    const __m256 scale = _mm256_set1_ps(32768.0f);
+    const __m256 max_val = _mm256_set1_ps(32767.0f);
+    const __m256 min_val = _mm256_set1_ps(-32768.0f);
+    size_t i = 0;
+
+    /* AVX2: 每次处理 16 个样本 */
+    for (; i + 16 <= count; i += 16) {
+        /* 加载并缩放 */
+        __m256 f0 = _mm256_loadu_ps(src + i);
+        __m256 f1 = _mm256_loadu_ps(src + i + 8);
+
+        f0 = _mm256_mul_ps(f0, scale);
+        f1 = _mm256_mul_ps(f1, scale);
+
+        /* 饱和 */
+        f0 = _mm256_min_ps(_mm256_max_ps(f0, min_val), max_val);
+        f1 = _mm256_min_ps(_mm256_max_ps(f1, min_val), max_val);
+
+        /* 转换到 int32 */
+        __m256i i0 = _mm256_cvtps_epi32(f0);
+        __m256i i1 = _mm256_cvtps_epi32(f1);
+
+        /* 打包到 int16: 需要重新排列 */
+        __m256i packed = _mm256_packs_epi32(i0, i1);
+        packed = _mm256_permute4x64_epi64(packed, 0xD8);
+        _mm256_storeu_si256((__m256i *)(dst + i), packed);
+    }
+
+    /* 处理剩余 */
+    for (; i < count; i++) {
+        float sample = src[i] * 32768.0f;
+        if (sample > 32767.0f) sample = 32767.0f;
+        if (sample < -32768.0f) sample = -32768.0f;
+        dst[i] = (int16_t)sample;
+    }
+}
+
+static float find_peak_float_avx2(const float *samples, size_t count) {
+    __m256 abs_mask = _mm256_castsi256_ps(_mm256_set1_epi32(0x7FFFFFFF));
+    __m256 peak_vec = _mm256_setzero_ps();
+    size_t i = 0;
+
+    for (; i + 8 <= count; i += 8) {
+        __m256 s = _mm256_loadu_ps(samples + i);
+        __m256 abs_s = _mm256_and_ps(s, abs_mask);
+        peak_vec = _mm256_max_ps(peak_vec, abs_s);
+    }
+
+    /* 水平归约 */
+    __m128 lo = _mm256_castps256_ps128(peak_vec);
+    __m128 hi = _mm256_extractf128_ps(peak_vec, 1);
+    __m128 max_128 = _mm_max_ps(lo, hi);
+    max_128 = _mm_max_ps(max_128, _mm_shuffle_ps(max_128, max_128, 0x4E));
+    max_128 = _mm_max_ps(max_128, _mm_shuffle_ps(max_128, max_128, 0xB1));
+    float peak = _mm_cvtss_f32(max_128);
+
+    for (; i < count; i++) {
+        float abs_val = samples[i] < 0.0f ? -samples[i] : samples[i];
+        if (abs_val > peak) peak = abs_val;
+    }
+
+    return peak;
+}
+
+static float compute_energy_float_avx2(const float *samples, size_t count) {
+    if (count == 0) return 0.0f;
+
+    __m256 sum_vec = _mm256_setzero_ps();
+    size_t i = 0;
+
+    for (; i + 8 <= count; i += 8) {
+        __m256 s = _mm256_loadu_ps(samples + i);
+        sum_vec = _mm256_fmadd_ps(s, s, sum_vec);
+    }
+
+    /* 水平归约 */
+    __m128 lo = _mm256_castps256_ps128(sum_vec);
+    __m128 hi = _mm256_extractf128_ps(sum_vec, 1);
+    __m128 sum_128 = _mm_add_ps(lo, hi);
+    sum_128 = _mm_add_ps(sum_128, _mm_shuffle_ps(sum_128, sum_128, 0x4E));
+    sum_128 = _mm_add_ps(sum_128, _mm_shuffle_ps(sum_128, sum_128, 0xB1));
+    float sum_sq = _mm_cvtss_f32(sum_128);
+
+    for (; i < count; i++) {
+        sum_sq += samples[i] * samples[i];
+    }
+
+    return sum_sq / (float)count;
+}
+
+static void apply_gain_float_avx2(float *samples, size_t count, float gain) {
+    __m256 g = _mm256_set1_ps(gain);
+    size_t i = 0;
+
+    for (; i + 8 <= count; i += 8) {
+        __m256 s = _mm256_loadu_ps(samples + i);
+        s = _mm256_mul_ps(s, g);
+        _mm256_storeu_ps(samples + i, s);
+    }
+
+    for (; i < count; i++) {
+        samples[i] *= gain;
+    }
+}
+
+static void mix_add_float_avx2(float *dst, const float *src, size_t count) {
+    size_t i = 0;
+
+    for (; i + 8 <= count; i += 8) {
+        __m256 d = _mm256_loadu_ps(dst + i);
+        __m256 s = _mm256_loadu_ps(src + i);
+        d = _mm256_add_ps(d, s);
+        _mm256_storeu_ps(dst + i, d);
+    }
+
+    for (; i < count; i++) {
+        dst[i] += src[i];
+    }
+}
+#endif
+
 /* 公共接口 - 自动选择最优实现 */
 void voice_int16_to_float(const int16_t *src, float *dst, size_t count) {
     if (!g_simd_detected) {
@@ -303,6 +469,16 @@ void voice_int16_to_float(const int16_t *src, float *dst, size_t count) {
 
 #if defined(VOICE_HAS_NEON)
     int16_to_float_neon(src, dst, count);
+#elif defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        int16_to_float_avx2(src, dst, count);
+        return;
+    }
+    if (g_simd_flags & VOICE_SIMD_SSE2) {
+        int16_to_float_sse2(src, dst, count);
+        return;
+    }
+    int16_to_float_scalar(src, dst, count);
 #elif defined(VOICE_HAS_SSE2)
     if (g_simd_flags & VOICE_SIMD_SSE2) {
         int16_to_float_sse2(src, dst, count);
@@ -321,6 +497,16 @@ void voice_float_to_int16(const float *src, int16_t *dst, size_t count) {
 
 #if defined(VOICE_HAS_NEON)
     float_to_int16_neon(src, dst, count);
+#elif defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        float_to_int16_avx2(src, dst, count);
+        return;
+    }
+    if (g_simd_flags & VOICE_SIMD_SSE2) {
+        float_to_int16_sse2(src, dst, count);
+        return;
+    }
+    float_to_int16_scalar(src, dst, count);
 #elif defined(VOICE_HAS_SSE2)
     if (g_simd_flags & VOICE_SIMD_SSE2) {
         float_to_int16_sse2(src, dst, count);
@@ -383,6 +569,13 @@ void voice_apply_gain_int16(int16_t *samples, size_t count, float gain) {
 void voice_apply_gain_float(float *samples, size_t count, float gain) {
     if (gain == 1.0f) return;
 
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        apply_gain_float_avx2(samples, count, gain);
+        return;
+    }
+#endif
+
 #if defined(VOICE_HAS_SSE2)
     if (g_simd_flags & VOICE_SIMD_SSE2) {
         __m128 g = _mm_set1_ps(gain);
@@ -433,6 +626,13 @@ void voice_mix_add_int16(int16_t *dst, const int16_t *src, size_t count) {
 }
 
 void voice_mix_add_float(float *dst, const float *src, size_t count) {
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        mix_add_float_avx2(dst, src, count);
+        return;
+    }
+#endif
+
 #if defined(VOICE_HAS_SSE2)
     if (g_simd_flags & VOICE_SIMD_SSE2) {
         size_t i = 0;
@@ -490,6 +690,12 @@ int16_t voice_find_peak_int16(const int16_t *samples, size_t count) {
 }
 
 float voice_find_peak_float(const float *samples, size_t count) {
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        return find_peak_float_avx2(samples, count);
+    }
+#endif
+
     float peak = 0.0f;
     for (size_t i = 0; i < count; i++) {
         float abs_val = samples[i] < 0.0f ? -samples[i] : samples[i];
@@ -509,6 +715,12 @@ float voice_compute_energy_int16(const int16_t *samples, size_t count) {
 }
 
 float voice_compute_energy_float(const float *samples, size_t count) {
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        return compute_energy_float_avx2(samples, count);
+    }
+#endif
+
     if (count == 0) return 0.0f;
 
     float sum_sq = 0.0f;
