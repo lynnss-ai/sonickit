@@ -69,9 +69,9 @@ int main(int argc, char *argv[]) {
     (void)argc;
     (void)argv;
 
-    printf("╔════════════════════════════════════════════════════════════════╗\n");
-    printf("║          SonicKit SIMD Performance Benchmark                   ║\n");
-    printf("╚════════════════════════════════════════════════════════════════╝\n\n");
+    printf("+================================================================+\n");
+    printf("|          SonicKit SIMD Performance Benchmark                   |\n");
+    printf("+================================================================+\n\n");
 
     /* 检测 SIMD 能力 */
     uint32_t simd_flags = voice_simd_detect();
@@ -99,9 +99,9 @@ int main(int argc, char *argv[]) {
     /* 运行基准测试 */
     bench_context_t bench;
 
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
     printf("                     Format Conversion Tests                        \n");
-    printf("═══════════════════════════════════════════════════════════════════\n\n");
+    printf("===================================================================\n\n");
 
     bench_init(&bench, "int16_to_float", bench_int16_to_float, &ctx);
     bench_set_throughput(&bench, TEST_SIZE, "samples/sec");
@@ -117,9 +117,9 @@ int main(int argc, char *argv[]) {
     bench_print_result(&bench);
     bench_cleanup(&bench);
 
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
     printf("                     Audio Processing Tests                         \n");
-    printf("═══════════════════════════════════════════════════════════════════\n\n");
+    printf("===================================================================\n\n");
 
     /* 重置数据 */
     memcpy(ctx.float_buf_dst, ctx.float_buf_src, TEST_SIZE * sizeof(float));
@@ -138,9 +138,9 @@ int main(int argc, char *argv[]) {
     bench_print_result(&bench);
     bench_cleanup(&bench);
 
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
     printf("                     Analysis Tests                                 \n");
-    printf("═══════════════════════════════════════════════════════════════════\n\n");
+    printf("===================================================================\n\n");
 
     bench_init(&bench, "find_peak_float", bench_find_peak, &ctx);
     bench_set_throughput(&bench, TEST_SIZE, "samples/sec");
@@ -157,9 +157,9 @@ int main(int argc, char *argv[]) {
     bench_cleanup(&bench);
 
     /* 不同缓冲区大小测试 */
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
     printf("                     Buffer Size Scaling Test                       \n");
-    printf("═══════════════════════════════════════════════════════════════════\n\n");
+    printf("===================================================================\n\n");
 
     size_t sizes[] = {64, 256, 1024, 4096, 16384};
     const int num_sizes = sizeof(sizes) / sizeof(sizes[0]);
@@ -201,9 +201,9 @@ int main(int argc, char *argv[]) {
     voice_aligned_free(ctx.float_buf_src);
     voice_aligned_free(ctx.float_buf_dst);
 
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
     printf("                     Benchmark Complete                             \n");
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
 
     return 0;
 }

@@ -277,36 +277,36 @@ static inline void bench_run(bench_context_t *ctx) {
 static inline void bench_print_result(const bench_context_t *ctx) {
     const bench_stats_t *s = &ctx->stats;
 
-    printf("┌────────────────────────────────────────────────────────────────┐\n");
-    printf("│ Benchmark: %-52s │\n", s->name);
-    printf("├────────────────────────────────────────────────────────────────┤\n");
-    printf("│ Iterations: %-10u                                        │\n", s->iterations);
-    printf("│ Mean:       %10.2f ns  (%.2f µs)                        │\n",
+    printf("+------------------------------------------------------------------+\n");
+    printf("| Benchmark: %-52s |\n", s->name);
+    printf("+------------------------------------------------------------------+\n");
+    printf("| Iterations: %-10u                                        |\n", s->iterations);
+    printf("| Mean:       %10.2f ns  (%.2f us)                         |\n",
            s->mean_ns, s->mean_ns / 1000.0);
-    printf("│ Median:     %10.2f ns                                    │\n", s->median_ns);
-    printf("│ Std Dev:    %10.2f ns                                    │\n", s->stddev_ns);
-    printf("│ Min:        %10.2f ns                                    │\n", s->min_ns);
-    printf("│ Max:        %10.2f ns                                    │\n", s->max_ns);
-    printf("│ P95:        %10.2f ns                                    │\n", s->p95_ns);
-    printf("│ P99:        %10.2f ns                                    │\n", s->p99_ns);
+    printf("| Median:     %10.2f ns                                    |\n", s->median_ns);
+    printf("| Std Dev:    %10.2f ns                                    |\n", s->stddev_ns);
+    printf("| Min:        %10.2f ns                                    |\n", s->min_ns);
+    printf("| Max:        %10.2f ns                                    |\n", s->max_ns);
+    printf("| P95:        %10.2f ns                                    |\n", s->p95_ns);
+    printf("| P99:        %10.2f ns                                    |\n", s->p99_ns);
 
     if (s->throughput > 0) {
         if (s->throughput > 1e9) {
-            printf("│ Throughput: %10.2f G%s                                 │\n",
+            printf("| Throughput: %10.2f G%s                                 |\n",
                    s->throughput / 1e9, s->unit);
         } else if (s->throughput > 1e6) {
-            printf("│ Throughput: %10.2f M%s                                 │\n",
+            printf("| Throughput: %10.2f M%s                                 |\n",
                    s->throughput / 1e6, s->unit);
         } else if (s->throughput > 1e3) {
-            printf("│ Throughput: %10.2f K%s                                 │\n",
+            printf("| Throughput: %10.2f K%s                                 |\n",
                    s->throughput / 1e3, s->unit);
         } else {
-            printf("│ Throughput: %10.2f %s                                  │\n",
+            printf("| Throughput: %10.2f %s                                  |\n",
                    s->throughput, s->unit);
         }
     }
 
-    printf("└────────────────────────────────────────────────────────────────┘\n\n");
+    printf("+------------------------------------------------------------------+\n\n");
 }
 
 /**
@@ -343,16 +343,16 @@ static inline void bench_compare(
     double speedup = baseline->mean_ns / test->mean_ns;
     double diff_percent = ((baseline->mean_ns - test->mean_ns) / baseline->mean_ns) * 100.0;
 
-    printf("┌────────────────────────────────────────────────────────────────┐\n");
-    printf("│ Comparison: %-50s │\n", label);
-    printf("├────────────────────────────────────────────────────────────────┤\n");
-    printf("│ Baseline:   %-52s │\n", baseline->name);
-    printf("│             %10.2f ns                                      │\n", baseline->mean_ns);
-    printf("│ Test:       %-52s │\n", test->name);
-    printf("│             %10.2f ns                                      │\n", test->mean_ns);
-    printf("│ Speedup:    %10.2fx                                        │\n", speedup);
-    printf("│ Difference: %+9.1f%%                                        │\n", diff_percent);
-    printf("└────────────────────────────────────────────────────────────────┘\n\n");
+    printf("+------------------------------------------------------------------+\n");
+    printf("| Comparison: %-50s |\n", label);
+    printf("+------------------------------------------------------------------+\n");
+    printf("| Baseline:   %-52s |\n", baseline->name);
+    printf("|             %10.2f ns                                      |\n", baseline->mean_ns);
+    printf("| Test:       %-52s |\n", test->name);
+    printf("|             %10.2f ns                                      |\n", test->mean_ns);
+    printf("| Speedup:    %10.2fx                                        |\n", speedup);
+    printf("| Difference: %+9.1f%%                                        |\n", diff_percent);
+    printf("+------------------------------------------------------------------+\n\n");
 }
 
 /* ============================================

@@ -39,9 +39,9 @@ static void bench_aec_process(void *ctx) {
 }
 
 static void run_aec_benchmark(void) {
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
     printf("                     AEC Benchmark                                  \n");
-    printf("═══════════════════════════════════════════════════════════════════\n\n");
+    printf("===================================================================\n\n");
 
     /* 创建 AEC */
     voice_aec_ext_config_t aec_config;
@@ -135,9 +135,9 @@ static void bench_time_stretch(void *ctx) {
 }
 
 static void run_time_stretcher_benchmark(void) {
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
     printf("                     Time Stretcher Benchmark                       \n");
-    printf("═══════════════════════════════════════════════════════════════════\n\n");
+    printf("===================================================================\n\n");
 
     /* 创建 Time Stretcher */
     voice_time_stretcher_config_t ts_config;
@@ -223,9 +223,9 @@ static void bench_delay_estimate(void *ctx) {
 }
 
 static void run_delay_estimator_benchmark(void) {
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
     printf("                     Delay Estimator Benchmark                      \n");
-    printf("═══════════════════════════════════════════════════════════════════\n\n");
+    printf("===================================================================\n\n");
 
     /* 创建 Delay Estimator */
     voice_delay_estimator_config_t de_config;
@@ -283,9 +283,9 @@ int main(int argc, char *argv[]) {
     (void)argc;
     (void)argv;
 
-    printf("╔════════════════════════════════════════════════════════════════╗\n");
-    printf("║          SonicKit DSP Performance Benchmark                    ║\n");
-    printf("╚════════════════════════════════════════════════════════════════╝\n\n");
+    printf("+================================================================+\n");
+    printf("|          SonicKit DSP Performance Benchmark                    |\n");
+    printf("+================================================================+\n\n");
 
     printf("Sample Rate: %d Hz\n", SAMPLE_RATE);
     printf("Frame Size: %d samples (%.1f ms)\n", FRAME_SIZE,
@@ -296,9 +296,9 @@ int main(int argc, char *argv[]) {
     run_time_stretcher_benchmark();
     run_delay_estimator_benchmark();
 
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
     printf("                     Benchmark Complete                             \n");
-    printf("═══════════════════════════════════════════════════════════════════\n");
+    printf("===================================================================\n");
 
     return 0;
 }
