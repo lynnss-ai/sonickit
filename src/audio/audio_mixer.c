@@ -6,6 +6,7 @@
 
 #include "audio/audio_mixer.h"
 #include "audio/audio_buffer.h"
+#include "utils/simd_utils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -319,29 +320,25 @@ voice_error_t voice_mixer_get_output(
         size_t read = voice_ring_buffer_read(src->buffer, temp_i16, num_samples * sizeof(int16_t));
         if (read < num_samples * sizeof(int16_t)) continue;
 
-        /* 转换为浮点并应用增益 */
+        /* 转换为浮点并应用增益 (SIMD优化) */
         float gain = src->config.gain;
-        for (size_t j = 0; j < num_samples; j++) {
-            mixer->mix_buffer[j] += (float)temp_i16[j] / 32768.0f * gain;
-        }
+        voice_int16_to_float(temp_i16, mixer->source_buffer, num_samples);
+        voice_apply_gain_float(mixer->source_buffer, gain, num_samples);
+        voice_mix_add_float(mixer->mix_buffer, mixer->source_buffer, num_samples);
 
         active_sources++;
     }
 
     free(temp_i16);
 
-    /* 归一化 */
+    /* 归一化 (SIMD优化) */
     if (active_sources > 1 && mixer->config.algorithm == VOICE_MIX_NORMALIZED) {
         float scale = 1.0f / sqrtf((float)active_sources);
-        for (size_t i = 0; i < num_samples; i++) {
-            mixer->mix_buffer[i] *= scale;
-        }
+        voice_apply_gain_float(mixer->mix_buffer, scale, num_samples);
     }
 
-    /* 应用主增益 */
-    for (size_t i = 0; i < num_samples; i++) {
-        mixer->mix_buffer[i] *= mixer->config.master_gain;
-    }
+    /* 应用主增益 (SIMD优化) */
+    voice_apply_gain_float(mixer->mix_buffer, mixer->config.master_gain, num_samples);
 
     /* 应用限制器 */
     if (mixer->config.enable_limiter) {
@@ -349,13 +346,8 @@ voice_error_t voice_mixer_get_output(
         apply_limiter(mixer, mixer->mix_buffer, num_samples, threshold);
     }
 
-    /* 转换回 int16 */
-    for (size_t i = 0; i < num_samples; i++) {
-        float val = mixer->mix_buffer[i] * 32768.0f;
-        if (val > 32767.0f) val = 32767.0f;
-        if (val < -32768.0f) val = -32768.0f;
-        output[i] = (int16_t)val;
-    }
+    /* 转换回 int16 (SIMD优化) */
+    voice_float_to_int16(mixer->mix_buffer, output, num_samples);
 
     if (samples_out) {
         *samples_out = num_samples;

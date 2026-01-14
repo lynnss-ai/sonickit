@@ -7,9 +7,23 @@
  */
 
 #include "dsp/time_stretcher.h"
+#include "utils/simd_utils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+/* SIMD intrinsics */
+#if defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__)
+    #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+        #ifdef __AVX2__
+            #include <immintrin.h>
+        #elif defined(__SSE2__)
+            #include <emmintrin.h>
+        #endif
+    #elif defined(__ARM_NEON) || defined(__ARM_NEON__)
+        #include <arm_neon.h>
+    #endif
+#endif
 
 /* Constants */
 #define TS_MIN_RATE         0.5f
@@ -65,21 +79,46 @@ static void generate_hann_window(float *window, size_t length)
 }
 
 /**
- * @brief Calculate cross-correlation at a given lag
+ * @brief Calculate cross-correlation at a given lag (SIMD optimized)
  */
 static float cross_correlation(const float *a, const float *b, size_t length)
 {
-    float sum = 0.0f;
-    float norm_a = 0.0f;
-    float norm_b = 0.0f;
+    /* 使用 SIMD 计算能量和点积 */
+    float energy_a = voice_compute_energy_float(a, length) * (float)length;
+    float energy_b = voice_compute_energy_float(b, length) * (float)length;
 
+    /* 点积计算 - AVX2 优化 */
+#if defined(__AVX2__) || defined(__AVX__)
+    float sum = 0.0f;
+    size_t i = 0;
+
+    #ifdef __AVX2__
+    __m256 sum_vec = _mm256_setzero_ps();
+    for (; i + 8 <= length; i += 8) {
+        __m256 va = _mm256_loadu_ps(a + i);
+        __m256 vb = _mm256_loadu_ps(b + i);
+        sum_vec = _mm256_fmadd_ps(va, vb, sum_vec);
+    }
+    /* 水平归约 */
+    __m128 lo = _mm256_castps256_ps128(sum_vec);
+    __m128 hi = _mm256_extractf128_ps(sum_vec, 1);
+    __m128 sum_128 = _mm_add_ps(lo, hi);
+    sum_128 = _mm_add_ps(sum_128, _mm_shuffle_ps(sum_128, sum_128, 0x4E));
+    sum_128 = _mm_add_ps(sum_128, _mm_shuffle_ps(sum_128, sum_128, 0xB1));
+    sum = _mm_cvtss_f32(sum_128);
+    #endif
+
+    for (; i < length; i++) {
+        sum += a[i] * b[i];
+    }
+#else
+    float sum = 0.0f;
     for (size_t i = 0; i < length; i++) {
         sum += a[i] * b[i];
-        norm_a += a[i] * a[i];
-        norm_b += b[i] * b[i];
     }
+#endif
 
-    float denom = sqrtf(norm_a * norm_b);
+    float denom = sqrtf(energy_a * energy_b);
     if (denom < 1e-10f) {
         return 0.0f;
     }
@@ -119,15 +158,74 @@ static int find_best_offset(const float *input, size_t input_len,
 }
 
 /**
- * @brief Overlap-add two frames
+ * @brief Overlap-add two frames (SIMD optimized)
  */
 static void overlap_add(float *output, const float *prev, const float *next,
                         const float *window, size_t length)
 {
+#if defined(__AVX2__) || defined(__AVX__)
+    size_t i = 0;
+    __m256 ones = _mm256_set1_ps(1.0f);
+
+    for (; i + 8 <= length; i += 8) {
+        __m256 w = _mm256_loadu_ps(window + i);
+        __m256 p = _mm256_loadu_ps(prev + i);
+        __m256 n = _mm256_loadu_ps(next + i);
+        __m256 one_minus_w = _mm256_sub_ps(ones, w);
+
+        /* output = prev * (1-w) + next * w */
+        __m256 result = _mm256_mul_ps(p, one_minus_w);
+        result = _mm256_fmadd_ps(n, w, result);
+
+        _mm256_storeu_ps(output + i, result);
+    }
+
+    for (; i < length; i++) {
+        float w = window[i];
+        output[i] = prev[i] * (1.0f - w) + next[i] * w;
+    }
+#elif defined(__SSE2__)
+    size_t i = 0;
+    __m128 ones = _mm_set1_ps(1.0f);
+
+    for (; i + 4 <= length; i += 4) {
+        __m128 w = _mm_loadu_ps(window + i);
+        __m128 p = _mm_loadu_ps(prev + i);
+        __m128 n = _mm_loadu_ps(next + i);
+        __m128 one_minus_w = _mm_sub_ps(ones, w);
+
+        __m128 result = _mm_add_ps(_mm_mul_ps(p, one_minus_w), _mm_mul_ps(n, w));
+        _mm_storeu_ps(output + i, result);
+    }
+
+    for (; i < length; i++) {
+        float w = window[i];
+        output[i] = prev[i] * (1.0f - w) + next[i] * w;
+    }
+#elif defined(__ARM_NEON) || defined(__ARM_NEON__)
+    size_t i = 0;
+    float32x4_t ones = vdupq_n_f32(1.0f);
+
+    for (; i + 4 <= length; i += 4) {
+        float32x4_t w = vld1q_f32(window + i);
+        float32x4_t p = vld1q_f32(prev + i);
+        float32x4_t n = vld1q_f32(next + i);
+        float32x4_t one_minus_w = vsubq_f32(ones, w);
+
+        float32x4_t result = vmlaq_f32(vmulq_f32(p, one_minus_w), n, w);
+        vst1q_f32(output + i, result);
+    }
+
+    for (; i < length; i++) {
+        float w = window[i];
+        output[i] = prev[i] * (1.0f - w) + next[i] * w;
+    }
+#else
     for (size_t i = 0; i < length; i++) {
         float w = window[i];
         output[i] = prev[i] * (1.0f - w) + next[i] * w;
     }
+#endif
 }
 
 /* ============================================================================
