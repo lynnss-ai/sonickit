@@ -1,0 +1,54 @@
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# IDE files
+.vs/
+.vscode/
+*.vcxproj*
+*.sln
+.idea/
+*.xcodeproj/
+*.xcworkspace/
+
+# Compiled files
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Dependencies
+third_party/miniaudio/miniaudio.h
+!third_party/miniaudio/.gitkeep
+
+# Test outputs
+*.wav
+*.mp3
+*.flac
+*.opus
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Debug files
+*.pdb
+*.ilk
+
+# Package files
+*.tar.gz
+*.zip
+
+# Additional build outputs to ignore
+/build_new/
+/build_minimal/
+/build_standalone/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
