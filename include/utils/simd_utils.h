@@ -2,7 +2,7 @@
  * @file simd_utils.h
  * @brief SIMD utilities for audio processing optimization
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
+ *
  * SIMD 工具函数，用于音频处理性能优化
  * 支持 SSE2/AVX2 (x86) 和 NEON (ARM)
  */
@@ -211,6 +211,71 @@ void voice_soft_clip_float(float *samples, size_t count, float threshold);
  * @brief 硬限制器
  */
 void voice_hard_clip_int16(int16_t *samples, size_t count, int16_t threshold);
+
+/* ============================================
+ * 复数运算 (SIMD 优化) - FFT/IFFT 用
+ * ============================================ */
+
+/**
+ * @brief 复数乘法 (分离实虚部格式)
+ *
+ * result_r[i] = a_r[i] * b_r[i] - a_i[i] * b_i[i]
+ * result_i[i] = a_r[i] * b_i[i] + a_i[i] * b_r[i]
+ */
+void voice_complex_mul(
+    const float *a_real, const float *a_imag,
+    const float *b_real, const float *b_imag,
+    float *result_real, float *result_imag,
+    size_t count
+);
+
+/**
+ * @brief 复数乘以共轭
+ *
+ * result_r[i] = a_r[i] * b_r[i] + a_i[i] * b_i[i]
+ * result_i[i] = a_i[i] * b_r[i] - a_r[i] * b_i[i]
+ */
+void voice_complex_mul_conj(
+    const float *a_real, const float *a_imag,
+    const float *b_real, const float *b_imag,
+    float *result_real, float *result_imag,
+    size_t count
+);
+
+/**
+ * @brief 计算复数幅度
+ *
+ * mag[i] = sqrt(real[i]^2 + imag[i]^2)
+ */
+void voice_complex_magnitude(
+    const float *real, const float *imag,
+    float *magnitude,
+    size_t count
+);
+
+/**
+ * @brief 复数除以幅度 (PHAT 加权)
+ *
+ * result_r[i] = real[i] / mag[i]
+ * result_i[i] = imag[i] / mag[i]
+ */
+void voice_complex_normalize(
+    float *real, float *imag,
+    size_t count,
+    float min_magnitude
+);
+
+/**
+ * @brief FFT 蝶形运算 (radix-2)
+ *
+ * 就地处理: 处理配对 (i, i+half_step)
+ */
+void voice_fft_butterfly(
+    float *real, float *imag,
+    size_t n, size_t step,
+    float wr_init, float wi_init,
+    float wpr, float wpi
+);
 
 /* ============================================
  * 批量操作

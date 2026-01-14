@@ -12,6 +12,7 @@
 
 #include "dsp/echo_canceller.h"
 #include "dsp/delay_estimator.h"
+#include "utils/simd_utils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -219,11 +220,8 @@ static void complex_multiply_conj(aec_complex_t *out, const aec_complex_t *a,
  * ============================================ */
 
 static float compute_energy(const float *data, size_t n) {
-    float energy = 0.0f;
-    for (size_t i = 0; i < n; i++) {
-        energy += data[i] * data[i];
-    }
-    return energy;
+    /* 使用 SIMD 优化的能量计算 (返回 sum 而非 mean) */
+    return voice_compute_energy_float(data, n) * (float)n;
 }
 
 static void generate_hann_window(float *window, size_t n) {

@@ -7,6 +7,7 @@
  */
 
 #include "dsp/delay_estimator.h"
+#include "utils/simd_utils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -115,6 +116,8 @@ static void simple_idft(const float *real, const float *imag, float *output, siz
 
 /**
  * @brief Fast DFT using radix-2 Cooley-Tukey (when size is power of 2)
+ *
+ * 使用 SIMD 优化的蝶形运算
  */
 static void fft_radix2(float *real, float *imag, size_t n, int inverse)
 {
@@ -135,42 +138,24 @@ static void fft_radix2(float *real, float *imag, size_t n, int inverse)
         j += m;
     }
 
-    /* Cooley-Tukey */
+    /* Cooley-Tukey with SIMD butterfly */
     const float pi = 3.14159265358979f;
     float sign = inverse ? 1.0f : -1.0f;
 
     for (size_t step = 2; step <= n; step <<= 1) {
-        float angle = sign * 2.0f * pi / step;
+        float angle = sign * 2.0f * pi / (float)step;
         float wpr = cosf(angle);
         float wpi = sinf(angle);
 
-        for (size_t group = 0; group < n; group += step) {
-            float wr = 1.0f, wi = 0.0f;
-            for (size_t pair = 0; pair < step / 2; pair++) {
-                size_t i = group + pair;
-                size_t k = i + step / 2;
-
-                float tr = wr * real[k] - wi * imag[k];
-                float ti = wr * imag[k] + wi * real[k];
-
-                real[k] = real[i] - tr;
-                imag[k] = imag[i] - ti;
-                real[i] += tr;
-                imag[i] += ti;
-
-                float wt = wr;
-                wr = wr * wpr - wi * wpi;
-                wi = wi * wpr + wt * wpi;
-            }
-        }
+        /* 使用 SIMD 蝶形运算 (对于 step >= 16 效果更好) */
+        voice_fft_butterfly(real, imag, n, step, 1.0f, 0.0f, wpr, wpi);
     }
 
     if (inverse) {
-        float scale = 1.0f / n;
-        for (size_t i = 0; i < n; i++) {
-            real[i] *= scale;
-            imag[i] *= scale;
-        }
+        /* 使用 SIMD 缩放 */
+        float scale = 1.0f / (float)n;
+        voice_apply_gain_float(real, n, scale);
+        voice_apply_gain_float(imag, n, scale);
     }
 }
 
@@ -206,28 +191,14 @@ static void gcc_phat(
     fft_radix2(de->ref_real, de->ref_imag, n, 0);
     fft_radix2(de->cap_real, de->cap_imag, n, 0);
 
-    /* Cross-spectrum: Cap * conj(Ref) */
-    for (size_t i = 0; i < n; i++) {
-        float rr = de->ref_real[i];
-        float ri = de->ref_imag[i];
-        float cr = de->cap_real[i];
-        float ci = de->cap_imag[i];
+    /* Cross-spectrum: Cap * conj(Ref) - 使用 SIMD 优化 */
+    voice_complex_mul_conj(de->cap_real, de->cap_imag,
+                           de->ref_real, de->ref_imag,
+                           de->cross_real, de->cross_imag, n);
 
-        /* Multiply capture by conjugate of reference */
-        float cross_r = cr * rr + ci * ri;
-        float cross_i = ci * rr - cr * ri;
-
-        if (use_phat) {
-            /* PHAT weighting: normalize by magnitude */
-            float mag = sqrtf(cross_r * cross_r + cross_i * cross_i);
-            if (mag > DE_MIN_ENERGY_THRESHOLD) {
-                cross_r /= mag;
-                cross_i /= mag;
-            }
-        }
-
-        de->cross_real[i] = cross_r;
-        de->cross_imag[i] = cross_i;
+    if (use_phat) {
+        /* PHAT weighting: normalize by magnitude - 使用 SIMD 优化 */
+        voice_complex_normalize(de->cross_real, de->cross_imag, n, DE_MIN_ENERGY_THRESHOLD);
     }
 
     /* Inverse FFT to get correlation */

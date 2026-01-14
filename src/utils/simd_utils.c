@@ -754,3 +754,390 @@ void voice_memzero(void *dst, size_t size) {
 void voice_memcpy(void *dst, const void *src, size_t size) {
     memcpy(dst, src, size);
 }
+
+/* ============================================
+ * 复数运算 (SIMD 优化) - FFT/IFFT 用
+ * ============================================ */
+
+#if defined(VOICE_HAS_AVX2)
+static void complex_mul_avx2(
+    const float *a_r, const float *a_i,
+    const float *b_r, const float *b_i,
+    float *res_r, float *res_i,
+    size_t count)
+{
+    size_t i = 0;
+
+    for (; i + 8 <= count; i += 8) {
+        __m256 ar = _mm256_loadu_ps(a_r + i);
+        __m256 ai = _mm256_loadu_ps(a_i + i);
+        __m256 br = _mm256_loadu_ps(b_r + i);
+        __m256 bi = _mm256_loadu_ps(b_i + i);
+
+        /* res_r = ar * br - ai * bi */
+        __m256 rr = _mm256_mul_ps(ar, br);
+        rr = _mm256_fnmadd_ps(ai, bi, rr);
+
+        /* res_i = ar * bi + ai * br */
+        __m256 ri = _mm256_mul_ps(ar, bi);
+        ri = _mm256_fmadd_ps(ai, br, ri);
+
+        _mm256_storeu_ps(res_r + i, rr);
+        _mm256_storeu_ps(res_i + i, ri);
+    }
+
+    for (; i < count; i++) {
+        res_r[i] = a_r[i] * b_r[i] - a_i[i] * b_i[i];
+        res_i[i] = a_r[i] * b_i[i] + a_i[i] * b_r[i];
+    }
+}
+
+static void complex_mul_conj_avx2(
+    const float *a_r, const float *a_i,
+    const float *b_r, const float *b_i,
+    float *res_r, float *res_i,
+    size_t count)
+{
+    size_t i = 0;
+
+    for (; i + 8 <= count; i += 8) {
+        __m256 ar = _mm256_loadu_ps(a_r + i);
+        __m256 ai = _mm256_loadu_ps(a_i + i);
+        __m256 br = _mm256_loadu_ps(b_r + i);
+        __m256 bi = _mm256_loadu_ps(b_i + i);
+
+        /* conj(b) = (br, -bi) */
+        /* res_r = ar * br + ai * bi */
+        __m256 rr = _mm256_mul_ps(ar, br);
+        rr = _mm256_fmadd_ps(ai, bi, rr);
+
+        /* res_i = ai * br - ar * bi */
+        __m256 ri = _mm256_mul_ps(ai, br);
+        ri = _mm256_fnmadd_ps(ar, bi, ri);
+
+        _mm256_storeu_ps(res_r + i, rr);
+        _mm256_storeu_ps(res_i + i, ri);
+    }
+
+    for (; i < count; i++) {
+        res_r[i] = a_r[i] * b_r[i] + a_i[i] * b_i[i];
+        res_i[i] = a_i[i] * b_r[i] - a_r[i] * b_i[i];
+    }
+}
+
+static void complex_magnitude_avx2(
+    const float *real, const float *imag,
+    float *mag, size_t count)
+{
+    size_t i = 0;
+
+    for (; i + 8 <= count; i += 8) {
+        __m256 r = _mm256_loadu_ps(real + i);
+        __m256 im = _mm256_loadu_ps(imag + i);
+
+        /* mag = sqrt(r^2 + i^2) */
+        __m256 r2 = _mm256_mul_ps(r, r);
+        __m256 mag_sq = _mm256_fmadd_ps(im, im, r2);
+        __m256 m = _mm256_sqrt_ps(mag_sq);
+
+        _mm256_storeu_ps(mag + i, m);
+    }
+
+    for (; i < count; i++) {
+        mag[i] = sqrtf(real[i] * real[i] + imag[i] * imag[i]);
+    }
+}
+
+static void complex_normalize_avx2(
+    float *real, float *imag,
+    size_t count, float min_mag)
+{
+    __m256 min_vec = _mm256_set1_ps(min_mag);
+    size_t i = 0;
+
+    for (; i + 8 <= count; i += 8) {
+        __m256 r = _mm256_loadu_ps(real + i);
+        __m256 im = _mm256_loadu_ps(imag + i);
+
+        /* 计算幅度 */
+        __m256 r2 = _mm256_mul_ps(r, r);
+        __m256 mag_sq = _mm256_fmadd_ps(im, im, r2);
+        __m256 mag = _mm256_sqrt_ps(mag_sq);
+
+        /* 避免除零 */
+        mag = _mm256_max_ps(mag, min_vec);
+
+        /* 归一化 */
+        __m256 inv_mag = _mm256_div_ps(_mm256_set1_ps(1.0f), mag);
+        r = _mm256_mul_ps(r, inv_mag);
+        im = _mm256_mul_ps(im, inv_mag);
+
+        _mm256_storeu_ps(real + i, r);
+        _mm256_storeu_ps(imag + i, im);
+    }
+
+    for (; i < count; i++) {
+        float mag = sqrtf(real[i] * real[i] + imag[i] * imag[i]);
+        if (mag > min_mag) {
+            float inv = 1.0f / mag;
+            real[i] *= inv;
+            imag[i] *= inv;
+        }
+    }
+}
+#endif
+
+#if defined(VOICE_HAS_SSE2)
+static void complex_mul_sse2(
+    const float *a_r, const float *a_i,
+    const float *b_r, const float *b_i,
+    float *res_r, float *res_i,
+    size_t count)
+{
+    size_t i = 0;
+
+    for (; i + 4 <= count; i += 4) {
+        __m128 ar = _mm_loadu_ps(a_r + i);
+        __m128 ai = _mm_loadu_ps(a_i + i);
+        __m128 br = _mm_loadu_ps(b_r + i);
+        __m128 bi = _mm_loadu_ps(b_i + i);
+
+        /* res_r = ar * br - ai * bi */
+        __m128 rr = _mm_sub_ps(_mm_mul_ps(ar, br), _mm_mul_ps(ai, bi));
+
+        /* res_i = ar * bi + ai * br */
+        __m128 ri = _mm_add_ps(_mm_mul_ps(ar, bi), _mm_mul_ps(ai, br));
+
+        _mm_storeu_ps(res_r + i, rr);
+        _mm_storeu_ps(res_i + i, ri);
+    }
+
+    for (; i < count; i++) {
+        res_r[i] = a_r[i] * b_r[i] - a_i[i] * b_i[i];
+        res_i[i] = a_r[i] * b_i[i] + a_i[i] * b_r[i];
+    }
+}
+
+static void complex_magnitude_sse2(
+    const float *real, const float *imag,
+    float *mag, size_t count)
+{
+    size_t i = 0;
+
+    for (; i + 4 <= count; i += 4) {
+        __m128 r = _mm_loadu_ps(real + i);
+        __m128 im = _mm_loadu_ps(imag + i);
+
+        __m128 r2 = _mm_mul_ps(r, r);
+        __m128 i2 = _mm_mul_ps(im, im);
+        __m128 mag_sq = _mm_add_ps(r2, i2);
+        __m128 m = _mm_sqrt_ps(mag_sq);
+
+        _mm_storeu_ps(mag + i, m);
+    }
+
+    for (; i < count; i++) {
+        mag[i] = sqrtf(real[i] * real[i] + imag[i] * imag[i]);
+    }
+}
+#endif
+
+/* 公共接口 */
+void voice_complex_mul(
+    const float *a_real, const float *a_imag,
+    const float *b_real, const float *b_imag,
+    float *result_real, float *result_imag,
+    size_t count)
+{
+    if (!g_simd_detected) voice_simd_detect();
+
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        complex_mul_avx2(a_real, a_imag, b_real, b_imag, result_real, result_imag, count);
+        return;
+    }
+#endif
+#if defined(VOICE_HAS_SSE2)
+    if (g_simd_flags & VOICE_SIMD_SSE2) {
+        complex_mul_sse2(a_real, a_imag, b_real, b_imag, result_real, result_imag, count);
+        return;
+    }
+#endif
+
+    for (size_t i = 0; i < count; i++) {
+        result_real[i] = a_real[i] * b_real[i] - a_imag[i] * b_imag[i];
+        result_imag[i] = a_real[i] * b_imag[i] + a_imag[i] * b_real[i];
+    }
+}
+
+void voice_complex_mul_conj(
+    const float *a_real, const float *a_imag,
+    const float *b_real, const float *b_imag,
+    float *result_real, float *result_imag,
+    size_t count)
+{
+    if (!g_simd_detected) voice_simd_detect();
+
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        complex_mul_conj_avx2(a_real, a_imag, b_real, b_imag, result_real, result_imag, count);
+        return;
+    }
+#endif
+
+    for (size_t i = 0; i < count; i++) {
+        result_real[i] = a_real[i] * b_real[i] + a_imag[i] * b_imag[i];
+        result_imag[i] = a_imag[i] * b_real[i] - a_real[i] * b_imag[i];
+    }
+}
+
+void voice_complex_magnitude(
+    const float *real, const float *imag,
+    float *magnitude,
+    size_t count)
+{
+    if (!g_simd_detected) voice_simd_detect();
+
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        complex_magnitude_avx2(real, imag, magnitude, count);
+        return;
+    }
+#endif
+#if defined(VOICE_HAS_SSE2)
+    if (g_simd_flags & VOICE_SIMD_SSE2) {
+        complex_magnitude_sse2(real, imag, magnitude, count);
+        return;
+    }
+#endif
+
+    for (size_t i = 0; i < count; i++) {
+        magnitude[i] = sqrtf(real[i] * real[i] + imag[i] * imag[i]);
+    }
+}
+
+void voice_complex_normalize(
+    float *real, float *imag,
+    size_t count,
+    float min_magnitude)
+{
+    if (!g_simd_detected) voice_simd_detect();
+
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        complex_normalize_avx2(real, imag, count, min_magnitude);
+        return;
+    }
+#endif
+
+    for (size_t i = 0; i < count; i++) {
+        float mag = sqrtf(real[i] * real[i] + imag[i] * imag[i]);
+        if (mag > min_magnitude) {
+            float inv = 1.0f / mag;
+            real[i] *= inv;
+            imag[i] *= inv;
+        }
+    }
+}
+
+void voice_fft_butterfly(
+    float *real, float *imag,
+    size_t n, size_t step,
+    float wr_init, float wi_init,
+    float wpr, float wpi)
+{
+    size_t half_step = step / 2;
+
+#if defined(VOICE_HAS_AVX2)
+    if ((g_simd_flags & VOICE_SIMD_AVX2) && half_step >= 8) {
+        /* 对于大的蝶形，预计算旋转因子并向量化 */
+        float *wr_arr = (float *)voice_aligned_alloc(half_step * sizeof(float), 32);
+        float *wi_arr = (float *)voice_aligned_alloc(half_step * sizeof(float), 32);
+
+        if (wr_arr && wi_arr) {
+            float wr = wr_init, wi = wi_init;
+            for (size_t p = 0; p < half_step; p++) {
+                wr_arr[p] = wr;
+                wi_arr[p] = wi;
+                float wt = wr;
+                wr = wr * wpr - wi * wpi;
+                wi = wi * wpr + wt * wpi;
+            }
+
+            for (size_t group = 0; group < n; group += step) {
+                size_t i = 0;
+                for (; i + 8 <= half_step; i += 8) {
+                    size_t idx_i = group + i;
+                    size_t idx_k = idx_i + half_step;
+
+                    __m256 wr_v = _mm256_loadu_ps(wr_arr + i);
+                    __m256 wi_v = _mm256_loadu_ps(wi_arr + i);
+
+                    __m256 rk = _mm256_loadu_ps(real + idx_k);
+                    __m256 ik = _mm256_loadu_ps(imag + idx_k);
+                    __m256 ri = _mm256_loadu_ps(real + idx_i);
+                    __m256 ii = _mm256_loadu_ps(imag + idx_i);
+
+                    /* tr = wr * rk - wi * ik */
+                    __m256 tr = _mm256_mul_ps(wr_v, rk);
+                    tr = _mm256_fnmadd_ps(wi_v, ik, tr);
+
+                    /* ti = wr * ik + wi * rk */
+                    __m256 ti = _mm256_mul_ps(wr_v, ik);
+                    ti = _mm256_fmadd_ps(wi_v, rk, ti);
+
+                    /* real[k] = real[i] - tr; imag[k] = imag[i] - ti */
+                    _mm256_storeu_ps(real + idx_k, _mm256_sub_ps(ri, tr));
+                    _mm256_storeu_ps(imag + idx_k, _mm256_sub_ps(ii, ti));
+
+                    /* real[i] += tr; imag[i] += ti */
+                    _mm256_storeu_ps(real + idx_i, _mm256_add_ps(ri, tr));
+                    _mm256_storeu_ps(imag + idx_i, _mm256_add_ps(ii, ti));
+                }
+
+                /* 标量处理剩余 */
+                for (; i < half_step; i++) {
+                    size_t idx_i = group + i;
+                    size_t idx_k = idx_i + half_step;
+
+                    float tr = wr_arr[i] * real[idx_k] - wi_arr[i] * imag[idx_k];
+                    float ti = wr_arr[i] * imag[idx_k] + wi_arr[i] * real[idx_k];
+
+                    real[idx_k] = real[idx_i] - tr;
+                    imag[idx_k] = imag[idx_i] - ti;
+                    real[idx_i] += tr;
+                    imag[idx_i] += ti;
+                }
+            }
+
+            voice_aligned_free(wr_arr);
+            voice_aligned_free(wi_arr);
+            return;
+        }
+
+        if (wr_arr) voice_aligned_free(wr_arr);
+        if (wi_arr) voice_aligned_free(wi_arr);
+    }
+#endif
+
+    /* 标量回退 */
+    for (size_t group = 0; group < n; group += step) {
+        float wr = wr_init, wi = wi_init;
+        for (size_t pair = 0; pair < half_step; pair++) {
+            size_t i = group + pair;
+            size_t k = i + half_step;
+
+            float tr = wr * real[k] - wi * imag[k];
+            float ti = wr * imag[k] + wi * real[k];
+
+            real[k] = real[i] - tr;
+            imag[k] = imag[i] - ti;
+            real[i] += tr;
+            imag[i] += ti;
+
+            float wt = wr;
+            wr = wr * wpr - wi * wpi;
+            wi = wi * wpr + wt * wpi;
+        }
+    }
+}
