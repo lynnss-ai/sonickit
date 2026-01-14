@@ -942,6 +942,98 @@ static void complex_magnitude_sse2(
 }
 #endif
 
+/* ============================================
+ * NEON 复数运算实现
+ * ============================================ */
+#if defined(VOICE_HAS_NEON)
+static void complex_mul_neon(
+    const float *a_r, const float *a_i,
+    const float *b_r, const float *b_i,
+    float *res_r, float *res_i,
+    size_t count)
+{
+    size_t i = 0;
+
+    for (; i + 4 <= count; i += 4) {
+        float32x4_t ar = vld1q_f32(a_r + i);
+        float32x4_t ai = vld1q_f32(a_i + i);
+        float32x4_t br = vld1q_f32(b_r + i);
+        float32x4_t bi = vld1q_f32(b_i + i);
+
+        /* res_r = ar * br - ai * bi */
+        float32x4_t rr = vmlsq_f32(vmulq_f32(ar, br), ai, bi);
+
+        /* res_i = ar * bi + ai * br */
+        float32x4_t ri = vmlaq_f32(vmulq_f32(ar, bi), ai, br);
+
+        vst1q_f32(res_r + i, rr);
+        vst1q_f32(res_i + i, ri);
+    }
+
+    for (; i < count; i++) {
+        res_r[i] = a_r[i] * b_r[i] - a_i[i] * b_i[i];
+        res_i[i] = a_r[i] * b_i[i] + a_i[i] * b_r[i];
+    }
+}
+
+static void complex_mul_conj_neon(
+    const float *a_r, const float *a_i,
+    const float *b_r, const float *b_i,
+    float *res_r, float *res_i,
+    size_t count)
+{
+    size_t i = 0;
+
+    for (; i + 4 <= count; i += 4) {
+        float32x4_t ar = vld1q_f32(a_r + i);
+        float32x4_t ai = vld1q_f32(a_i + i);
+        float32x4_t br = vld1q_f32(b_r + i);
+        float32x4_t bi = vld1q_f32(b_i + i);
+
+        /* res_r = ar * br + ai * bi (conjugate) */
+        float32x4_t rr = vmlaq_f32(vmulq_f32(ar, br), ai, bi);
+
+        /* res_i = ai * br - ar * bi (conjugate) */
+        float32x4_t ri = vmlsq_f32(vmulq_f32(ai, br), ar, bi);
+
+        vst1q_f32(res_r + i, rr);
+        vst1q_f32(res_i + i, ri);
+    }
+
+    for (; i < count; i++) {
+        res_r[i] = a_r[i] * b_r[i] + a_i[i] * b_i[i];
+        res_i[i] = a_i[i] * b_r[i] - a_r[i] * b_i[i];
+    }
+}
+
+static void complex_magnitude_neon(
+    const float *real, const float *imag,
+    float *mag, size_t count)
+{
+    size_t i = 0;
+
+    for (; i + 4 <= count; i += 4) {
+        float32x4_t r = vld1q_f32(real + i);
+        float32x4_t im = vld1q_f32(imag + i);
+
+        float32x4_t r2 = vmulq_f32(r, r);
+        float32x4_t i2 = vmulq_f32(im, im);
+        float32x4_t mag_sq = vaddq_f32(r2, i2);
+
+        /* NEON doesn't have vsqrtq_f32 on all platforms, use reciprocal estimate */
+        float32x4_t rsqrt = vrsqrteq_f32(mag_sq);
+        rsqrt = vmulq_f32(rsqrt, vrsqrtsq_f32(vmulq_f32(mag_sq, rsqrt), rsqrt));
+        float32x4_t m = vmulq_f32(mag_sq, rsqrt);
+
+        vst1q_f32(mag + i, m);
+    }
+
+    for (; i < count; i++) {
+        mag[i] = sqrtf(real[i] * real[i] + imag[i] * imag[i]);
+    }
+}
+#endif
+
 /* 公共接口 */
 void voice_complex_mul(
     const float *a_real, const float *a_imag,
@@ -963,6 +1055,10 @@ void voice_complex_mul(
         return;
     }
 #endif
+#if defined(VOICE_HAS_NEON)
+    complex_mul_neon(a_real, a_imag, b_real, b_imag, result_real, result_imag, count);
+    return;
+#endif
 
     for (size_t i = 0; i < count; i++) {
         result_real[i] = a_real[i] * b_real[i] - a_imag[i] * b_imag[i];
@@ -983,6 +1079,10 @@ void voice_complex_mul_conj(
         complex_mul_conj_avx2(a_real, a_imag, b_real, b_imag, result_real, result_imag, count);
         return;
     }
+#endif
+#if defined(VOICE_HAS_NEON)
+    complex_mul_conj_neon(a_real, a_imag, b_real, b_imag, result_real, result_imag, count);
+    return;
 #endif
 
     for (size_t i = 0; i < count; i++) {
@@ -1009,6 +1109,10 @@ void voice_complex_magnitude(
         complex_magnitude_sse2(real, imag, magnitude, count);
         return;
     }
+#endif
+#if defined(VOICE_HAS_NEON)
+    complex_magnitude_neon(real, imag, magnitude, count);
+    return;
 #endif
 
     for (size_t i = 0; i < count; i++) {
