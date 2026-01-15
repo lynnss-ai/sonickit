@@ -372,10 +372,6 @@ voice_error_t voice_watermark_detect(voice_watermark_detector_t *detector,
 
         /* Process when we have enough for one bit */
         if (detector->buffer_pos >= detector->chips_per_bit) {
-            /* Correlate with PN sequence */
-            float correlation = 0.0f;
-            float signal_power = 0.0f;
-
             pn_generator_t pn_copy;
             pn_init(&pn_copy, detector->initial_seed);
 
@@ -384,16 +380,20 @@ voice_error_t voice_watermark_detect(voice_watermark_detector_t *detector,
                 pn_next_bit(&pn_copy);
             }
 
-            /* Correlate */
+            /* Generate chip sequence into correlation_buffer for SIMD processing */
             for (size_t j = 0; j < detector->chips_per_bit; j++) {
-                float chip = pn_next_chip(&pn_copy);
-                float sample = detector->buffer[j];
-                correlation += sample * chip;
-                signal_power += sample * sample;
+                detector->correlation_buffer[j] = pn_next_chip(&pn_copy);
             }
 
+            /* Use SIMD-optimized dot product and energy computation */
+            float correlation = voice_dot_product_float(detector->buffer,
+                                                         detector->correlation_buffer,
+                                                         detector->chips_per_bit);
+            float signal_energy = voice_compute_energy_float(detector->buffer,
+                                                              detector->chips_per_bit);
+
             correlation /= detector->chips_per_bit;
-            signal_power = sqrtf(signal_power / detector->chips_per_bit);
+            float signal_power = sqrtf(signal_energy);
 
             /* Normalize */
             if (signal_power > 0.0001f) {

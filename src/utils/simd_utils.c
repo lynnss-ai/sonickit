@@ -934,6 +934,52 @@ float voice_compute_energy_float(const float *samples, size_t count) {
     return sum_sq / (float)count;
 }
 
+#if defined(VOICE_HAS_AVX2)
+static float dot_product_float_avx2(const float *a, const float *b, size_t count) {
+    if (count == 0) return 0.0f;
+
+    __m256 sum_vec = _mm256_setzero_ps();
+    size_t i = 0;
+
+    for (; i + 8 <= count; i += 8) {
+        __m256 va = _mm256_loadu_ps(a + i);
+        __m256 vb = _mm256_loadu_ps(b + i);
+        sum_vec = _mm256_fmadd_ps(va, vb, sum_vec);
+    }
+
+    /* Horizontal sum */
+    __m128 lo = _mm256_castps256_ps128(sum_vec);
+    __m128 hi = _mm256_extractf128_ps(sum_vec, 1);
+    __m128 sum_128 = _mm_add_ps(lo, hi);
+    sum_128 = _mm_add_ps(sum_128, _mm_shuffle_ps(sum_128, sum_128, 0x4E));
+    sum_128 = _mm_add_ps(sum_128, _mm_shuffle_ps(sum_128, sum_128, 0xB1));
+    float sum = _mm_cvtss_f32(sum_128);
+
+    /* Handle remaining elements */
+    for (; i < count; i++) {
+        sum += a[i] * b[i];
+    }
+
+    return sum;
+}
+#endif
+
+float voice_dot_product_float(const float *a, const float *b, size_t count) {
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        return dot_product_float_avx2(a, b, count);
+    }
+#endif
+
+    if (count == 0) return 0.0f;
+
+    float sum = 0.0f;
+    for (size_t i = 0; i < count; i++) {
+        sum += a[i] * b[i];
+    }
+    return sum;
+}
+
 void voice_soft_clip_float(float *samples, size_t count, float threshold) {
     for (size_t i = 0; i < count; i++) {
         if (samples[i] > threshold) {

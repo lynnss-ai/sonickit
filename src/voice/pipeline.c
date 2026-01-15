@@ -5,6 +5,7 @@
  */
 
 #include "voice/pipeline.h"
+#include "utils/simd_utils.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -877,16 +878,12 @@ static void pipeline_playback_callback(
 
     /* Output */
     if (have_audio && !pipeline->playback_muted) {
-        /* Apply volume */
+        /* Copy to output buffer first */
+        memcpy(output, pipeline->processing_buffer, frame_count * sizeof(int16_t));
+
+        /* Apply volume using SIMD-optimized function */
         if (pipeline->playback_volume != 1.0f) {
-            for (size_t i = 0; i < frame_count; i++) {
-                int32_t sample = (int32_t)(pipeline->processing_buffer[i] * pipeline->playback_volume);
-                if (sample > 32767) sample = 32767;
-                if (sample < -32768) sample = -32768;
-                output[i] = (int16_t)sample;
-            }
-        } else {
-            memcpy(output, pipeline->processing_buffer, frame_count * sizeof(int16_t));
+            voice_apply_gain_int16(output, frame_count, pipeline->playback_volume);
         }
 
         /* AEC playback reference */

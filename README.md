@@ -209,6 +209,7 @@ cmake --build . -j$(nproc)
 | `SONICKIT_ENABLE_RNNOISE` | ON | Enable RNNoise neural network noise reduction |
 | `SONICKIT_ENABLE_SRTP` | ON | Enable SRTP encryption (requires libsrtp2) |
 | `SONICKIT_ENABLE_DTLS` | ON | Enable DTLS-SRTP key exchange (requires OpenSSL) |
+| `SONICKIT_ENABLE_LTO` | ON | Enable Link-Time Optimization for Release builds |
 
 ### Build Outputs
 
