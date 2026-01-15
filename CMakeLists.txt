@@ -212,6 +212,7 @@ set(SONICKIT_SOURCES
     src/dsp/watermark.c
     src/dsp/time_stretcher.c
     src/dsp/delay_estimator.c
+    src/dsp/spatial.c
 
     # 编解码器
     src/codec/codec.c
@@ -356,11 +357,17 @@ if(SONICKIT_BUILD_TESTS)
     target_link_libraries(test_effects voice)
     add_test(NAME test_effects COMMAND test_effects)
 
-    # 水印测试
+    # Watermark test
     add_executable(test_watermark tests/test_watermark.c)
     target_include_directories(test_watermark PRIVATE ${TEST_INCLUDE_DIR})
     target_link_libraries(test_watermark voice)
     add_test(NAME test_watermark COMMAND test_watermark)
+
+    # Spatial audio test
+    add_executable(test_spatial tests/test_spatial.c)
+    target_include_directories(test_spatial PRIVATE ${TEST_INCLUDE_DIR})
+    target_link_libraries(test_spatial voice)
+    add_test(NAME test_spatial COMMAND test_spatial)
 
     # 诊断测试
     add_executable(test_diagnostics tests/test_diagnostics.c)
