@@ -5,6 +5,7 @@
  */
 
 #include "dsp/comfort_noise.h"
+#include "utils/simd_utils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -32,21 +33,21 @@ static float cng_randf(void) {
 
 struct voice_cng_s {
     voice_cng_config_t config;
-    
+
     /* 噪声电平 */
     float noise_level;              /**< 线性 */
     float target_level;
-    
+
     /* 频谱匹配 */
     float spectral_energy[CNG_SPECTRAL_BANDS];
     float filter_state[CNG_SPECTRAL_BANDS * 2];
-    
+
     /* 粉红噪声状态 */
     float pink_state[7];
-    
+
     /* 布朗噪声状态 */
     float brown_state;
-    
+
     /* 平滑 */
     float transition_coeff;
     float current_level;
@@ -58,18 +59,18 @@ struct voice_cng_s {
 
 void voice_cng_config_init(voice_cng_config_t *config) {
     if (!config) return;
-    
+
     memset(config, 0, sizeof(voice_cng_config_t));
-    
+
     config->sample_rate = 16000;
     config->frame_size = 160;
     config->noise_type = VOICE_CNG_WHITE;
-    
+
     config->noise_level_db = -50.0f;
     config->auto_level = true;
-    
+
     config->transition_time_ms = 20.0f;
-    
+
     config->enable_spectral_match = false;
     config->spectral_bands = CNG_SPECTRAL_BANDS;
 }
@@ -81,28 +82,28 @@ void voice_cng_config_init(voice_cng_config_t *config) {
 voice_cng_t *voice_cng_create(const voice_cng_config_t *config) {
     voice_cng_t *cng = (voice_cng_t *)calloc(1, sizeof(voice_cng_t));
     if (!cng) return NULL;
-    
+
     if (config) {
         cng->config = *config;
     } else {
         voice_cng_config_init(&cng->config);
     }
-    
+
     /* 初始化电平 */
     cng->noise_level = powf(10.0f, cng->config.noise_level_db / 20.0f);
     cng->target_level = cng->noise_level;
     cng->current_level = cng->noise_level;
-    
+
     /* 初始化频谱能量 (平坦) */
     for (int i = 0; i < CNG_SPECTRAL_BANDS; i++) {
         cng->spectral_energy[i] = 1.0f / CNG_SPECTRAL_BANDS;
     }
-    
+
     /* 计算过渡系数 */
     float samples_per_ms = cng->config.sample_rate / 1000.0f;
     float transition_samples = cng->config.transition_time_ms * samples_per_ms;
     cng->transition_coeff = 1.0f / transition_samples;
-    
+
     return cng;
 }
 
@@ -126,16 +127,16 @@ static float generate_pink_noise(voice_cng_t *cng) {
         0.99886f, 0.99332f, 0.96900f, 0.86650f,
         0.55000f, -0.7616f, 0.115926f
     };
-    
+
     float white = cng_randf();
     float pink = 0.0f;
-    
+
     for (int i = 0; i < 7; i++) {
-        cng->pink_state[i] = weights[i] * cng->pink_state[i] + 
+        cng->pink_state[i] = weights[i] * cng->pink_state[i] +
                              (1.0f - fabsf(weights[i])) * white;
         pink += cng->pink_state[i];
     }
-    
+
     return pink * 0.125f;
 }
 
@@ -143,11 +144,11 @@ static float generate_brown_noise(voice_cng_t *cng) {
     /* 布朗噪声 = 白噪声积分 */
     float white = cng_randf();
     cng->brown_state += white * 0.02f;
-    
+
     /* 限制范围 */
     if (cng->brown_state > 1.0f) cng->brown_state = 1.0f;
     if (cng->brown_state < -1.0f) cng->brown_state = -1.0f;
-    
+
     return cng->brown_state;
 }
 
@@ -163,30 +164,26 @@ voice_error_t voice_cng_analyze(
     if (!cng || !samples) {
         return VOICE_ERROR_INVALID_PARAM;
     }
-    
-    /* 计算输入能量 */
-    int64_t sum_sq = 0;
-    for (size_t i = 0; i < num_samples; i++) {
-        sum_sq += (int32_t)samples[i] * (int32_t)samples[i];
-    }
-    
-    float rms = sqrtf((float)sum_sq / (float)num_samples) / 32768.0f;
-    
+
+    /* Use SIMD-optimized energy computation */
+    float energy = voice_compute_energy_int16(samples, num_samples);
+    float rms = sqrtf(energy);
+
     /* 平滑更新目标电平 */
     if (cng->config.auto_level) {
         const float alpha = 0.1f;
         cng->target_level = cng->target_level * (1.0f - alpha) + rms * alpha;
-        
+
         /* 限制范围 */
         float min_level = powf(10.0f, -60.0f / 20.0f);
         float max_level = powf(10.0f, -30.0f / 20.0f);
-        
+
         if (cng->target_level < min_level) cng->target_level = min_level;
         if (cng->target_level > max_level) cng->target_level = max_level;
     }
-    
+
     /* TODO: 频谱分析 */
-    
+
     return VOICE_SUCCESS;
 }
 
@@ -198,7 +195,7 @@ voice_error_t voice_cng_generate(
     if (!cng || !output) {
         return VOICE_ERROR_INVALID_PARAM;
     }
-    
+
     for (size_t i = 0; i < num_samples; i++) {
         /* 平滑电平过渡 */
         if (cng->current_level < cng->target_level) {
@@ -212,10 +209,10 @@ voice_error_t voice_cng_generate(
                 cng->current_level = cng->target_level;
             }
         }
-        
+
         /* 生成噪声 */
         float noise = 0.0f;
-        
+
         switch (cng->config.noise_type) {
             case VOICE_CNG_WHITE:
                 noise = generate_white_noise();
@@ -231,17 +228,17 @@ voice_error_t voice_cng_generate(
                 noise = generate_pink_noise(cng);
                 break;
         }
-        
+
         /* 应用电平 */
         float sample = noise * cng->current_level * 32768.0f;
-        
+
         /* 限制范围 */
         if (sample > 32767.0f) sample = 32767.0f;
         if (sample < -32768.0f) sample = -32768.0f;
-        
+
         output[i] = (int16_t)sample;
     }
-    
+
     return VOICE_SUCCESS;
 }
 
@@ -253,15 +250,15 @@ voice_error_t voice_cng_generate_float(
     if (!cng || !output) {
         return VOICE_ERROR_INVALID_PARAM;
     }
-    
+
     for (size_t i = 0; i < num_samples; i++) {
         /* 平滑电平 */
         float diff = cng->target_level - cng->current_level;
         cng->current_level += diff * cng->transition_coeff;
-        
+
         /* 生成噪声 */
         float noise = 0.0f;
-        
+
         switch (cng->config.noise_type) {
             case VOICE_CNG_WHITE:
                 noise = generate_white_noise();
@@ -276,19 +273,19 @@ voice_error_t voice_cng_generate_float(
                 noise = generate_pink_noise(cng);
                 break;
         }
-        
+
         output[i] = noise * cng->current_level;
     }
-    
+
     return VOICE_SUCCESS;
 }
 
 voice_error_t voice_cng_set_level(voice_cng_t *cng, float level_db) {
     if (!cng) return VOICE_ERROR_INVALID_PARAM;
-    
+
     cng->config.noise_level_db = level_db;
     cng->target_level = powf(10.0f, level_db / 20.0f);
-    
+
     return VOICE_SUCCESS;
 }
 
@@ -304,18 +301,18 @@ voice_error_t voice_cng_encode_sid(
     if (!cng || !sid) {
         return VOICE_ERROR_INVALID_PARAM;
     }
-    
+
     memset(sid, 0, sizeof(voice_sid_frame_t));
-    
+
     /* RFC 3389: noise_level = -dBov */
     float dbov = 20.0f * log10f(cng->current_level);
     int level = (int)(-dbov);
     if (level < 0) level = 0;
     if (level > 127) level = 127;
-    
+
     sid->noise_level = (uint8_t)level;
     sid->param_count = 0;
-    
+
     return VOICE_SUCCESS;
 }
 
@@ -326,19 +323,19 @@ voice_error_t voice_cng_decode_sid(
     if (!cng || !sid) {
         return VOICE_ERROR_INVALID_PARAM;
     }
-    
+
     float dbov = -(float)sid->noise_level;
     cng->target_level = powf(10.0f, dbov / 20.0f);
-    
+
     return VOICE_SUCCESS;
 }
 
 void voice_cng_reset(voice_cng_t *cng) {
     if (!cng) return;
-    
+
     cng->current_level = cng->noise_level;
     cng->target_level = cng->noise_level;
-    
+
     memset(cng->pink_state, 0, sizeof(cng->pink_state));
     cng->brown_state = 0.0f;
     memset(cng->filter_state, 0, sizeof(cng->filter_state));
