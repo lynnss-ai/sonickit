@@ -203,6 +203,12 @@ float voice_compute_energy_int16(const int16_t *samples, size_t count);
 float voice_compute_energy_float(const float *samples, size_t count);
 
 /**
+ * @brief 计算点积 (float)
+ * @return sum(a[i] * b[i])
+ */
+float voice_dot_product_float(const float *a, const float *b, size_t count);
+
+/**
  * @brief 软限制器 (tanh 风格)
  */
 void voice_soft_clip_float(float *samples, size_t count, float threshold);
