@@ -207,6 +207,7 @@ cmake --build . -j$(nproc)
 | `SONICKIT_ENABLE_RNNOISE` | ON | 启用 RNNoise 神经网络降噪 |
 | `SONICKIT_ENABLE_SRTP` | ON | 启用 SRTP 加密 (需要 libsrtp2) |
 | `SONICKIT_ENABLE_DTLS` | ON | 启用 DTLS-SRTP 密钥交换 (需要 OpenSSL) |
+| `SONICKIT_ENABLE_LTO` | ON | 启用链接时优化 (Release 构建) |
 
 ### 构建输出
 
