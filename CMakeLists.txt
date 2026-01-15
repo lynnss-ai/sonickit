@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # ============================================
-# 编译选项
+# Build Options
 # ============================================
 option(SONICKIT_BUILD_EXAMPLES "Build example programs" ON)
 option(SONICKIT_BUILD_TESTS "Build tests" ON)
@@ -15,9 +15,24 @@ option(SONICKIT_ENABLE_SPEEX "Enable Speex codec" OFF)
 option(SONICKIT_ENABLE_G722 "Enable G.722 codec" OFF)
 option(SONICKIT_ENABLE_SRTP "Enable SRTP encryption" ON)
 option(SONICKIT_ENABLE_DTLS "Enable DTLS-SRTP key exchange" ON)
+option(SONICKIT_ENABLE_LTO "Enable Link-Time Optimization (Release builds)" ON)
 
 # ============================================
-# 平台检测
+# Link-Time Optimization (LTO/IPO)
+# ============================================
+if(SONICKIT_ENABLE_LTO AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT LTO_SUPPORTED OUTPUT LTO_OUTPUT)
+    if(LTO_SUPPORTED)
+        message(STATUS "LTO/IPO is supported, enabling for Release build")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else()
+        message(WARNING "LTO/IPO is not supported: ${LTO_OUTPUT}")
+    endif()
+endif()
+
+# ============================================
+# Platform Detection
 # ============================================
 if(WIN32)
     set(SONICKIT_PLATFORM "windows")

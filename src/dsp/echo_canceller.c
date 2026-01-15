@@ -23,45 +23,46 @@
 #endif
 
 /* ============================================
- * 常量定义
+ * Constants
  * ============================================ */
 
-#define AEC_MAX_FILTER_LENGTH   4096    /* 最大滤波器长度 (样本) */
-#define AEC_MAX_FRAME_SIZE      512     /* 最大帧大小 */
-#define AEC_FFT_SIZE            512     /* FFT 大小 */
-#define AEC_PLAYBACK_BUFFER_MS  500     /* 播放缓冲区长度 (ms) */
-#define AEC_DTD_HANGOVER        10      /* DTD 挂起帧数 */
-#define AEC_ERLE_SMOOTH         0.98f   /* ERLE 平滑系数 */
-#define AEC_CONVERGENCE_THRESH  0.7f    /* 收敛阈值 */
+#define AEC_MAX_FILTER_LENGTH   4096    /* Max filter length (samples) */
+#define AEC_MAX_FRAME_SIZE      512     /* Max frame size */
+#define AEC_FFT_SIZE            512     /* FFT size */
+#define AEC_PLAYBACK_BUFFER_MS  500     /* Playback buffer length (ms) */
+#define AEC_DTD_HANGOVER        10      /* DTD hangover frames */
+#define AEC_ERLE_SMOOTH         0.98f   /* ERLE smoothing factor */
+#define AEC_CONVERGENCE_THRESH  0.7f    /* Convergence threshold */
 
 /* ============================================
- * 内部类型
+ * Internal Types (Split Real/Imag for SIMD)
  * ============================================ */
 
-/** 复数结构 */
+/** Split complex buffer (separate real/imag arrays for SIMD optimization) */
 typedef struct {
-    float re;
-    float im;
-} aec_complex_t;
+    float *real;                /* Real parts array */
+    float *imag;                /* Imaginary parts array */
+    size_t size;                /* Array size */
+} split_complex_t;
 
-/** FDAF 滤波器块 */
+/** FDAF filter block (using split complex format) */
 typedef struct {
-    aec_complex_t *coeffs;      /* 频域滤波器系数 */
-    float *power;               /* 频率功率谱估计 */
+    split_complex_t coeffs;     /* Frequency-domain filter coefficients */
+    float *power;               /* Frequency power spectrum estimate */
 } fdaf_block_t;
 
-/** DTD 检测器 */
+/** DTD detector */
 typedef struct {
-    float far_energy;           /* 远端能量 (平滑) */
-    float near_energy;          /* 近端能量 (平滑) */
-    float error_energy;         /* 误差能量 */
-    float cross_corr;           /* 互相关 */
-    voice_dtd_state_t state;    /* 当前状态 */
-    int hangover;               /* 挂起计数 */
+    float far_energy;           /* Far-end energy (smoothed) */
+    float near_energy;          /* Near-end energy (smoothed) */
+    float error_energy;         /* Error energy */
+    float cross_corr;           /* Cross-correlation */
+    voice_dtd_state_t state;    /* Current state */
+    int hangover;               /* Hangover count */
 } dtd_detector_t;
 
 /* ============================================
- * 内部结构
+ * Internal Structure (Split Complex Format)
  * ============================================ */
 
 struct voice_aec_s {
@@ -69,56 +70,52 @@ struct voice_aec_s {
     bool enabled;
     uint64_t frames_processed;
 
-    /* 播放缓冲区 (用于异步模式) */
+    /* Playback buffer (for async mode) */
     int16_t *playback_buffer;
     size_t playback_buffer_size;
     size_t playback_write_pos;
     size_t playback_read_pos;
-    size_t playback_count;              /* 缓冲区中的样本数 */
+    size_t playback_count;              /* Samples in buffer */
 
-    /* FDAF 滤波器 */
-    size_t num_blocks;                  /* 滤波器块数 */
-    size_t fft_size;                    /* FFT 大小 */
-    fdaf_block_t *filter_blocks;        /* 滤波器块数组 */
-    aec_complex_t *fft_buffer;          /* FFT 工作缓冲区 */
-    float *window;                      /* 分析窗口 */
+    /* FDAF filter */
+    size_t num_blocks;                  /* Number of filter blocks */
+    size_t fft_size;                    /* FFT size */
+    fdaf_block_t *filter_blocks;        /* Filter block array */
+    split_complex_t fft_buffer;         /* FFT work buffer (split format) */
+    float *window;                      /* Analysis window */
 
-    /* 输入缓冲区 */
-    float *far_buffer;                  /* 远端输入缓冲区 */
-    float *near_buffer;                 /* 近端输入缓冲区 */
-    float *error_buffer;                /* 误差缓冲区 */
-    aec_complex_t *far_freq;            /* 远端频域 */
-    aec_complex_t *near_freq;           /* 近端频域 */
-    aec_complex_t *error_freq;          /* 误差频域 */
-    aec_complex_t *echo_est_freq;       /* 回声估计频域 */
+    /* Input buffers */
+    float *far_buffer;                  /* Far-end input buffer */
+    float *near_buffer;                 /* Near-end input buffer */
+    float *error_buffer;                /* Error buffer */
+    split_complex_t far_freq;           /* Far-end frequency domain */
+    split_complex_t near_freq;          /* Near-end frequency domain */
+    split_complex_t error_freq;         /* Error frequency domain */
+    split_complex_t echo_est_freq;      /* Echo estimate frequency domain */
 
-    /* 时域 NLMS (备选) */
-    float *nlms_weights;                /* NLMS 权重 */
-    float *nlms_x_buffer;               /* NLMS 输入缓冲 */
+    /* Time-domain NLMS (fallback) */
+    float *nlms_weights;                /* NLMS weights */
+    float *nlms_x_buffer;               /* NLMS input buffer */
 
-    /* 延迟估计器 */
+    /* Delay estimator */
     voice_delay_estimator_t *delay_est;
-    int known_delay_samples;            /* 已知延迟 (如果设置) */
+    int known_delay_samples;            /* Known delay (if set) */
     bool use_known_delay;
 
-    /* DTD 检测 */
+    /* DTD detection */
     dtd_detector_t dtd;
 
-    /* 状态统计 */
+    /* Statistics */
     float erle_db;                      /* ERLE (dB) */
-    float convergence;                  /* 收敛度 */
+    float convergence;                  /* Convergence level */
 };
 
 /* ============================================
- * 内部函数声明
+ * Internal Function Declarations
  * ============================================ */
 
-static void fft_forward(aec_complex_t *data, size_t n);
-static void fft_inverse(aec_complex_t *data, size_t n);
-static void complex_multiply(aec_complex_t *out, const aec_complex_t *a,
-                            const aec_complex_t *b, size_t n);
-static void complex_multiply_conj(aec_complex_t *out, const aec_complex_t *a,
-                                  const aec_complex_t *b, size_t n);
+static void fft_forward_split(float *real, float *imag, size_t n);
+static void fft_inverse_split(float *real, float *imag, size_t n);
 static float compute_energy(const float *data, size_t n);
 static void dtd_update(dtd_detector_t *dtd, float far_energy,
                       float near_energy, float error_energy, float threshold);
@@ -128,18 +125,48 @@ static void nlms_filter(voice_aec_t *aec, const float *far, const float *near,
                        float *output, size_t frame_size);
 static void generate_hann_window(float *window, size_t n);
 
+/* Helper functions for split complex buffer management */
+static bool split_complex_alloc(split_complex_t *sc, size_t size);
+static void split_complex_free(split_complex_t *sc);
+static void split_complex_zero(split_complex_t *sc);
+
 /* ============================================
- * FFT 实现 (Radix-2 Cooley-Tukey)
+ * Split Complex Buffer Management
  * ============================================ */
 
-static void fft_forward(aec_complex_t *data, size_t n) {
-    /* 位反转排列 */
+static bool split_complex_alloc(split_complex_t *sc, size_t size) {
+    sc->real = (float *)calloc(size, sizeof(float));
+    sc->imag = (float *)calloc(size, sizeof(float));
+    sc->size = size;
+    return (sc->real != NULL && sc->imag != NULL);
+}
+
+static void split_complex_free(split_complex_t *sc) {
+    if (sc->real) { free(sc->real); sc->real = NULL; }
+    if (sc->imag) { free(sc->imag); sc->imag = NULL; }
+    sc->size = 0;
+}
+
+static void split_complex_zero(split_complex_t *sc) {
+    if (sc->real) memset(sc->real, 0, sc->size * sizeof(float));
+    if (sc->imag) memset(sc->imag, 0, sc->size * sizeof(float));
+}
+
+/* ============================================
+ * FFT Implementation (Split Format, SIMD-friendly)
+ * ============================================ */
+
+static void fft_forward_split(float *real, float *imag, size_t n) {
+    /* Bit-reversal permutation */
     size_t j = 0;
     for (size_t i = 0; i < n - 1; i++) {
         if (i < j) {
-            aec_complex_t temp = data[i];
-            data[i] = data[j];
-            data[j] = temp;
+            float temp_r = real[i];
+            float temp_i = imag[i];
+            real[i] = real[j];
+            imag[i] = imag[j];
+            real[j] = temp_r;
+            imag[j] = temp_i;
         }
         size_t k = n >> 1;
         while (k <= j) {
@@ -149,78 +176,65 @@ static void fft_forward(aec_complex_t *data, size_t n) {
         j += k;
     }
 
-    /* Cooley-Tukey 蝶形运算 */
+    /* Cooley-Tukey butterfly operations */
     for (size_t len = 2; len <= n; len <<= 1) {
         float angle = -2.0f * (float)M_PI / (float)len;
-        aec_complex_t w_len = { cosf(angle), sinf(angle) };
+        float w_len_r = cosf(angle);
+        float w_len_i = sinf(angle);
 
         for (size_t i = 0; i < n; i += len) {
-            aec_complex_t w = { 1.0f, 0.0f };
+            float w_r = 1.0f;
+            float w_i = 0.0f;
             size_t half = len >> 1;
             for (size_t k = 0; k < half; k++) {
-                aec_complex_t t = {
-                    w.re * data[i + k + half].re - w.im * data[i + k + half].im,
-                    w.re * data[i + k + half].im + w.im * data[i + k + half].re
-                };
-                aec_complex_t u = data[i + k];
-                data[i + k].re = u.re + t.re;
-                data[i + k].im = u.im + t.im;
-                data[i + k + half].re = u.re - t.re;
-                data[i + k + half].im = u.im - t.im;
+                size_t idx1 = i + k;
+                size_t idx2 = i + k + half;
 
-                float new_w_re = w.re * w_len.re - w.im * w_len.im;
-                float new_w_im = w.re * w_len.im + w.im * w_len.re;
-                w.re = new_w_re;
-                w.im = new_w_im;
+                /* t = w * data[idx2] */
+                float t_r = w_r * real[idx2] - w_i * imag[idx2];
+                float t_i = w_r * imag[idx2] + w_i * real[idx2];
+
+                /* Butterfly */
+                float u_r = real[idx1];
+                float u_i = imag[idx1];
+                real[idx1] = u_r + t_r;
+                imag[idx1] = u_i + t_i;
+                real[idx2] = u_r - t_r;
+                imag[idx2] = u_i - t_i;
+
+                /* Update twiddle factor */
+                float new_w_r = w_r * w_len_r - w_i * w_len_i;
+                float new_w_i = w_r * w_len_i + w_i * w_len_r;
+                w_r = new_w_r;
+                w_i = new_w_i;
             }
         }
     }
 }
 
-static void fft_inverse(aec_complex_t *data, size_t n) {
-    /* 共轭 */
+static void fft_inverse_split(float *real, float *imag, size_t n) {
+    /* Conjugate */
     for (size_t i = 0; i < n; i++) {
-        data[i].im = -data[i].im;
+        imag[i] = -imag[i];
     }
 
-    /* 正向 FFT */
-    fft_forward(data, n);
+    /* Forward FFT */
+    fft_forward_split(real, imag, n);
 
-    /* 共轭并归一化 */
+    /* Conjugate and normalize */
     float scale = 1.0f / (float)n;
     for (size_t i = 0; i < n; i++) {
-        data[i].re *= scale;
-        data[i].im = -data[i].im * scale;
+        real[i] *= scale;
+        imag[i] = -imag[i] * scale;
     }
 }
 
 /* ============================================
- * 复数运算
- * ============================================ */
-
-static void complex_multiply(aec_complex_t *out, const aec_complex_t *a,
-                            const aec_complex_t *b, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-        out[i].re = a[i].re * b[i].re - a[i].im * b[i].im;
-        out[i].im = a[i].re * b[i].im + a[i].im * b[i].re;
-    }
-}
-
-static void complex_multiply_conj(aec_complex_t *out, const aec_complex_t *a,
-                                  const aec_complex_t *b, size_t n) {
-    /* out = a * conj(b) */
-    for (size_t i = 0; i < n; i++) {
-        out[i].re = a[i].re * b[i].re + a[i].im * b[i].im;
-        out[i].im = a[i].im * b[i].re - a[i].re * b[i].im;
-    }
-}
-
-/* ============================================
- * 工具函数
+ * Utility Functions
  * ============================================ */
 
 static float compute_energy(const float *data, size_t n) {
-    /* 使用 SIMD 优化的能量计算 (返回 sum 而非 mean) */
+    /* Use SIMD-optimized energy calculation (returns sum, not mean) */
     return voice_compute_energy_float(data, n) * (float)n;
 }
 
@@ -231,36 +245,36 @@ static void generate_hann_window(float *window, size_t n) {
 }
 
 /* ============================================
- * DTD 检测
+ * DTD Detection
  * ============================================ */
 
 static void dtd_update(dtd_detector_t *dtd, float far_energy,
                       float near_energy, float error_energy, float threshold) {
     const float smooth = 0.9f;
 
-    /* 平滑能量 */
+    /* Smooth energy values */
     dtd->far_energy = smooth * dtd->far_energy + (1.0f - smooth) * far_energy;
     dtd->near_energy = smooth * dtd->near_energy + (1.0f - smooth) * near_energy;
     dtd->error_energy = smooth * dtd->error_energy + (1.0f - smooth) * error_energy;
 
-    /* 计算相关度指标 */
+    /* Compute correlation metric */
     float eps = 1e-10f;
 
-    /* 回声返回损耗比 */
+    /* Echo Return Loss Enhancement ratio */
     float echo_ratio = dtd->error_energy / (dtd->near_energy + eps);
 
-    /* 双讲检测: 如果误差能量远大于预期回声，说明有近端说话 */
+    /* Double-talk detection: if error energy >> expected echo, near-end is speaking */
     bool far_active = dtd->far_energy > 1e-6f;
     bool near_active = dtd->near_energy > 1e-6f;
     bool double_talk = echo_ratio > threshold && far_active && near_active;
 
-    /* 状态机 */
+    /* State machine */
     if (double_talk) {
         dtd->state = VOICE_DTD_DOUBLE_TALK;
         dtd->hangover = AEC_DTD_HANGOVER;
     } else if (dtd->hangover > 0) {
         dtd->hangover--;
-        /* 保持当前状态 */
+        /* Maintain current state */
     } else if (far_active && !near_active) {
         dtd->state = VOICE_DTD_FAR_END;
     } else if (!far_active && near_active) {
@@ -271,7 +285,7 @@ static void dtd_update(dtd_detector_t *dtd, float far_energy,
 }
 
 /* ============================================
- * FDAF 滤波
+ * FDAF Filter (SIMD-Optimized Split Complex)
  * ============================================ */
 
 static void fdaf_filter(voice_aec_t *aec, const float *far, const float *near,
@@ -279,105 +293,131 @@ static void fdaf_filter(voice_aec_t *aec, const float *far, const float *near,
     size_t fft_size = aec->fft_size;
     size_t half_fft = fft_size / 2;
 
-    /* 移动远端缓冲区并添加新帧 */
+    /* Shift far-end buffer and add new frame */
     memmove(aec->far_buffer, aec->far_buffer + frame_size,
             (fft_size - frame_size) * sizeof(float));
     memcpy(aec->far_buffer + fft_size - frame_size, far, frame_size * sizeof(float));
 
-    /* 准备 FFT 输入 (加窗) */
+    /* Prepare FFT input (windowed) */
     for (size_t i = 0; i < fft_size; i++) {
-        aec->fft_buffer[i].re = aec->far_buffer[i] * aec->window[i];
-        aec->fft_buffer[i].im = 0.0f;
+        aec->fft_buffer.real[i] = aec->far_buffer[i] * aec->window[i];
+        aec->fft_buffer.imag[i] = 0.0f;
     }
-    fft_forward(aec->fft_buffer, fft_size);
-    memcpy(aec->far_freq, aec->fft_buffer, fft_size * sizeof(aec_complex_t));
+    fft_forward_split(aec->fft_buffer.real, aec->fft_buffer.imag, fft_size);
 
-    /* 更新滤波器块 (移位) */
+    /* Copy to far_freq */
+    memcpy(aec->far_freq.real, aec->fft_buffer.real, fft_size * sizeof(float));
+    memcpy(aec->far_freq.imag, aec->fft_buffer.imag, fft_size * sizeof(float));
+
+    /* Shift filter blocks */
     for (size_t b = aec->num_blocks - 1; b > 0; b--) {
-        memcpy(aec->filter_blocks[b].coeffs, aec->filter_blocks[b - 1].coeffs,
-               fft_size * sizeof(aec_complex_t));
+        memcpy(aec->filter_blocks[b].coeffs.real, aec->filter_blocks[b - 1].coeffs.real,
+               fft_size * sizeof(float));
+        memcpy(aec->filter_blocks[b].coeffs.imag, aec->filter_blocks[b - 1].coeffs.imag,
+               fft_size * sizeof(float));
     }
-    memcpy(aec->filter_blocks[0].coeffs, aec->far_freq, fft_size * sizeof(aec_complex_t));
+    memcpy(aec->filter_blocks[0].coeffs.real, aec->far_freq.real, fft_size * sizeof(float));
+    memcpy(aec->filter_blocks[0].coeffs.imag, aec->far_freq.imag, fft_size * sizeof(float));
 
-    /* 计算回声估计: Y = sum(H_k * X_k) */
-    memset(aec->echo_est_freq, 0, fft_size * sizeof(aec_complex_t));
+    /* Compute echo estimate: Y = sum(H_k * X_k) using SIMD complex multiply */
+    split_complex_zero(&aec->echo_est_freq);
+
+    /* Temporary buffer for intermediate results */
+    float temp_real[AEC_FFT_SIZE];
+    float temp_imag[AEC_FFT_SIZE];
+
     for (size_t b = 0; b < aec->num_blocks; b++) {
+        /* Use SIMD-optimized complex multiplication */
+        voice_complex_mul(
+            aec->filter_blocks[b].coeffs.real, aec->filter_blocks[b].coeffs.imag,
+            aec->far_freq.real, aec->far_freq.imag,
+            temp_real, temp_imag,
+            fft_size
+        );
+
+        /* Accumulate results */
         for (size_t i = 0; i < fft_size; i++) {
-            aec_complex_t h = aec->filter_blocks[b].coeffs[i];
-            aec_complex_t x = aec->far_freq[i];  /* 应该用延迟版本 */
-            aec->echo_est_freq[i].re += h.re * x.re - h.im * x.im;
-            aec->echo_est_freq[i].im += h.re * x.im + h.im * x.re;
+            aec->echo_est_freq.real[i] += temp_real[i];
+            aec->echo_est_freq.imag[i] += temp_imag[i];
         }
     }
 
-    /* IFFT 得到时域回声估计 */
-    memcpy(aec->fft_buffer, aec->echo_est_freq, fft_size * sizeof(aec_complex_t));
-    fft_inverse(aec->fft_buffer, fft_size);
+    /* IFFT to get time-domain echo estimate */
+    memcpy(aec->fft_buffer.real, aec->echo_est_freq.real, fft_size * sizeof(float));
+    memcpy(aec->fft_buffer.imag, aec->echo_est_freq.imag, fft_size * sizeof(float));
+    fft_inverse_split(aec->fft_buffer.real, aec->fft_buffer.imag, fft_size);
 
-    /* 提取回声估计的后半部分 */
+    /* Extract second half of echo estimate */
     float echo_estimate[AEC_MAX_FRAME_SIZE];
     for (size_t i = 0; i < frame_size && i < AEC_MAX_FRAME_SIZE; i++) {
-        echo_estimate[i] = aec->fft_buffer[half_fft + i].re;
+        echo_estimate[i] = aec->fft_buffer.real[half_fft + i];
     }
 
-    /* 计算误差 */
+    /* Compute error */
     for (size_t i = 0; i < frame_size; i++) {
         output[i] = near[i] - echo_estimate[i];
     }
 
-    /* DTD 检测 */
+    /* DTD detection */
     float far_energy = compute_energy(far, frame_size);
     float near_energy = compute_energy(near, frame_size);
     float error_energy = compute_energy(output, frame_size);
     dtd_update(&aec->dtd, far_energy, near_energy, error_energy, aec->config.dtd_threshold);
 
-    /* 计算 ERLE */
+    /* Compute ERLE */
     float eps = 1e-10f;
     float erle_linear = near_energy / (error_energy + eps);
     aec->erle_db = AEC_ERLE_SMOOTH * aec->erle_db +
                    (1.0f - AEC_ERLE_SMOOTH) * 10.0f * log10f(erle_linear + eps);
 
-    /* 自适应更新 (除非双讲) */
+    /* Adaptive update (unless double-talk) */
     if (aec->dtd.state != VOICE_DTD_DOUBLE_TALK &&
         aec->dtd.state != VOICE_DTD_NEAR_END) {
 
         float mu = aec->config.nlms_step_size;
 
-        /* 准备误差频域 */
+        /* Prepare error in frequency domain */
         for (size_t i = 0; i < fft_size; i++) {
             if (i < half_fft) {
-                aec->fft_buffer[i].re = 0.0f;
+                aec->fft_buffer.real[i] = 0.0f;
             } else {
-                aec->fft_buffer[i].re = output[i - half_fft] * aec->window[i];
+                aec->fft_buffer.real[i] = output[i - half_fft] * aec->window[i];
             }
-            aec->fft_buffer[i].im = 0.0f;
+            aec->fft_buffer.imag[i] = 0.0f;
         }
-        fft_forward(aec->fft_buffer, fft_size);
-        memcpy(aec->error_freq, aec->fft_buffer, fft_size * sizeof(aec_complex_t));
+        fft_forward_split(aec->fft_buffer.real, aec->fft_buffer.imag, fft_size);
+        memcpy(aec->error_freq.real, aec->fft_buffer.real, fft_size * sizeof(float));
+        memcpy(aec->error_freq.imag, aec->fft_buffer.imag, fft_size * sizeof(float));
 
-        /* 更新滤波器: H = H + mu * E * conj(X) / |X|^2 */
+        /* Update filter: H = H + mu * E * conj(X) / |X|^2 */
+        /* Use SIMD complex multiply conjugate */
+        float update_real[AEC_FFT_SIZE];
+        float update_imag[AEC_FFT_SIZE];
+        voice_complex_mul_conj(
+            aec->error_freq.real, aec->error_freq.imag,
+            aec->far_freq.real, aec->far_freq.imag,
+            update_real, update_imag,
+            fft_size
+        );
+
+        /* Normalize by power and apply step size */
         for (size_t i = 0; i < fft_size; i++) {
-            float power = aec->far_freq[i].re * aec->far_freq[i].re +
-                         aec->far_freq[i].im * aec->far_freq[i].im + eps;
+            float power = aec->far_freq.real[i] * aec->far_freq.real[i] +
+                         aec->far_freq.imag[i] * aec->far_freq.imag[i] + eps;
+            float inv_power = 1.0f / power;
 
-            aec_complex_t update;
-            update.re = (aec->error_freq[i].re * aec->far_freq[i].re +
-                        aec->error_freq[i].im * aec->far_freq[i].im) / power;
-            update.im = (aec->error_freq[i].im * aec->far_freq[i].re -
-                        aec->error_freq[i].re * aec->far_freq[i].im) / power;
-
-            aec->filter_blocks[0].coeffs[i].re += mu * update.re;
-            aec->filter_blocks[0].coeffs[i].im += mu * update.im;
+            aec->filter_blocks[0].coeffs.real[i] += mu * update_real[i] * inv_power;
+            aec->filter_blocks[0].coeffs.imag[i] += mu * update_imag[i] * inv_power;
         }
 
-        /* 更新收敛度估计 */
+        /* Update convergence estimate */
         aec->convergence = aec->convergence * 0.99f + 0.01f *
             (aec->erle_db > 10.0f ? 1.0f : aec->erle_db / 10.0f);
     }
 }
 
 /* ============================================
- * NLMS 滤波 (备选)
+ * NLMS Filter (Fallback)
  * ============================================ */
 
 static void nlms_filter(voice_aec_t *aec, const float *far, const float *near,
@@ -391,35 +431,35 @@ static void nlms_filter(voice_aec_t *aec, const float *far, const float *near,
     float eps = 1e-10f;
 
     for (size_t n = 0; n < frame_size; n++) {
-        /* 移动输入缓冲区 */
+        /* Shift input buffer */
         memmove(aec->nlms_x_buffer + 1, aec->nlms_x_buffer,
                 (filter_len - 1) * sizeof(float));
         aec->nlms_x_buffer[0] = far[n];
 
-        /* 计算回声估计 */
+        /* Compute echo estimate */
         float echo_est = 0.0f;
         for (size_t i = 0; i < filter_len; i++) {
             echo_est += aec->nlms_weights[i] * aec->nlms_x_buffer[i];
         }
 
-        /* 误差 */
+        /* Error */
         float error = near[n] - echo_est;
         output[n] = error;
 
-        /* 计算输入功率 */
+        /* Compute input power */
         float power = 0.0f;
         for (size_t i = 0; i < filter_len; i++) {
             power += aec->nlms_x_buffer[i] * aec->nlms_x_buffer[i];
         }
 
-        /* 更新权重 */
+        /* Update weights */
         float norm_mu = mu / (power + eps);
         for (size_t i = 0; i < filter_len; i++) {
             aec->nlms_weights[i] += norm_mu * error * aec->nlms_x_buffer[i];
         }
     }
 
-    /* 更新 DTD */
+    /* Update DTD */
     float far_energy = compute_energy(far, frame_size);
     float near_energy = compute_energy(near, frame_size);
     float error_energy = compute_energy(output, frame_size);
@@ -442,7 +482,7 @@ void voice_aec_ext_config_init(voice_aec_ext_config_t *config) {
     config->enable_residual_echo_suppress = true;
     config->enable_comfort_noise = false;
 
-    /* Phase 1 新增默认值 */
+    /* Phase 1 defaults */
     config->algorithm = VOICE_AEC_ALG_FDAF;
     config->enable_delay_estimation = true;
     config->enable_dtd = true;
@@ -461,7 +501,7 @@ voice_aec_t *voice_aec_create(const voice_aec_ext_config_t *config) {
     aec->enabled = true;
     aec->frames_processed = 0;
 
-    /* 计算 FFT 大小 (2 倍帧大小，取 2 的幂) */
+    /* Calculate FFT size (2x frame size, power of 2) */
     size_t fft_size = 256;
     while (fft_size < config->frame_size * 2) {
         fft_size *= 2;
@@ -471,13 +511,13 @@ voice_aec_t *voice_aec_create(const voice_aec_ext_config_t *config) {
     }
     aec->fft_size = fft_size;
 
-    /* 计算滤波器块数 */
+    /* Calculate number of filter blocks */
     size_t tail_samples = (config->tail_length_ms * config->sample_rate) / 1000;
     aec->num_blocks = (tail_samples + config->frame_size - 1) / config->frame_size;
     if (aec->num_blocks < 1) aec->num_blocks = 1;
     if (aec->num_blocks > 16) aec->num_blocks = 16;
 
-    /* 分配播放缓冲区 */
+    /* Allocate playback buffer */
     aec->playback_buffer_size = (config->sample_rate * AEC_PLAYBACK_BUFFER_MS) / 1000;
     aec->playback_buffer = (int16_t *)calloc(aec->playback_buffer_size, sizeof(int16_t));
     if (!aec->playback_buffer) goto cleanup;
@@ -485,37 +525,38 @@ voice_aec_t *voice_aec_create(const voice_aec_ext_config_t *config) {
     aec->playback_read_pos = 0;
     aec->playback_count = 0;
 
-    /* 分配 FDAF 资源 */
+    /* Allocate FDAF resources (using split complex format) */
     if (config->algorithm == VOICE_AEC_ALG_FDAF) {
         aec->filter_blocks = (fdaf_block_t *)calloc(aec->num_blocks, sizeof(fdaf_block_t));
         if (!aec->filter_blocks) goto cleanup;
 
         for (size_t i = 0; i < aec->num_blocks; i++) {
-            aec->filter_blocks[i].coeffs = (aec_complex_t *)calloc(fft_size, sizeof(aec_complex_t));
+            if (!split_complex_alloc(&aec->filter_blocks[i].coeffs, fft_size)) goto cleanup;
             aec->filter_blocks[i].power = (float *)calloc(fft_size, sizeof(float));
-            if (!aec->filter_blocks[i].coeffs || !aec->filter_blocks[i].power) goto cleanup;
+            if (!aec->filter_blocks[i].power) goto cleanup;
         }
 
-        aec->fft_buffer = (aec_complex_t *)calloc(fft_size, sizeof(aec_complex_t));
+        /* Allocate split complex buffers */
+        if (!split_complex_alloc(&aec->fft_buffer, fft_size)) goto cleanup;
+        if (!split_complex_alloc(&aec->far_freq, fft_size)) goto cleanup;
+        if (!split_complex_alloc(&aec->near_freq, fft_size)) goto cleanup;
+        if (!split_complex_alloc(&aec->error_freq, fft_size)) goto cleanup;
+        if (!split_complex_alloc(&aec->echo_est_freq, fft_size)) goto cleanup;
+
         aec->window = (float *)calloc(fft_size, sizeof(float));
         aec->far_buffer = (float *)calloc(fft_size, sizeof(float));
         aec->near_buffer = (float *)calloc(fft_size, sizeof(float));
         aec->error_buffer = (float *)calloc(fft_size, sizeof(float));
-        aec->far_freq = (aec_complex_t *)calloc(fft_size, sizeof(aec_complex_t));
-        aec->near_freq = (aec_complex_t *)calloc(fft_size, sizeof(aec_complex_t));
-        aec->error_freq = (aec_complex_t *)calloc(fft_size, sizeof(aec_complex_t));
-        aec->echo_est_freq = (aec_complex_t *)calloc(fft_size, sizeof(aec_complex_t));
 
-        if (!aec->fft_buffer || !aec->window || !aec->far_buffer ||
-            !aec->near_buffer || !aec->error_buffer || !aec->far_freq ||
-            !aec->near_freq || !aec->error_freq || !aec->echo_est_freq) {
+        if (!aec->window || !aec->far_buffer ||
+            !aec->near_buffer || !aec->error_buffer) {
             goto cleanup;
         }
 
         generate_hann_window(aec->window, fft_size);
     }
 
-    /* 分配 NLMS 资源 */
+    /* Allocate NLMS resources */
     if (config->algorithm == VOICE_AEC_ALG_NLMS) {
         size_t filter_len = config->filter_length;
         if (filter_len > AEC_MAX_FILTER_LENGTH) {
@@ -526,7 +567,7 @@ voice_aec_t *voice_aec_create(const voice_aec_ext_config_t *config) {
         if (!aec->nlms_weights || !aec->nlms_x_buffer) goto cleanup;
     }
 
-    /* 创建延迟估计器 */
+    /* Create delay estimator */
     if (config->enable_delay_estimation) {
         voice_delay_estimator_config_t de_config;
         voice_delay_estimator_config_init(&de_config);
@@ -534,14 +575,14 @@ voice_aec_t *voice_aec_create(const voice_aec_ext_config_t *config) {
         de_config.frame_size = config->frame_size;
         de_config.max_delay_samples = tail_samples;
         aec->delay_est = voice_delay_estimator_create(&de_config);
-        /* 延迟估计器创建失败不是致命错误 */
+        /* Delay estimator creation failure is not fatal */
     }
 
-    /* 初始化 DTD */
+    /* Initialize DTD */
     memset(&aec->dtd, 0, sizeof(dtd_detector_t));
     aec->dtd.state = VOICE_DTD_IDLE;
 
-    /* 初始化状态 */
+    /* Initialize state */
     aec->erle_db = 0.0f;
     aec->convergence = 0.0f;
     aec->known_delay_samples = 0;
@@ -557,34 +598,35 @@ cleanup:
 void voice_aec_destroy(voice_aec_t *aec) {
     if (!aec) return;
 
-    /* 释放播放缓冲区 */
+    /* Free playback buffer */
     if (aec->playback_buffer) {
         free(aec->playback_buffer);
     }
 
-    /* 释放 FDAF 资源 */
+    /* Free FDAF resources (split complex format) */
     if (aec->filter_blocks) {
         for (size_t i = 0; i < aec->num_blocks; i++) {
-            if (aec->filter_blocks[i].coeffs) free(aec->filter_blocks[i].coeffs);
+            split_complex_free(&aec->filter_blocks[i].coeffs);
             if (aec->filter_blocks[i].power) free(aec->filter_blocks[i].power);
         }
         free(aec->filter_blocks);
     }
-    if (aec->fft_buffer) free(aec->fft_buffer);
+    split_complex_free(&aec->fft_buffer);
+    split_complex_free(&aec->far_freq);
+    split_complex_free(&aec->near_freq);
+    split_complex_free(&aec->error_freq);
+    split_complex_free(&aec->echo_est_freq);
+
     if (aec->window) free(aec->window);
     if (aec->far_buffer) free(aec->far_buffer);
     if (aec->near_buffer) free(aec->near_buffer);
     if (aec->error_buffer) free(aec->error_buffer);
-    if (aec->far_freq) free(aec->far_freq);
-    if (aec->near_freq) free(aec->near_freq);
-    if (aec->error_freq) free(aec->error_freq);
-    if (aec->echo_est_freq) free(aec->echo_est_freq);
 
-    /* 释放 NLMS 资源 */
+    /* Free NLMS resources */
     if (aec->nlms_weights) free(aec->nlms_weights);
     if (aec->nlms_x_buffer) free(aec->nlms_x_buffer);
 
-    /* 销毁延迟估计器 */
+    /* Destroy delay estimator */
     if (aec->delay_est) {
         voice_delay_estimator_destroy(aec->delay_est);
     }
@@ -606,7 +648,7 @@ voice_error_t voice_aec_process(
         return VOICE_OK;
     }
 
-    /* 转换为浮点 */
+    /* Convert to float */
     float far_float[AEC_MAX_FRAME_SIZE];
     float near_float[AEC_MAX_FRAME_SIZE];
     float out_float[AEC_MAX_FRAME_SIZE];
@@ -622,14 +664,14 @@ voice_error_t voice_aec_process(
         far_float[i] = speaker_ref ? (float)speaker_ref[i] * scale_in : 0.0f;
     }
 
-    /* 延迟估计 */
+    /* Delay estimation */
     if (aec->delay_est && aec->config.enable_delay_estimation && speaker_ref) {
         voice_delay_estimate_t delay_result;
         voice_delay_estimator_estimate_float(aec->delay_est, far_float, near_float,
                                               process_size, &delay_result);
     }
 
-    /* 根据算法选择滤波器 */
+    /* Select filter based on algorithm */
     switch (aec->config.algorithm) {
         case VOICE_AEC_ALG_FDAF:
             fdaf_filter(aec, far_float, near_float, out_float, process_size);
@@ -640,7 +682,7 @@ voice_error_t voice_aec_process(
             break;
 
         case VOICE_AEC_ALG_SPEEX:
-            /* 回退到直接复制 (SpeexDSP 未集成) */
+            /* Fallback to direct copy (SpeexDSP not integrated) */
             memcpy(out_float, near_float, process_size * sizeof(float));
             break;
 
@@ -649,7 +691,7 @@ voice_error_t voice_aec_process(
             break;
     }
 
-    /* 转换回 int16 */
+    /* Convert back to int16 */
     for (size_t i = 0; i < process_size; i++) {
         float sample = out_float[i] * 32768.0f;
         if (sample > 32767.0f) sample = 32767.0f;
@@ -657,7 +699,7 @@ voice_error_t voice_aec_process(
         output[i] = (int16_t)sample;
     }
 
-    /* 处理剩余样本 */
+    /* Process remaining samples */
     for (size_t i = process_size; i < frame_count; i++) {
         output[i] = mic_input[i];
     }
@@ -673,7 +715,7 @@ voice_error_t voice_aec_playback(
 ) {
     if (!aec || !speaker_data) return VOICE_ERROR_NULL_POINTER;
 
-    /* 写入播放缓冲区 */
+    /* Write to playback buffer */
     for (size_t i = 0; i < frame_count; i++) {
         aec->playback_buffer[aec->playback_write_pos] = speaker_data[i];
         aec->playback_write_pos = (aec->playback_write_pos + 1) % aec->playback_buffer_size;
@@ -681,7 +723,7 @@ voice_error_t voice_aec_playback(
         if (aec->playback_count < aec->playback_buffer_size) {
             aec->playback_count++;
         } else {
-            /* 缓冲区满，移动读指针 */
+            /* Buffer full, move read pointer */
             aec->playback_read_pos = (aec->playback_read_pos + 1) % aec->playback_buffer_size;
         }
     }
@@ -702,7 +744,7 @@ voice_error_t voice_aec_capture(
         return VOICE_OK;
     }
 
-    /* 获取延迟 */
+    /* Get delay */
     int delay_samples;
     if (aec->use_known_delay) {
         delay_samples = aec->known_delay_samples;
@@ -712,14 +754,14 @@ voice_error_t voice_aec_capture(
         delay_samples = (int)(aec->config.frame_size * 2);
     }
 
-    /* 从播放缓冲区读取远端参考信号 */
+    /* Read far-end reference from playback buffer */
     int16_t far_ref[AEC_MAX_FRAME_SIZE];
     size_t read_count = frame_count;
     if (read_count > AEC_MAX_FRAME_SIZE) {
         read_count = AEC_MAX_FRAME_SIZE;
     }
 
-    /* 计算读取位置 (考虑延迟) */
+    /* Calculate read position (considering delay) */
     size_t read_pos = aec->playback_read_pos;
     if (delay_samples > 0 && (size_t)delay_samples < aec->playback_count) {
         read_pos = (aec->playback_write_pos + aec->playback_buffer_size - (size_t)delay_samples)
@@ -735,7 +777,7 @@ voice_error_t voice_aec_capture(
         }
     }
 
-    /* 调用同步处理 */
+    /* Call synchronous processing */
     return voice_aec_process(aec, mic_input, far_ref, output, frame_count);
 }
 
@@ -769,7 +811,7 @@ bool voice_aec_is_enabled(voice_aec_t *aec) {
 void voice_aec_reset(voice_aec_t *aec) {
     if (!aec) return;
 
-    /* 重置播放缓冲区 */
+    /* Reset playback buffer */
     if (aec->playback_buffer) {
         memset(aec->playback_buffer, 0, aec->playback_buffer_size * sizeof(int16_t));
     }
@@ -777,24 +819,22 @@ void voice_aec_reset(voice_aec_t *aec) {
     aec->playback_read_pos = 0;
     aec->playback_count = 0;
 
-    /* 重置 FDAF 滤波器 */
+    /* Reset FDAF filter (using split complex format) */
     if (aec->filter_blocks) {
         for (size_t i = 0; i < aec->num_blocks; i++) {
-            if (aec->filter_blocks[i].coeffs) {
-                memset(aec->filter_blocks[i].coeffs, 0, aec->fft_size * sizeof(aec_complex_t));
-            }
+            split_complex_zero(&aec->filter_blocks[i].coeffs);
             if (aec->filter_blocks[i].power) {
                 memset(aec->filter_blocks[i].power, 0, aec->fft_size * sizeof(float));
             }
         }
     }
 
-    /* 重置 FDAF 缓冲区 */
+    /* Reset FDAF buffers */
     if (aec->far_buffer) memset(aec->far_buffer, 0, aec->fft_size * sizeof(float));
     if (aec->near_buffer) memset(aec->near_buffer, 0, aec->fft_size * sizeof(float));
     if (aec->error_buffer) memset(aec->error_buffer, 0, aec->fft_size * sizeof(float));
 
-    /* 重置 NLMS */
+    /* Reset NLMS */
     if (aec->nlms_weights) {
         memset(aec->nlms_weights, 0, aec->config.filter_length * sizeof(float));
     }
@@ -802,16 +842,16 @@ void voice_aec_reset(voice_aec_t *aec) {
         memset(aec->nlms_x_buffer, 0, aec->config.filter_length * sizeof(float));
     }
 
-    /* 重置延迟估计器 */
+    /* Reset delay estimator */
     if (aec->delay_est) {
         voice_delay_estimator_reset(aec->delay_est);
     }
 
-    /* 重置 DTD */
+    /* Reset DTD */
     memset(&aec->dtd, 0, sizeof(dtd_detector_t));
     aec->dtd.state = VOICE_DTD_IDLE;
 
-    /* 重置状态 */
+    /* Reset state */
     aec->erle_db = 0.0f;
     aec->convergence = 0.0f;
     aec->frames_processed = 0;
@@ -828,12 +868,12 @@ int voice_aec_get_delay(voice_aec_t *aec) {
         return voice_delay_estimator_get_delay(aec->delay_est);
     }
 
-    /* 默认返回估计延迟 */
+    /* Return default estimated delay */
     return (int)aec->config.frame_size * 2;
 }
 
 /* ============================================
- * Phase 1 新增 API
+ * Phase 1 Extended API
  * ============================================ */
 
 voice_error_t voice_aec_set_delay(voice_aec_t *aec, int delay_samples) {
@@ -886,7 +926,7 @@ voice_error_t voice_aec_enable_delay_estimation(voice_aec_t *aec, bool enabled) 
 
     aec->config.enable_delay_estimation = enabled;
 
-    /* 如果启用且延迟估计器不存在，则创建 */
+    /* If enabling and delay estimator doesn't exist, create it */
     if (enabled && !aec->delay_est) {
         voice_delay_estimator_config_t de_config;
         voice_delay_estimator_config_init(&de_config);
