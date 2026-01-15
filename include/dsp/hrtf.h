@@ -76,6 +76,7 @@ typedef struct {
     bool enable_crossfade;      /**< Smooth transitions when position changes */
     float crossfade_time_ms;    /**< Crossfade duration (ms) */
     bool enable_itd;            /**< Enable Interaural Time Difference */
+    bool enable_fft_convolution; /**< Use FFT for convolution (faster for long HRIRs) */
 } voice_hrtf_config_t;
 
 /* ============================================

@@ -18,6 +18,139 @@
 #endif
 
 /* ============================================
+ * FFT Implementation for HRTF Convolution
+ * ============================================ */
+
+/** Find next power of 2 */
+static size_t next_power_of_2(size_t n) {
+    size_t p = 1;
+    while (p < n) p <<= 1;
+    return p;
+}
+
+/** Split complex format for FFT */
+typedef struct {
+    float *real;
+    float *imag;
+    size_t size;
+} hrtf_split_complex_t;
+
+/** Allocate split complex buffer */
+static hrtf_split_complex_t *split_complex_alloc(size_t size) {
+    hrtf_split_complex_t *sc = (hrtf_split_complex_t *)malloc(sizeof(hrtf_split_complex_t));
+    if (!sc) return NULL;
+
+    sc->size = size;
+    sc->real = (float *)calloc(size, sizeof(float));
+    sc->imag = (float *)calloc(size, sizeof(float));
+
+    if (!sc->real || !sc->imag) {
+        free(sc->real);
+        free(sc->imag);
+        free(sc);
+        return NULL;
+    }
+    return sc;
+}
+
+/** Free split complex buffer */
+static void split_complex_free(hrtf_split_complex_t *sc) {
+    if (!sc) return;
+    free(sc->real);
+    free(sc->imag);
+    free(sc);
+}
+
+/** Zero split complex buffer */
+static void split_complex_zero(hrtf_split_complex_t *sc) {
+    if (!sc) return;
+    memset(sc->real, 0, sc->size * sizeof(float));
+    memset(sc->imag, 0, sc->size * sizeof(float));
+}
+
+/** FFT forward (Cooley-Tukey, radix-2) */
+static void hrtf_fft_forward(float *real, float *imag, size_t n) {
+    /* Bit-reversal permutation */
+    size_t j = 0;
+    for (size_t i = 0; i < n - 1; i++) {
+        if (i < j) {
+            float temp_r = real[i];
+            float temp_i = imag[i];
+            real[i] = real[j];
+            imag[i] = imag[j];
+            real[j] = temp_r;
+            imag[j] = temp_i;
+        }
+        size_t k = n >> 1;
+        while (k <= j) {
+            j -= k;
+            k >>= 1;
+        }
+        j += k;
+    }
+
+    /* Cooley-Tukey butterfly operations */
+    for (size_t len = 2; len <= n; len <<= 1) {
+        float angle = -2.0f * (float)M_PI / (float)len;
+        float w_len_r = cosf(angle);
+        float w_len_i = sinf(angle);
+
+        for (size_t i = 0; i < n; i += len) {
+            float w_r = 1.0f;
+            float w_i = 0.0f;
+            size_t half = len >> 1;
+            for (size_t k = 0; k < half; k++) {
+                size_t idx1 = i + k;
+                size_t idx2 = i + k + half;
+
+                float t_r = w_r * real[idx2] - w_i * imag[idx2];
+                float t_i = w_r * imag[idx2] + w_i * real[idx2];
+
+                float u_r = real[idx1];
+                float u_i = imag[idx1];
+                real[idx1] = u_r + t_r;
+                imag[idx1] = u_i + t_i;
+                real[idx2] = u_r - t_r;
+                imag[idx2] = u_i - t_i;
+
+                float new_w_r = w_r * w_len_r - w_i * w_len_i;
+                float new_w_i = w_r * w_len_i + w_i * w_len_r;
+                w_r = new_w_r;
+                w_i = new_w_i;
+            }
+        }
+    }
+}
+
+/** FFT inverse */
+static void hrtf_fft_inverse(float *real, float *imag, size_t n) {
+    /* Conjugate */
+    for (size_t i = 0; i < n; i++) {
+        imag[i] = -imag[i];
+    }
+
+    /* Forward FFT */
+    hrtf_fft_forward(real, imag, n);
+
+    /* Conjugate and normalize */
+    float scale = 1.0f / (float)n;
+    for (size_t i = 0; i < n; i++) {
+        real[i] *= scale;
+        imag[i] = -imag[i] * scale;
+    }
+}
+
+/** Complex multiply: c = a * b */
+static void complex_multiply(const float *a_real, const float *a_imag,
+                             const float *b_real, const float *b_imag,
+                             float *c_real, float *c_imag, size_t n) {
+    for (size_t i = 0; i < n; i++) {
+        c_real[i] = a_real[i] * b_real[i] - a_imag[i] * b_imag[i];
+        c_imag[i] = a_real[i] * b_imag[i] + a_imag[i] * b_real[i];
+    }
+}
+
+/* ============================================
  * Built-in HRIR Data
  * ============================================ */
 
@@ -202,6 +335,15 @@ struct voice_hrtf_processor_s {
     float *output_left;
     float *output_right;
     size_t buffer_pos;
+
+    /* FFT convolution buffers (only allocated if FFT enabled) */
+    size_t fft_size;
+    hrtf_split_complex_t *fft_input;
+    hrtf_split_complex_t *fft_hrir_left;
+    hrtf_split_complex_t *fft_hrir_right;
+    hrtf_split_complex_t *fft_output;
+    float *overlap_buffer_left;
+    float *overlap_buffer_right;
 
     /* Last processed position */
     float last_azimuth;
@@ -470,6 +612,7 @@ void voice_hrtf_config_init(voice_hrtf_config_t *config) {
     config->enable_crossfade = true;
     config->crossfade_time_ms = 20.0f;
     config->enable_itd = true;
+    config->enable_fft_convolution = false;  /* Direct convolution by default */
 }
 
 voice_hrtf_processor_t *voice_hrtf_processor_create(
@@ -505,6 +648,25 @@ voice_hrtf_processor_t *voice_hrtf_processor_create(
         return NULL;
     }
 
+    /* Allocate FFT buffers if FFT convolution is enabled */
+    if (config->enable_fft_convolution) {
+        /* FFT size must be power of 2, at least block_size + hrir_length - 1 */
+        proc->fft_size = next_power_of_2(config->block_size + hrtf->hrir_length);
+
+        proc->fft_input = split_complex_alloc(proc->fft_size);
+        proc->fft_hrir_left = split_complex_alloc(proc->fft_size);
+        proc->fft_hrir_right = split_complex_alloc(proc->fft_size);
+        proc->fft_output = split_complex_alloc(proc->fft_size);
+        proc->overlap_buffer_left = (float *)calloc(hrtf->hrir_length, sizeof(float));
+        proc->overlap_buffer_right = (float *)calloc(hrtf->hrir_length, sizeof(float));
+
+        if (!proc->fft_input || !proc->fft_hrir_left || !proc->fft_hrir_right ||
+            !proc->fft_output || !proc->overlap_buffer_left || !proc->overlap_buffer_right) {
+            voice_hrtf_processor_destroy(proc);
+            return NULL;
+        }
+    }
+
     /* Initialize with forward-facing position */
     voice_hrtf_interpolate(hrtf, 0.0f, 0.0f,
                            proc->current_hrir_left, proc->current_hrir_right,
@@ -526,6 +688,15 @@ void voice_hrtf_processor_destroy(voice_hrtf_processor_t *processor) {
     free(processor->input_buffer);
     free(processor->output_left);
     free(processor->output_right);
+
+    /* Free FFT buffers */
+    split_complex_free(processor->fft_input);
+    split_complex_free(processor->fft_hrir_left);
+    split_complex_free(processor->fft_hrir_right);
+    split_complex_free(processor->fft_output);
+    free(processor->overlap_buffer_left);
+    free(processor->overlap_buffer_right);
+
     free(processor);
 }
 
@@ -540,6 +711,18 @@ void voice_hrtf_processor_reset(voice_hrtf_processor_t *processor) {
     memset(processor->input_buffer, 0, buf_size * sizeof(float));
     memset(processor->output_left, 0, buf_size * sizeof(float));
     memset(processor->output_right, 0, buf_size * sizeof(float));
+
+    /* Reset FFT buffers */
+    if (processor->config.enable_fft_convolution) {
+        if (processor->overlap_buffer_left) {
+            memset(processor->overlap_buffer_left, 0,
+                   processor->hrir_length * sizeof(float));
+        }
+        if (processor->overlap_buffer_right) {
+            memset(processor->overlap_buffer_right, 0,
+                   processor->hrir_length * sizeof(float));
+        }
+    }
 }
 
 /* Direct time-domain convolution (SIMD-optimized for short filters) */
@@ -554,6 +737,57 @@ static void convolve_hrir(const float *input, size_t input_len,
         for (size_t j = 0; j < hrir_len; j++) {
             output[i + j] += sample * hrir[j];
         }
+    }
+}
+
+/* FFT-based convolution (overlap-add method) */
+static void convolve_hrir_fft(voice_hrtf_processor_t *proc,
+                              const float *input, size_t input_len,
+                              const float *hrir,
+                              float *overlap_buffer,
+                              float *output) {
+    size_t fft_size = proc->fft_size;
+    size_t hrir_len = proc->hrir_length;
+
+    /* Zero pad input to FFT size */
+    split_complex_zero(proc->fft_input);
+    for (size_t i = 0; i < input_len && i < fft_size; i++) {
+        proc->fft_input->real[i] = input[i];
+    }
+
+    /* FFT of input */
+    hrtf_fft_forward(proc->fft_input->real, proc->fft_input->imag, fft_size);
+
+    /* Zero pad HRIR to FFT size */
+    split_complex_zero(proc->fft_output);  /* Reuse as temp for HRIR FFT */
+    for (size_t i = 0; i < hrir_len && i < fft_size; i++) {
+        proc->fft_output->real[i] = hrir[i];
+    }
+
+    /* FFT of HRIR */
+    hrtf_fft_forward(proc->fft_output->real, proc->fft_output->imag, fft_size);
+
+    /* Complex multiply in frequency domain */
+    float *result_real = proc->fft_input->real;  /* Reuse input buffer */
+    float *result_imag = proc->fft_input->imag;
+    complex_multiply(proc->fft_input->real, proc->fft_input->imag,
+                     proc->fft_output->real, proc->fft_output->imag,
+                     result_real, result_imag, fft_size);
+
+    /* IFFT to get time domain result */
+    hrtf_fft_inverse(result_real, result_imag, fft_size);
+
+    /* Add overlap from previous block and copy result */
+    for (size_t i = 0; i < input_len; i++) {
+        output[i] = result_real[i];
+        if (i < hrir_len - 1) {
+            output[i] += overlap_buffer[i];
+        }
+    }
+
+    /* Save overlap for next block */
+    for (size_t i = 0; i < hrir_len - 1 && (input_len + i) < fft_size; i++) {
+        overlap_buffer[i] = result_real[input_len + i];
     }
 }
 
@@ -613,10 +847,21 @@ voice_error_t voice_hrtf_process(
     }
 
     /* Convolve with current HRIRs */
-    convolve_hrir(mono_input, num_samples,
-                  processor->current_hrir_left, hrir_len, temp_left);
-    convolve_hrir(mono_input, num_samples,
-                  processor->current_hrir_right, hrir_len, temp_right);
+    if (processor->config.enable_fft_convolution && processor->fft_input) {
+        /* FFT-based convolution */
+        convolve_hrir_fft(processor, mono_input, num_samples,
+                          processor->current_hrir_left,
+                          processor->overlap_buffer_left, temp_left);
+        convolve_hrir_fft(processor, mono_input, num_samples,
+                          processor->current_hrir_right,
+                          processor->overlap_buffer_right, temp_right);
+    } else {
+        /* Direct time-domain convolution */
+        convolve_hrir(mono_input, num_samples,
+                      processor->current_hrir_left, hrir_len, temp_left);
+        convolve_hrir(mono_input, num_samples,
+                      processor->current_hrir_right, hrir_len, temp_right);
+    }
 
     /* Handle crossfade if active */
     if (processor->crossfading) {

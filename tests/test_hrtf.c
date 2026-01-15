@@ -415,6 +415,55 @@ static int test_hrtf_null_params(void) {
 }
 
 /* ============================================
+ * Test: HRTF FFT Convolution
+ * ============================================ */
+static int test_hrtf_fft_convolution(void) {
+    printf("  Testing HRTF FFT convolution...\n");
+
+    voice_hrtf_t *hrtf = voice_hrtf_load_builtin();
+    TEST_ASSERT(hrtf != NULL, "Failed to load HRTF");
+
+    /* Config with FFT enabled */
+    voice_hrtf_config_t config;
+    voice_hrtf_config_init(&config);
+    config.enable_fft_convolution = true;
+    config.block_size = 256;
+
+    voice_hrtf_processor_t *proc = voice_hrtf_processor_create(hrtf, &config);
+    TEST_ASSERT(proc != NULL, "Failed to create FFT processor");
+
+    /* Create mono input (sine wave) */
+    const size_t num_samples = 256;
+    float mono_input[256];
+    float binaural_output[512];
+
+    for (size_t i = 0; i < num_samples; i++) {
+        mono_input[i] = 0.5f * sinf(2.0f * (float)M_PI * 440.0f * (float)i / 48000.0f);
+    }
+
+    /* Process at right position */
+    voice_error_t err = voice_hrtf_process(proc, mono_input, binaural_output,
+                                            num_samples, 90.0f, 0.0f);
+    TEST_ASSERT(err == VOICE_SUCCESS, "FFT processing failed");
+
+    /* Calculate left and right channel energy */
+    float left_energy = 0.0f, right_energy = 0.0f;
+    for (size_t i = 0; i < num_samples; i++) {
+        left_energy += binaural_output[i * 2] * binaural_output[i * 2];
+        right_energy += binaural_output[i * 2 + 1] * binaural_output[i * 2 + 1];
+    }
+    printf("    FFT Right (90deg) - L: %.4f, R: %.4f\n", left_energy, right_energy);
+
+    /* Right source should have more energy in right channel */
+    TEST_ASSERT(right_energy > left_energy, "FFT: right ear should be louder");
+
+    voice_hrtf_processor_destroy(proc);
+    voice_hrtf_destroy(hrtf);
+
+    return 0;
+}
+
+/* ============================================
  * Main
  * ============================================ */
 int main(void) {
@@ -430,6 +479,7 @@ int main(void) {
     RUN_TEST(test_hrtf_position_sweep);
     RUN_TEST(test_hrtf_elevation);
     RUN_TEST(test_hrtf_null_params);
+    RUN_TEST(test_hrtf_fft_convolution);
 
     TEST_SUMMARY();
 }

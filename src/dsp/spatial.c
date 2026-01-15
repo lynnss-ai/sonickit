@@ -12,6 +12,7 @@
  */
 
 #include "dsp/spatial.h"
+#include "dsp/hrtf.h"
 #include "utils/simd_utils.h"
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +36,10 @@ struct voice_spatial_renderer_s {
 
     /* Doppler state */
     float doppler_ratio;
+
+    /* HRTF binaural processing */
+    voice_hrtf_t *hrtf;
+    voice_hrtf_processor_t *hrtf_processor;
 
     /* Work buffers */
     float *work_buffer;
@@ -432,6 +437,25 @@ voice_spatial_renderer_t *voice_spatial_renderer_create(
     renderer->air_absorption_state_r = 0.0f;
     renderer->doppler_ratio = 1.0f;
 
+    /* Initialize HRTF if enabled */
+    renderer->hrtf = NULL;
+    renderer->hrtf_processor = NULL;
+
+    if (config->enable_hrtf) {
+        renderer->hrtf = voice_hrtf_load_builtin();
+        if (renderer->hrtf) {
+            voice_hrtf_config_t hrtf_config;
+            voice_hrtf_config_init(&hrtf_config);
+            hrtf_config.sample_rate = config->sample_rate;
+            hrtf_config.block_size = config->frame_size;
+            hrtf_config.enable_crossfade = true;
+            hrtf_config.crossfade_time_ms = 10.0f;
+
+            renderer->hrtf_processor = voice_hrtf_processor_create(
+                renderer->hrtf, &hrtf_config);
+        }
+    }
+
     return renderer;
 }
 
@@ -440,6 +464,14 @@ void voice_spatial_renderer_destroy(voice_spatial_renderer_t *renderer) {
 
     if (renderer->work_buffer) {
         free(renderer->work_buffer);
+    }
+
+    /* Clean up HRTF */
+    if (renderer->hrtf_processor) {
+        voice_hrtf_processor_destroy(renderer->hrtf_processor);
+    }
+    if (renderer->hrtf) {
+        voice_hrtf_destroy(renderer->hrtf);
     }
 
     free(renderer);
@@ -455,6 +487,11 @@ void voice_spatial_renderer_reset(voice_spatial_renderer_t *renderer) {
     if (renderer->work_buffer) {
         memset(renderer->work_buffer, 0,
                renderer->work_buffer_size * sizeof(float));
+    }
+
+    /* Reset HRTF processor */
+    if (renderer->hrtf_processor) {
+        voice_hrtf_processor_reset(renderer->hrtf_processor);
     }
 }
 
@@ -570,11 +607,28 @@ voice_error_t voice_spatial_render_source(
     gain_l *= total_gain;
     gain_r *= total_gain;
 
-    /* Render to stereo output */
-    for (size_t i = 0; i < num_samples; i++) {
-        float sample = mono_input[i];
-        stereo_output[i * 2] = sample * gain_l;      /* Left */
-        stereo_output[i * 2 + 1] = sample * gain_r;  /* Right */
+    /* Check if HRTF processing is enabled and available */
+    if (renderer->config.enable_hrtf && renderer->hrtf_processor) {
+        /* Use HRTF binaural rendering */
+        float elevation = voice_spatial_elevation(&renderer->listener,
+                                                   &source->position);
+
+        /* Apply gain to input (use work buffer) */
+        float *gained_input = renderer->work_buffer;
+        for (size_t i = 0; i < num_samples; i++) {
+            gained_input[i] = mono_input[i] * total_gain;
+        }
+
+        /* Process with HRTF */
+        voice_hrtf_process(renderer->hrtf_processor, gained_input,
+                           stereo_output, num_samples, azimuth, elevation);
+    } else {
+        /* Render to stereo output using simple panning */
+        for (size_t i = 0; i < num_samples; i++) {
+            float sample = mono_input[i];
+            stereo_output[i * 2] = sample * gain_l;      /* Left */
+            stereo_output[i * 2 + 1] = sample * gain_r;  /* Right */
+        }
     }
 
     /* Apply air absorption if enabled */

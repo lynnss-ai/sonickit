@@ -302,6 +302,68 @@ static int test_renderer_distance_attenuation(void)
 }
 
 /* ============================================
+ * HRTF Integration Test
+ * ============================================ */
+
+static int test_renderer_hrtf_integration(void)
+{
+    /* Test with HRTF enabled */
+    voice_spatial_config_t config;
+    voice_spatial_config_init(&config);
+    config.enable_hrtf = true;  /* Enable HRTF */
+    config.sample_rate = 48000;
+    config.frame_size = 256;
+
+    voice_spatial_renderer_t *renderer = voice_spatial_renderer_create(&config);
+    TEST_ASSERT(renderer != NULL, "Failed to create renderer with HRTF");
+
+    /* Set listener */
+    voice_spatial_listener_t listener;
+    voice_spatial_listener_init(&listener);
+    voice_spatial_set_listener(renderer, &listener);
+
+    /* Set source to the right */
+    voice_spatial_source_t source;
+    voice_spatial_source_init(&source);
+    source.position.x = 2.0f;   /* Right */
+    source.position.y = 0.0f;
+    source.position.z = 0.0f;
+
+    /* Create test signal */
+    const size_t num_samples = 256;
+    float mono_input[256];
+    float stereo_output[512];
+
+    for (size_t i = 0; i < num_samples; i++) {
+        mono_input[i] = 0.5f * sinf(2.0f * 3.14159f * 440.0f * (float)i / 48000.0f);
+    }
+
+    /* Render with HRTF */
+    voice_error_t err = voice_spatial_render_source(renderer, &source,
+                                                     mono_input, stereo_output,
+                                                     num_samples);
+    TEST_ASSERT(err == VOICE_SUCCESS, "HRTF render failed");
+
+    /* Check output has content */
+    float left_energy = 0.0f, right_energy = 0.0f;
+    for (size_t i = 0; i < num_samples; i++) {
+        left_energy += stereo_output[i * 2] * stereo_output[i * 2];
+        right_energy += stereo_output[i * 2 + 1] * stereo_output[i * 2 + 1];
+    }
+
+    printf("    HRTF right source - L: %.4f, R: %.4f\n", left_energy, right_energy);
+
+    /* Right source should have more energy in right channel */
+    TEST_ASSERT(right_energy > left_energy, "HRTF right ear should be louder");
+
+    /* Reset and test again */
+    voice_spatial_renderer_reset(renderer);
+
+    voice_spatial_renderer_destroy(renderer);
+    return TEST_PASSED;
+}
+
+/* ============================================
  * Main
  * ============================================ */
 
@@ -332,6 +394,9 @@ int main(void)
     RUN_TEST(test_renderer_create_destroy);
     RUN_TEST(test_renderer_process);
     RUN_TEST(test_renderer_distance_attenuation);
+
+    /* HRTF integration test */
+    RUN_TEST(test_renderer_hrtf_integration);
 
     TEST_SUMMARY();
 }
