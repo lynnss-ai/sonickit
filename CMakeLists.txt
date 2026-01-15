@@ -213,6 +213,7 @@ set(SONICKIT_SOURCES
     src/dsp/time_stretcher.c
     src/dsp/delay_estimator.c
     src/dsp/spatial.c
+    src/dsp/hrtf.c
 
     # 编解码器
     src/codec/codec.c
@@ -368,6 +369,12 @@ if(SONICKIT_BUILD_TESTS)
     target_include_directories(test_spatial PRIVATE ${TEST_INCLUDE_DIR})
     target_link_libraries(test_spatial voice)
     add_test(NAME test_spatial COMMAND test_spatial)
+
+    # HRTF 测试
+    add_executable(test_hrtf tests/test_hrtf.c)
+    target_include_directories(test_hrtf PRIVATE ${TEST_INCLUDE_DIR})
+    target_link_libraries(test_hrtf voice)
+    add_test(NAME test_hrtf COMMAND test_hrtf)
 
     # 诊断测试
     add_executable(test_diagnostics tests/test_diagnostics.c)
