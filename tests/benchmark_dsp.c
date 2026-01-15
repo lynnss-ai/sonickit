@@ -84,7 +84,7 @@ static void run_aec_benchmark(void) {
     printf("                     AEC Benchmark                                  \n");
     printf("===================================================================\n\n");
 
-    /* 创建 AEC */
+    /* Create AEC */
     voice_aec_ext_config_t aec_config;
     voice_aec_ext_config_init(&aec_config);
     aec_config.sample_rate = SAMPLE_RATE;
@@ -97,7 +97,7 @@ static void run_aec_benchmark(void) {
         return;
     }
 
-    /* 分配测试数据 */
+    /* Allocate test data */
     aec_bench_ctx_t ctx;
     ctx.aec = aec;
     ctx.frame_size = FRAME_SIZE;
@@ -110,15 +110,15 @@ static void run_aec_benchmark(void) {
         goto cleanup_aec;
     }
 
-    /* 生成测试信号 */
+    /* Generate test signals */
     bench_generate_sine_int16(ctx.speaker_ref, FRAME_SIZE, 440.0f, (float)SAMPLE_RATE);
-    /* 麦克风信号 = 回声 + 近端语音 */
+    /* Microphone signal = echo + near-end speech */
     for (size_t i = 0; i < FRAME_SIZE; i++) {
         ctx.mic_in[i] = ctx.speaker_ref[i] / 2 +
                        (int16_t)(sinf(2.0f * 3.14159f * 1000.0f * (float)i / SAMPLE_RATE) * 8000);
     }
 
-    /* 运行基准测试 - FDAF 算法 */
+    /* Run benchmark test - FDAF algorithm */
     bench_context_t bench;
     bench_init(&bench, "AEC FDAF (10ms frame)", bench_aec_process, &ctx);
     bench_set_throughput(&bench, FRAME_SIZE, "samples/sec");
@@ -126,14 +126,14 @@ static void run_aec_benchmark(void) {
     bench_run(&bench);
     bench_print_result(&bench);
 
-    /* 计算实时因子 */
+    /* Calculate real-time factor */
     double frame_duration_ns = (double)FRAME_SIZE / (double)SAMPLE_RATE * 1e9;
     double rtf = bench.stats.mean_ns / frame_duration_ns;
     printf("Real-Time Factor: %.4f (< 1.0 means real-time capable)\n\n", rtf);
 
     bench_cleanup(&bench);
 
-    /* 测试 NLMS 算法 */
+    /* Test NLMS algorithm */
     voice_aec_destroy(aec);
     aec_config.algorithm = VOICE_AEC_ALG_NLMS;
     aec = voice_aec_create(&aec_config);
@@ -180,7 +180,7 @@ static void run_time_stretcher_benchmark(void) {
     printf("                     Time Stretcher Benchmark                       \n");
     printf("===================================================================\n\n");
 
-    /* 创建 Time Stretcher */
+    /* Create Time Stretcher */
     voice_time_stretcher_config_t ts_config;
     voice_time_stretcher_config_init(&ts_config);
     ts_config.sample_rate = SAMPLE_RATE;
@@ -191,11 +191,11 @@ static void run_time_stretcher_benchmark(void) {
         return;
     }
 
-    /* 分配测试数据 */
+    /* Allocate test data */
     ts_bench_ctx_t ctx;
     ctx.ts = ts;
     ctx.input_size = FRAME_SIZE;
-    ctx.output_size = FRAME_SIZE * 2;  /* 最大输出 */
+    ctx.output_size = FRAME_SIZE * 2;  /* Max output */
     ctx.input = (int16_t *)malloc(ctx.input_size * sizeof(int16_t));
     ctx.output = (int16_t *)malloc(ctx.output_size * sizeof(int16_t));
 
@@ -206,7 +206,7 @@ static void run_time_stretcher_benchmark(void) {
 
     bench_generate_sine_int16(ctx.input, ctx.input_size, 440.0f, (float)SAMPLE_RATE);
 
-    /* 测试不同的拉伸比例 */
+    /* Test different stretching ratios */
     float rates[] = {0.5f, 0.8f, 1.0f, 1.2f, 1.5f, 2.0f};
     int num_rates = sizeof(rates) / sizeof(rates[0]);
 
@@ -268,7 +268,7 @@ static void run_delay_estimator_benchmark(void) {
     printf("                     Delay Estimator Benchmark                      \n");
     printf("===================================================================\n\n");
 
-    /* 创建 Delay Estimator */
+    /* Create Delay Estimator */
     voice_delay_estimator_config_t de_config;
     voice_delay_estimator_config_init(&de_config);
     de_config.sample_rate = SAMPLE_RATE;
@@ -280,7 +280,7 @@ static void run_delay_estimator_benchmark(void) {
         return;
     }
 
-    /* 分配测试数据 */
+    /* Allocate test data */
     de_bench_ctx_t ctx;
     ctx.de = de;
     ctx.frame_size = FRAME_SIZE;
@@ -292,11 +292,11 @@ static void run_delay_estimator_benchmark(void) {
         goto cleanup_de;
     }
 
-    /* 生成带延迟的信号 */
+    /* Generate signal with delay */
     bench_generate_sine_float(ctx.far_signal, FRAME_SIZE, 440.0f, (float)SAMPLE_RATE);
     bench_generate_sine_float(ctx.near_signal, FRAME_SIZE, 440.0f, (float)SAMPLE_RATE);
 
-    /* 运行基准测试 */
+    /* Run benchmark */
     bench_context_t bench;
     bench_init(&bench, "GCC-PHAT Delay Estimation", bench_delay_estimate, &ctx);
     bench_set_throughput(&bench, FRAME_SIZE, "samples/sec");

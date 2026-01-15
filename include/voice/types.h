@@ -102,32 +102,32 @@ typedef enum {
  * 网络相关类型
  * ============================================ */
 
-/** 网络统计 */
+/** Network statistics */
 typedef struct {
     uint64_t packets_sent;
     uint64_t packets_received;
     uint64_t packets_lost;
     uint64_t bytes_sent;
     uint64_t bytes_received;
-    float loss_rate;            /**< 丢包率 (0-100%) */
-    float jitter_ms;            /**< 抖动 (毫秒) */
-    float rtt_ms;               /**< 往返时间 (毫秒) */
-    uint32_t available_bandwidth; /**< 可用带宽 (bps) */
+    float loss_rate;            /**< Packet loss rate (0-100%) */
+    float jitter_ms;            /**< Jitter (milliseconds) */
+    float rtt_ms;               /**< Round trip time (milliseconds) */
+    uint32_t available_bandwidth; /**< Available bandwidth (bps) */
 } voice_network_stats_t;
 
-/** 加密类型 */
+/** Encryption type */
 typedef enum {
     VOICE_CRYPTO_NONE = 0,
     VOICE_CRYPTO_SRTP_AES128_SHA1_80,   /**< AES-128-CM + HMAC-SHA1-80 */
     VOICE_CRYPTO_SRTP_AES128_SHA1_32,   /**< AES-128-CM + HMAC-SHA1-32 */
     VOICE_CRYPTO_SRTP_AES256_SHA1_80,   /**< AES-256-CM + HMAC-SHA1-80 */
-    VOICE_CRYPTO_SRTP_AEAD_AES128_GCM,  /**< AES-128-GCM (推荐) */
+    VOICE_CRYPTO_SRTP_AEAD_AES128_GCM,  /**< AES-128-GCM (Recommended) */
     VOICE_CRYPTO_SRTP_AEAD_AES256_GCM   /**< AES-256-GCM */
 } voice_crypto_suite_t;
 
-/** 密钥交换方式 */
+/** Key exchange method */
 typedef enum {
-    VOICE_KEY_EXCHANGE_PSK = 0,     /**< 预共享密钥 */
+    VOICE_KEY_EXCHANGE_PSK = 0,     /**< Pre-shared key */
     VOICE_KEY_EXCHANGE_DTLS_SRTP    /**< DTLS-SRTP */
 } voice_key_exchange_t;
 
@@ -135,20 +135,20 @@ typedef enum {
  * 回调函数类型
  * ============================================ */
 
-/** 音频数据回调 */
+/** Audio data callback */
 typedef void (*voice_audio_callback_t)(
     const voice_frame_t *frame,
     void *user_data
 );
 
-/** 事件回调 */
+/** Event callback */
 typedef void (*voice_event_callback_t)(
     int event_type,
     void *event_data,
     void *user_data
 );
 
-/** 日志回调 */
+/** Log callback */
 typedef void (*voice_log_callback_t)(
     int level,
     const char *message,
@@ -159,15 +159,15 @@ typedef void (*voice_log_callback_t)(
  * 工具宏
  * ============================================ */
 
-/** 计算每帧样本数 */
+/** Calculate samples per frame */
 #define VOICE_SAMPLES_PER_FRAME(sample_rate, frame_ms) \
     ((sample_rate) * (frame_ms) / 1000)
 
-/** 计算帧大小(字节) */
+/** Calculate frame size (bytes) */
 #define VOICE_FRAME_SIZE_BYTES(sample_rate, frame_ms, channels, bytes_per_sample) \
     (VOICE_SAMPLES_PER_FRAME(sample_rate, frame_ms) * (channels) * (bytes_per_sample))
 
-/** 获取格式的字节大小 */
+/** Get byte size of format */
 static inline size_t voice_format_bytes(voice_format_t format) {
     switch (format) {
         case VOICE_FORMAT_U8:  return 1;

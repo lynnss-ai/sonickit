@@ -22,7 +22,7 @@ extern "C" {
  * SIMD 特性检测
  * ============================================ */
 
-/** SIMD 能力标志 */
+/** SIMD capability flags */
 typedef enum {
     VOICE_SIMD_NONE     = 0,
     VOICE_SIMD_SSE2     = (1 << 0),
@@ -53,10 +53,10 @@ const char *voice_simd_get_description(void);
  * 内存对齐
  * ============================================ */
 
-/** 缓存行大小 */
+/** Cache line size */
 #define VOICE_CACHE_LINE_SIZE 64
 
-/** SIMD 对齐 (AVX-512 需要 64 字节) */
+/** SIMD alignment (AVX-512 requires 64 bytes) */
 #define VOICE_SIMD_ALIGN 64
 
 /**

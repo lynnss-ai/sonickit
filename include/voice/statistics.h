@@ -98,20 +98,20 @@ typedef struct {
     uint64_t packets_late;          /**< Late packets */
     uint64_t packets_discarded;     /**< Discarded packets */
 
-    /* 延迟 */
-    uint32_t rtt_ms;                /**< 往返延迟 (ms) */
-    uint32_t rtt_min_ms;            /**< 最小 RTT */
-    uint32_t rtt_max_ms;            /**< 最大 RTT */
-    uint32_t jitter_ms;             /**< 抖动 (ms) */
+    /* Delay */
+    uint32_t rtt_ms;                /**< Round trip delay (ms) */
+    uint32_t rtt_min_ms;            /**< Minimum RTT */
+    uint32_t rtt_max_ms;            /**< Maximum RTT */
+    uint32_t jitter_ms;             /**< Jitter (ms) */
 
-    /* 抖动缓冲 */
-    uint32_t jitter_buffer_ms;      /**< 抖动缓冲大小 (ms) */
-    uint32_t jitter_buffer_target_ms;/**< 目标大小 */
-    uint64_t plc_count;             /**< PLC 触发次数 */
+    /* Jitter buffer */
+    uint32_t jitter_buffer_ms;      /**< Jitter buffer size (ms) */
+    uint32_t jitter_buffer_target_ms;/**< Target size */
+    uint64_t plc_count;             /**< PLC trigger count */
 
-    /* 带宽估计 */
-    uint32_t estimated_bandwidth;   /**< 估计带宽 (bps) */
-    uint32_t target_bitrate;        /**< 目标比特率 (bps) */
+    /* Bandwidth estimation */
+    uint32_t estimated_bandwidth;   /**< Estimated bandwidth (bps) */
+    uint32_t target_bitrate;        /**< Target bitrate (bps) */
 } voice_network_ext_stats_t;
 
 /* ============================================
@@ -119,16 +119,16 @@ typedef struct {
  * ============================================ */
 
 typedef struct {
-    /* 时间 */
-    uint64_t session_duration_ms;   /**< 会话时长 (ms) */
-    uint64_t start_timestamp;       /**< 开始时间戳 */
+    /* Time */
+    uint64_t session_duration_ms;   /**< Session duration (ms) */
+    uint64_t start_timestamp;       /**< Start timestamp */
 
-    /* 质量 */
+    /* Quality */
     float mos_lq;                   /**< MOS-LQ (1.0-5.0) */
     float mos_cq;                   /**< MOS-CQ (1.0-5.0) */
     float r_factor;                 /**< R-Factor (0-100) */
 
-    /* 聚合统计 */
+    /* Aggregate statistics */
     voice_audio_stats_t audio;
     voice_codec_stats_t codec;
     voice_network_stats_t network;
@@ -139,10 +139,10 @@ typedef struct {
  * ============================================ */
 
 typedef struct {
-    uint64_t timestamp;             /**< 快照时间戳 */
-    uint32_t interval_ms;           /**< 统计间隔 */
+    uint64_t timestamp;             /**< Snapshot timestamp */
+    uint32_t interval_ms;           /**< Statistics interval */
 
-    /* 间隔内的统计 */
+    /* Statistics within interval */
     uint32_t packets_sent;
     uint32_t packets_received;
     uint32_t packets_lost;
@@ -158,11 +158,11 @@ typedef struct {
  * ============================================ */
 
 typedef struct {
-    uint32_t snapshot_interval_ms;  /**< 快照间隔 (ms) */
-    size_t history_size;            /**< 历史记录大小 */
-    bool enable_detailed_timing;    /**< 启用详细时间统计 */
+    uint32_t snapshot_interval_ms;  /**< Snapshot interval (ms) */
+    size_t history_size;            /**< History size */
+    bool enable_detailed_timing;    /**< Enable detailed timing statistics */
 
-    /* 回调 */
+    /* Callbacks */
     void (*on_snapshot)(const voice_stats_snapshot_t *snapshot, void *user_data);
     void (*on_quality_change)(float old_mos, float new_mos, void *user_data);
     void *callback_user_data;

@@ -2,7 +2,7 @@
  * @file rtp.h
  * @brief RTP/RTCP protocol interface
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
+ *
  * RFC 3550: RTP - Real-time Transport Protocol
  * RFC 3551: RTP Profile for Audio and Video Conferences
  */
@@ -29,7 +29,7 @@ extern "C" {
 #define RTP_MAX_PACKET_SIZE     1500
 #define RTP_MAX_PAYLOAD_SIZE    (RTP_MAX_PACKET_SIZE - RTP_HEADER_SIZE)
 
-/* 动态载荷类型范围 */
+/* Dynamic payload type range */
 #define RTP_PT_DYNAMIC_MIN      96
 #define RTP_PT_DYNAMIC_MAX      127
 
@@ -72,7 +72,7 @@ typedef struct {
     uint32_t csrc[RTP_MAX_CSRC];
     const uint8_t *payload;
     size_t payload_size;
-    
+
     /* 扩展头信息 */
     bool has_extension;
     uint16_t extension_profile;
@@ -153,14 +153,14 @@ typedef struct {
     uint64_t packets_sent;
     uint64_t bytes_sent;
     uint32_t packets_lost;
-    
+
     /* 接收统计 */
     uint64_t packets_received;
     uint64_t bytes_received;
     uint32_t packets_lost_recv;
     uint32_t packets_reordered;
     uint32_t packets_duplicate;
-    
+
     /* 质量指标 */
     uint32_t jitter;            /**< 抖动 (时钟单位) */
     float fraction_lost;        /**< 丢包率 (0-1) */
@@ -188,7 +188,7 @@ void rtp_session_destroy(rtp_session_t *session);
 
 /**
  * @brief 创建 RTP 包
- * 
+ *
  * @param session RTP会话
  * @param payload 载荷数据
  * @param payload_size 载荷大小
@@ -210,7 +210,7 @@ voice_error_t rtp_session_create_packet(
 
 /**
  * @brief 解析 RTP 包
- * 
+ *
  * @param session RTP会话 (可为NULL)
  * @param data 包数据
  * @param size 包大小
@@ -226,7 +226,7 @@ voice_error_t rtp_session_parse_packet(
 
 /**
  * @brief 处理接收的 RTP 包
- * 
+ *
  * 更新接收统计，处理序列号等
  */
 voice_error_t rtp_session_process_received(

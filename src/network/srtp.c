@@ -24,7 +24,7 @@ struct srtp_session_s {
     bool initialized;
 };
 
-/* 全局初始化标志 */
+/* Global initialization flag */
 static bool g_srtp_initialized = false;
 
 /* ============================================
@@ -116,10 +116,10 @@ srtp_session_t *srtp_session_create(const srtp_config_t *config)
 
     session->config = *config;
 
-    /* 设置策略 */
+    /* Set policy */
     memset(&session->policy, 0, sizeof(srtp_policy_t));
 
-    /* 从配置选择加密套件 */
+    /* Select crypto suite from config */
     srtp_crypto_policy_set_from_profile_for_rtp(
         &session->policy.rtp,
         ours_profile_to_libsrtp(config->profile)
@@ -130,7 +130,7 @@ srtp_session_t *srtp_session_create(const srtp_config_t *config)
         ours_profile_to_libsrtp(config->profile)
     );
 
-    /* 设置密钥 */
+    /* Set key */
     size_t key_len = config->master_key_len + config->master_salt_len;
     uint8_t *key_salt = (uint8_t *)malloc(key_len);
     if (!key_salt) {
@@ -149,10 +149,10 @@ srtp_session_t *srtp_session_create(const srtp_config_t *config)
     session->policy.allow_repeat_tx = 0;
     session->policy.next = NULL;
 
-    /* 创建 SRTP 上下文 */
+    /* Create SRTP context */
     srtp_err_status_t status = srtp_create(&session->srtp_ctx, &session->policy);
 
-    /* 不再需要密钥缓冲区 */
+    /* No longer need key buffer */
     free(key_salt);
     session->policy.key = NULL;
 

@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/* ssize_t 兼容性定义 */
+/* ssize_t compatibility definition */
 #if defined(_WIN32) || defined(__EMSCRIPTEN__)
 #include <sys/types.h>
 #ifndef _SSIZE_T_DEFINED
@@ -38,10 +38,10 @@ extern "C" {
  * @brief 传输类型
  */
 typedef enum {
-    VOICE_TRANSPORT_UDP,        /**< UDP 传输 */
-    VOICE_TRANSPORT_TCP,        /**< TCP 传输 */
-    VOICE_TRANSPORT_TLS,        /**< TLS/TCP 传输 */
-    VOICE_TRANSPORT_DTLS        /**< DTLS/UDP 传输 */
+    VOICE_TRANSPORT_UDP,        /**< UDP transport */
+    VOICE_TRANSPORT_TCP,        /**< TCP transport */
+    VOICE_TRANSPORT_TLS,        /**< TLS/TCP transport */
+    VOICE_TRANSPORT_DTLS        /**< DTLS/UDP transport */
 } voice_transport_type_t;
 
 /**
@@ -57,7 +57,7 @@ typedef enum {
  */
 typedef struct {
     voice_address_family_t family;
-    char address[64];           /**< 地址字符串 */
+    char address[64];           /**< Address string */
     uint16_t port;
 } voice_net_address_t;
 
@@ -65,25 +65,25 @@ typedef struct {
  * @brief 传输配置
  */
 typedef struct {
-    voice_transport_type_t type;    /**< 传输类型 */
-    voice_address_family_t family;  /**< 地址族 */
+    voice_transport_type_t type;    /**< Transport type */
+    voice_address_family_t family;  /**< Address family */
 
-    /* 本地绑定 */
-    char local_address[64];         /**< 本地地址 (空=任意) */
-    uint16_t local_port;            /**< 本地端口 (0=自动) */
+    /* Local binding */
+    char local_address[64];         /**< Local address (empty=any) */
+    uint16_t local_port;            /**< Local port (0=auto) */
 
-    /* Socket 选项 */
-    uint32_t recv_buffer_size;      /**< 接收缓冲区大小 */
-    uint32_t send_buffer_size;      /**< 发送缓冲区大小 */
-    int tos;                        /**< ToS/DSCP 值 */
-    bool reuse_addr;                /**< 地址重用 */
-    bool non_blocking;              /**< 非阻塞模式 */
+    /* Socket options */
+    uint32_t recv_buffer_size;      /**< Receive buffer size */
+    uint32_t send_buffer_size;      /**< Send buffer size */
+    int tos;                        /**< ToS/DSCP value */
+    bool reuse_addr;                /**< Address reuse */
+    bool non_blocking;              /**< Non-blocking mode */
 
-    /* 超时 */
-    uint32_t recv_timeout_ms;       /**< 接收超时 (ms) */
-    uint32_t send_timeout_ms;       /**< 发送超时 (ms) */
+    /* Timeout */
+    uint32_t recv_timeout_ms;       /**< Receive timeout (ms) */
+    uint32_t send_timeout_ms;       /**< Send timeout (ms) */
 
-    /* 回调 */
+    /* Callbacks */
     void (*on_receive)(const uint8_t *data, size_t size,
                        const voice_net_address_t *from, void *user_data);
     void (*on_error)(voice_error_t error, const char *message, void *user_data);
@@ -94,13 +94,13 @@ typedef struct {
  * @brief 传输统计
  */
 typedef struct {
-    uint64_t bytes_sent;            /**< 发送字节数 */
-    uint64_t bytes_received;        /**< 接收字节数 */
-    uint64_t packets_sent;          /**< 发送包数 */
-    uint64_t packets_received;      /**< 接收包数 */
-    uint64_t send_errors;           /**< 发送错误数 */
-    uint64_t recv_errors;           /**< 接收错误数 */
-    uint32_t last_rtt_us;           /**< 最近 RTT (微秒) */
+    uint64_t bytes_sent;            /**< Bytes sent */
+    uint64_t bytes_received;        /**< Bytes received */
+    uint64_t packets_sent;          /**< Packets sent */
+    uint64_t packets_received;      /**< Packets received */
+    uint64_t send_errors;           /**< Send errors */
+    uint64_t recv_errors;           /**< Receive errors */
+    uint32_t last_rtt_us;           /**< Last RTT (microseconds) */
 } voice_transport_stats_t;
 
 /* ============================================

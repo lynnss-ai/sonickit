@@ -119,7 +119,7 @@ voice_error_t voice_init(const voice_global_config_t *config)
         return VOICE_OK;
     }
 
-    /* 默认日志级别 */
+    /* Default log level */
     g_voice_state.log_level = VOICE_LOG_INFO;
 
     if (config) {

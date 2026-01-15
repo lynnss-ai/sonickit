@@ -116,13 +116,13 @@ int main(int argc, char *argv[]) {
     printf("|          SonicKit SIMD Performance Benchmark                   |\n");
     printf("+================================================================+\n\n");
 
-    /* 检测 SIMD 能力 */
+    /* Detect SIMD capabilities */
     uint32_t simd_flags = voice_simd_detect();
     printf("SIMD Capabilities: %s\n", voice_simd_get_description());
     printf("Test buffer size: %d samples\n", TEST_SIZE);
     printf("Iterations: %d\n\n", g_iterations);
 
-    /* 分配测试数据 */
+    /* Allocate test data */
     simd_test_ctx_t ctx;
     ctx.size = TEST_SIZE;
     ctx.int16_buf = (int16_t *)voice_aligned_alloc(TEST_SIZE * sizeof(int16_t), 64);
@@ -134,12 +134,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    /* 生成测试数据 */
+    /* Generate test data */
     bench_generate_int16(ctx.int16_buf, TEST_SIZE, 42);
     bench_generate_float(ctx.float_buf_src, TEST_SIZE, 42);
     memcpy(ctx.float_buf_dst, ctx.float_buf_src, TEST_SIZE * sizeof(float));
 
-    /* 运行基准测试 */
+    /* Run benchmarks */
     bench_context_t bench;
 
     printf("===================================================================\n");
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
     printf("                     Audio Processing Tests                         \n");
     printf("===================================================================\n\n");
 
-    /* 重置数据 */
+    /* Reset data */
     memcpy(ctx.float_buf_dst, ctx.float_buf_src, TEST_SIZE * sizeof(float));
 
     bench_init(&bench, "apply_gain_float", bench_apply_gain, &ctx);
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
     bench_print_result(&bench);
     bench_cleanup(&bench);
 
-    /* 不同缓冲区大小测试 */
+    /* Test with different buffer sizes */
     printf("===================================================================\n");
     printf("                     Buffer Size Scaling Test                       \n");
     printf("===================================================================\n\n");
@@ -239,7 +239,7 @@ int main(int argc, char *argv[]) {
 
     printf("\n");
 
-    /* 清理 */
+    /* Cleanup */
     voice_aligned_free(ctx.int16_buf);
     voice_aligned_free(ctx.float_buf_src);
     voice_aligned_free(ctx.float_buf_dst);

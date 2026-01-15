@@ -207,7 +207,7 @@ void voice_log(voice_log_level_t level, const char *fmt, ...);
     #define VOICE_ASSERT(cond) ((void)0)
 #endif
 
-/* 错误检查宏 */
+/* Error check macros */
 #define VOICE_CHECK(cond, err) \
     do { \
         if (!(cond)) { \

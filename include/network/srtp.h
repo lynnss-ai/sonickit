@@ -2,7 +2,7 @@
  * @file srtp.h
  * @brief SRTP encryption interface
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
+ *
  * Secure Real-time Transport Protocol (RFC 3711)
  * DTLS-SRTP key exchange (RFC 5764)
  */
@@ -32,10 +32,10 @@ extern "C" {
  * ============================================ */
 
 typedef enum {
-    SRTP_PROFILE_AES128_CM_SHA1_80 = 1,  /**< AES-CM 128位密钥, HMAC-SHA1 80位标签 */
-    SRTP_PROFILE_AES128_CM_SHA1_32 = 2,  /**< AES-CM 128位密钥, HMAC-SHA1 32位标签 */
-    SRTP_PROFILE_AEAD_AES_128_GCM  = 7,  /**< AES-GCM 128位 */
-    SRTP_PROFILE_AEAD_AES_256_GCM  = 8,  /**< AES-GCM 256位 */
+    SRTP_PROFILE_AES128_CM_SHA1_80 = 1,  /**< AES-CM 128-bit key, HMAC-SHA1 80-bit tag */
+    SRTP_PROFILE_AES128_CM_SHA1_32 = 2,  /**< AES-CM 128-bit key, HMAC-SHA1 32-bit tag */
+    SRTP_PROFILE_AEAD_AES_128_GCM  = 7,  /**< AES-GCM 128-bit */
+    SRTP_PROFILE_AEAD_AES_256_GCM  = 8,  /**< AES-GCM 256-bit */
 } srtp_profile_t;
 
 /* ============================================
@@ -44,19 +44,19 @@ typedef enum {
 
 typedef struct srtp_session_s srtp_session_t;
 
-/** SRTP 配置 */
+/** SRTP configuration */
 typedef struct {
-    srtp_profile_t profile;              /**< 加密配置 */
-    uint8_t master_key[32];              /**< 主密钥 */
-    size_t master_key_len;               /**< 主密钥长度 */
-    uint8_t master_salt[14];             /**< 主盐值 */
-    size_t master_salt_len;              /**< 主盐值长度 */
+    srtp_profile_t profile;              /**< Encryption profile */
+    uint8_t master_key[32];              /**< Master key */
+    size_t master_key_len;               /**< Master key length */
+    uint8_t master_salt[14];             /**< Master salt */
+    size_t master_salt_len;              /**< Master salt length */
     uint32_t ssrc;                       /**< SSRC */
-    bool is_sender;                      /**< 发送方/接收方 */
-    uint64_t replay_window_size;         /**< 重放保护窗口大小 */
+    bool is_sender;                      /**< Sender/Receiver */
+    uint64_t replay_window_size;         /**< Replay protection window size */
 } srtp_config_t;
 
-/** SRTP 密钥材料 */
+/** SRTP keying material */
 typedef struct {
     uint8_t client_write_key[32];
     size_t client_write_key_len;
@@ -103,7 +103,7 @@ void srtp_session_destroy(srtp_session_t *session);
 
 /**
  * @brief 保护 RTP 包 (加密+认证)
- * 
+ *
  * @param session SRTP会话
  * @param rtp_packet RTP包数据 (原地加密)
  * @param rtp_len RTP包长度(输入)/SRTP包长度(输出)
@@ -119,7 +119,7 @@ voice_error_t srtp_protect(
 
 /**
  * @brief 解保护 SRTP 包 (验证+解密)
- * 
+ *
  * @param session SRTP会话
  * @param srtp_packet SRTP包数据 (原地解密)
  * @param srtp_len SRTP包长度(输入)/RTP包长度(输出)
@@ -184,39 +184,39 @@ size_t srtp_get_salt_len(srtp_profile_t profile);
 
 typedef struct dtls_srtp_session_s dtls_srtp_session_t;
 
-/** DTLS 角色 */
+/** DTLS role */
 typedef enum {
     DTLS_ROLE_CLIENT,
     DTLS_ROLE_SERVER,
     DTLS_ROLE_AUTO,
 } dtls_role_t;
 
-/** DTLS-SRTP 配置 */
+/** DTLS-SRTP configuration */
 typedef struct {
-    dtls_role_t role;                    /**< 角色 */
-    const char *certificate_file;        /**< 证书文件路径 */
-    const char *private_key_file;        /**< 私钥文件路径 */
-    srtp_profile_t profiles[4];          /**< 支持的SRTP配置 */
-    size_t profile_count;                /**< 配置数量 */
+    dtls_role_t role;                    /**< Role */
+    const char *certificate_file;        /**< Certificate file path */
+    const char *private_key_file;        /**< Private key file path */
+    srtp_profile_t profiles[4];          /**< Supported SRTP profiles */
+    size_t profile_count;                /**< Profile count */
     int mtu;                             /**< MTU */
 } dtls_srtp_config_t;
 
-/** DTLS 事件类型 */
+/** DTLS event type */
 typedef enum {
-    DTLS_EVENT_CONNECTED,       /**< 握手完成 */
-    DTLS_EVENT_ERROR,           /**< 发生错误 */
-    DTLS_EVENT_CLOSED,          /**< 连接关闭 */
-    DTLS_EVENT_KEYS_READY,      /**< 密钥材料就绪 */
+    DTLS_EVENT_CONNECTED,       /**< Handshake complete */
+    DTLS_EVENT_ERROR,           /**< Error occurred */
+    DTLS_EVENT_CLOSED,          /**< Connection closed */
+    DTLS_EVENT_KEYS_READY,      /**< Key material ready */
 } dtls_event_t;
 
-/** DTLS 事件回调 */
+/** DTLS event callback */
 typedef void (*dtls_event_callback_t)(
     dtls_srtp_session_t *session,
     dtls_event_t event,
     void *user_data
 );
 
-/** DTLS 数据发送回调 */
+/** DTLS data send callback */
 typedef int (*dtls_send_callback_t)(
     const uint8_t *data,
     size_t len,

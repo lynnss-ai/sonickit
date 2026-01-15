@@ -249,7 +249,7 @@ voice_error_t voice_stats_get_session(
     stats->session_duration_ms = now - collector->start_time;
     stats->start_timestamp = collector->start_time;
 
-    /* 计算 MOS (简化版) */
+    /* Calculate MOS (simplified version) */
     float R = 93.2f;
     R -= collector->network_stats.loss_rate * 100.0f * 2.5f;
     R -= collector->network_stats.jitter_ms * 0.1f;
