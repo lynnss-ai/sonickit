@@ -108,8 +108,8 @@ static int test_vad_detect_speech(void)
     int16_t silence[960];
     generate_silence(silence, 960);
 
-    /* Process several frames of silence to let VAD adapt */
-    for (int i = 0; i < 10; i++) {
+    /* Process several frames of silence to let VAD adapt (20 frames to clear hangover) */
+    for (int i = 0; i < 20; i++) {
         err = voice_vad_process(vad, silence, 960, &result);
     }
     TEST_ASSERT(result.is_speech == false, "Should not detect speech in silence");

@@ -74,18 +74,19 @@ void voice_log(voice_log_level_t level, const char *fmt, ...)
     if (level < g_voice_state.log_level) {
         return;
     }
-    
+
     char message[1024];
     va_list args;
     va_start(args, fmt);
     vsnprintf(message, sizeof(message), fmt, args);
     va_end(args);
-    
+
     if (g_voice_state.log_callback) {
         g_voice_state.log_callback(level, message, g_voice_state.log_user_data);
     } else {
-        /* Default output to stderr */
-        fprintf(stderr, "[%s] %s\n", log_level_names[level], message);
+        /* INFO and DEBUG go to stdout, WARNING and ERROR go to stderr */
+        FILE *out = (level >= VOICE_LOG_WARN) ? stderr : stdout;
+        fprintf(out, "[%s] %s\n", log_level_names[level], message);
     }
 }
 
@@ -117,14 +118,14 @@ voice_error_t voice_init(const voice_global_config_t *config)
     if (g_voice_state.initialized) {
         return VOICE_OK;
     }
-    
+
     /* 默认日志级别 */
     g_voice_state.log_level = VOICE_LOG_INFO;
-    
+
     if (config) {
         voice_set_log_level(config->log_level);
     }
-    
+
     /* Platform-specific initialization */
 #ifdef _WIN32
     /* COM initialization (for WASAPI) */
@@ -134,11 +135,11 @@ voice_error_t voice_init(const voice_global_config_t *config)
         return VOICE_ERROR_NOT_INITIALIZED;
     }
 #endif
-    
+
     g_voice_state.initialized = true;
     VOICE_LOG_I("Voice library initialized (version %s)", VOICE_VERSION_STRING);
     VOICE_LOG_I("Platform: %s", voice_platform_name(voice_platform_get()));
-    
+
     return VOICE_OK;
 }
 
@@ -147,11 +148,11 @@ void voice_deinit(void)
     if (!g_voice_state.initialized) {
         return;
     }
-    
+
 #ifdef _WIN32
     CoUninitialize();
 #endif
-    
+
     VOICE_LOG_I("Voice library deinitialized");
     g_voice_state.initialized = false;
 }

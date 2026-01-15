@@ -225,11 +225,77 @@ build/
 ├── test_diagnostics.exe    # 诊断测试
 ├── test_datachannel.exe    # DataChannel 测试
 ├── test_sip.exe            # SIP 协议测试
+├── benchmark_simd.exe      # SIMD 性能基准测试
+├── benchmark_dsp.exe       # DSP 性能基准测试
 └── examples/
     ├── example_capture.exe     # 音频采集示例
     ├── example_playback.exe    # 音频播放示例
     ├── example_file_convert.exe # 文件转换示例
     └── example_voicechat.exe   # 语音聊天示例
+```
+
+### 运行测试
+
+```bash
+# 运行所有测试
+ctest --test-dir build -C Debug --output-on-failure
+
+# 运行特定测试
+./build/test_codec.exe
+```
+
+### 性能基准测试
+
+SonicKit 包含 SIMD 优化和 DSP 模块的性能基准测试。
+
+```bash
+# SIMD 基准测试 (格式转换、增益、混音等)
+./build/benchmark_simd.exe
+
+# DSP 基准测试 (AEC、时间拉伸、延迟估计)
+./build/benchmark_dsp.exe
+```
+
+**命令行选项:**
+
+| 选项 | 说明 |
+|------|------|
+| `-n, --iterations N` | 设置迭代次数 (默认: SIMD 10000, DSP 1000) |
+| `-h, --help` | 显示帮助信息 |
+
+**使用示例:**
+
+```bash
+# 使用 50000 次迭代运行 SIMD 基准测试
+./build/benchmark_simd.exe -n 50000
+
+# 使用 5000 次迭代运行 DSP 基准测试
+./build/benchmark_dsp.exe --iterations 5000
+```
+
+**示例输出:**
+
+```
++================================================================+
+|          SonicKit SIMD Performance Benchmark                   |
++================================================================+
+
+SIMD Capabilities: AVX2 SSE4.1 SSE2
+Test buffer size: 4096 samples
+Iterations: 10000
+
+===================================================================
+                     Format Conversion Tests
+===================================================================
+
+Benchmark: int16_to_float
+  Iterations: 10000
+  Mean:     245.32 ns
+  Median:   241.00 ns
+  Std Dev:   32.45 ns
+  Min/Max:  235.00 / 412.00 ns
+  P95/P99:  298.00 / 345.00 ns
+  Throughput: 16.70 Gsamples/sec
 ```
 
 ### WebAssembly (浏览器) 构建

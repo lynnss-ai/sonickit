@@ -61,6 +61,12 @@ struct voice_time_stretcher {
     float   *window;                /* Hann window coefficients */
     float   *prev_frame;            /* Previous frame for correlation */
 
+    /* Pre-allocated buffers for int16 conversion */
+    float   *conv_input;
+    float   *conv_output;
+    size_t   conv_capacity;
+
+
     bool     first_frame;           /* First frame flag */
 };
 
@@ -280,6 +286,12 @@ voice_time_stretcher_t *voice_time_stretcher_create(const voice_time_stretcher_c
     ts->input_buffer = calloc(ts->input_buffer_size, sizeof(float));
     if (!ts->input_buffer) goto fail;
 
+    /* Allocate conversion buffers (MTU sized margin) */
+    ts->conv_capacity = ts->input_buffer_size;
+    ts->conv_input = calloc(ts->conv_capacity, sizeof(float));
+    ts->conv_output = calloc(ts->conv_capacity, sizeof(float));
+    if (!ts->conv_input || !ts->conv_output) goto fail;
+
     /* Allocate output/OLA buffer */
     ts->output_buffer_size = ts->frame_samples * config->channels;
     ts->output_buffer = calloc(ts->output_buffer_size, sizeof(float));
@@ -311,6 +323,8 @@ void voice_time_stretcher_destroy(voice_time_stretcher_t *ts)
     free(ts->output_buffer);
     free(ts->window);
     free(ts->prev_frame);
+    free(ts->conv_input);
+    free(ts->conv_output);
     free(ts);
 }
 
@@ -476,18 +490,14 @@ voice_error_t voice_time_stretcher_process(
     }
 
     /* Convert int16 to float */
-    float *float_input = malloc(input_count * sizeof(float));
-    float *float_output = malloc(output_capacity * sizeof(float));
-    if (!float_input || !float_output) {
-        free(float_input);
-        free(float_output);
-        return VOICE_ERROR_NO_MEMORY;
+    if (input_count > ts->conv_capacity || output_capacity > ts->conv_capacity) {
+        return VOICE_ERROR_OVERFLOW;
     }
 
-    const float scale = 1.0f / 32768.0f;
-    for (size_t i = 0; i < input_count; i++) {
-        float_input[i] = input[i] * scale;
-    }
+    float *float_input = ts->conv_input;
+    float *float_output = ts->conv_output;
+
+    voice_int16_to_float(input, float_input, input_count);
 
     /* Process */
     size_t float_output_count;
@@ -497,18 +507,11 @@ voice_error_t voice_time_stretcher_process(
     );
 
     if (err == VOICE_SUCCESS) {
-        /* Convert float back to int16 */
-        for (size_t i = 0; i < float_output_count; i++) {
-            float sample = float_output[i] * 32768.0f;
-            if (sample > 32767.0f) sample = 32767.0f;
-            if (sample < -32768.0f) sample = -32768.0f;
-            output[i] = (int16_t)sample;
-        }
+        /* Convert float back to int16 using SIMD */
+        voice_float_to_int16(float_output, output, float_output_count);
         *output_count = float_output_count;
     }
 
-    free(float_input);
-    free(float_output);
     return err;
 }
 

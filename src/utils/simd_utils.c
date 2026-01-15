@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file simd_utils.c
  * @brief SIMD utilities implementation
  * @author wangxuebing <lynnss.codeai@gmail.com>
@@ -377,6 +377,172 @@ static void float_to_int16_avx2(const float *src, int16_t *dst, size_t count) {
     }
 }
 
+static void int16_to_float_stereo_avx2(const int16_t *src, float *dst_left, float *dst_right, size_t frames) {
+    const __m256 scale = _mm256_set1_ps(1.0f / 32768.0f);
+    size_t i = 0;
+    for (; i + 8 <= frames; i += 8) {
+        __m256i s16 = _mm256_loadu_si256((const __m256i *)(src + i * 2));
+        __m256i s32_lo = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(s16));
+        __m256i s32_hi = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(s16, 1));
+        __m256 f_lo = _mm256_cvtepi32_ps(s32_lo);
+        __m256 f_hi = _mm256_cvtepi32_ps(s32_hi);
+        f_lo = _mm256_mul_ps(f_lo, scale);
+        f_hi = _mm256_mul_ps(f_hi, scale);
+        __m256 v0 = _mm256_permute2f128_ps(f_lo, f_hi, 0x20);
+        __m256 v1 = _mm256_permute2f128_ps(f_lo, f_hi, 0x31);
+        __m256 left = _mm256_shuffle_ps(v0, v1, _MM_SHUFFLE(2, 0, 2, 0));
+        __m256 right = _mm256_shuffle_ps(v0, v1, _MM_SHUFFLE(3, 1, 3, 1));
+        _mm256_storeu_ps(dst_left + i, left);
+        _mm256_storeu_ps(dst_right + i, right);
+    }
+    for (; i < frames; i++) {
+        dst_left[i] = (float)src[i * 2] * (1.0f / 32768.0f);
+        dst_right[i] = (float)src[i * 2 + 1] * (1.0f / 32768.0f);
+    }
+}
+
+static void float_to_int16_stereo_avx2(const float *src_left, const float *src_right, int16_t *dst, size_t frames) {
+    const __m256 scale = _mm256_set1_ps(32768.0f);
+    size_t i = 0;
+    for (; i + 8 <= frames; i += 8) {
+        __m256 l = _mm256_loadu_ps(src_left + i);
+        __m256 r = _mm256_loadu_ps(src_right + i);
+        l = _mm256_mul_ps(l, scale);
+        r = _mm256_mul_ps(r, scale);
+        __m256 v0 = _mm256_unpacklo_ps(l, r);
+        __m256 v1 = _mm256_unpackhi_ps(l, r);
+        __m256 res_lo = _mm256_permute2f128_ps(v0, v1, 0x20);
+        __m256 res_hi = _mm256_permute2f128_ps(v0, v1, 0x31);
+        __m256i i_lo = _mm256_cvtps_epi32(res_lo);
+        __m256i i_hi = _mm256_cvtps_epi32(res_hi);
+        __m256i res_16 = _mm256_packs_epi32(i_lo, i_hi);
+        res_16 = _mm256_permute4x64_epi64(res_16, 0xD8);
+        _mm256_storeu_si256((__m256i *)(dst + i * 2), res_16);
+    }
+    for (; i < frames; i++) {
+        float sl = src_left[i] * 32768.0f;
+        float sr = src_right[i] * 32768.0f;
+        if (sl > 32767.0f) sl = 32767.0f; else if (sl < -32768.0f) sl = -32768.0f;
+        if (sr > 32767.0f) sr = 32767.0f; else if (sr < -32768.0f) sr = -32768.0f;
+        dst[i * 2] = (int16_t)sl;
+        dst[i * 2 + 1] = (int16_t)sr;
+    }
+}
+
+static void voice_mix_with_gain_float_avx2(float *dst, const float *src, size_t count, float dst_gain, float src_gain) {
+    const __m256 g1 = _mm256_set1_ps(dst_gain);
+    const __m256 g2 = _mm256_set1_ps(src_gain);
+    size_t i = 0;
+    for (; i + 8 <= count; i += 8) {
+        __m256 d = _mm256_loadu_ps(dst + i);
+        __m256 s = _mm256_loadu_ps(src + i);
+        d = _mm256_mul_ps(d, g1);
+        d = _mm256_fmadd_ps(s, g2, d);
+        _mm256_storeu_ps(dst + i, d);
+    }
+    for (; i < count; i++) {
+        dst[i] = dst[i] * dst_gain + src[i] * src_gain;
+    }
+}
+
+static int16_t voice_find_peak_int16_avx2(const int16_t *samples, size_t count) {
+    size_t i = 0;
+    __m256i max_vec = _mm256_setzero_si256();
+    for (; i + 16 <= count; i += 16) {
+        __m256i s = _mm256_loadu_si256((const __m256i *)(samples + i));
+        __m256i abs_s = _mm256_abs_epi16(s);
+        max_vec = _mm256_max_epi16(max_vec, abs_s);
+    }
+    __m128i m128 = _mm_max_epi16(_mm256_castsi256_si128(max_vec), _mm256_extracti128_si256(max_vec, 1));
+    m128 = _mm_max_epi16(m128, _mm_srli_si128(m128, 8));
+    m128 = _mm_max_epi16(m128, _mm_srli_si128(m128, 4));
+    m128 = _mm_max_epi16(m128, _mm_srli_si128(m128, 2));
+    int16_t peak = (int16_t)_mm_extract_epi16(m128, 0);
+    for (; i < count; i++) {
+        int16_t abs_val = abs(samples[i]);
+        if (abs_val > peak) peak = abs_val;
+    }
+    return peak;
+}
+
+static void voice_apply_gain_int16_avx2(int16_t *samples, size_t count, float gain) {
+    const __m256 g = _mm256_set1_ps(gain);
+    size_t i = 0;
+    for (; i + 16 <= count; i += 16) {
+        __m256i s16 = _mm256_loadu_si256((const __m256i *)(samples + i));
+        __m256i s32_lo = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(s16));
+        __m256i s32_hi = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(s16, 1));
+        __m256 f_lo = _mm256_cvtepi32_ps(s32_lo);
+        __m256 f_hi = _mm256_cvtepi32_ps(s32_hi);
+        f_lo = _mm256_mul_ps(f_lo, g);
+        f_hi = _mm256_mul_ps(f_hi, g);
+        __m256i r_lo = _mm256_cvtps_epi32(f_lo);
+        __m256i r_hi = _mm256_cvtps_epi32(f_hi);
+        __m256i res = _mm256_packs_epi32(r_lo, r_hi);
+        res = _mm256_permute4x64_epi64(res, 0xD8);
+        _mm256_storeu_si256((__m256i *)(samples + i), res);
+    }
+    for (; i < count; i++) {
+        float f = (float)samples[i] * gain;
+        if (f > 32767.0f) f = 32767.0f; else if (f < -32768.0f) f = -32768.0f;
+        samples[i] = (int16_t)f;
+    }
+}
+
+static void voice_mix_add_int16_avx2(int16_t *dst, const int16_t *src, size_t count) {
+    size_t i = 0;
+    for (; i + 16 <= count; i += 16) {
+        __m256i d = _mm256_loadu_si256((__m256i *)(dst + i));
+        __m256i s = _mm256_loadu_si256((const __m256i *)(src + i));
+        d = _mm256_adds_epi16(d, s);
+        _mm256_storeu_si256((__m256i *)(dst + i), d);
+    }
+    for (; i < count; i++) {
+        int32_t sum = (int32_t)dst[i] + src[i];
+        if (sum > 32767) sum = 32767; else if (sum < -32768) sum = -32768;
+        dst[i] = (int16_t)sum;
+    }
+}
+
+static void voice_hard_clip_int16_avx2(int16_t *samples, size_t count, int16_t threshold) {
+    __m256i top = _mm256_set1_epi16(threshold);
+    __m256i bottom = _mm256_set1_epi16(-threshold);
+    size_t i = 0;
+    for (; i + 16 <= count; i += 16) {
+        __m256i s = _mm256_loadu_si256((__m256i *)(samples + i));
+        s = _mm256_min_epi16(s, top);
+        s = _mm256_max_epi16(s, bottom);
+        _mm256_storeu_si256((__m256i *)(samples + i), s);
+    }
+    for (; i < count; i++) {
+        if (samples[i] > threshold) samples[i] = threshold;
+        else if (samples[i] < -threshold) samples[i] = -threshold;
+    }
+}
+
+static float voice_compute_energy_int16_avx2(const int16_t *samples, size_t count) {
+    if (count == 0) return 0.0f;
+    __m256 sum_vec = _mm256_setzero_ps();
+    size_t i = 0;
+    for (; i + 8 <= count; i += 8) {
+        __m128i s16 = _mm_loadu_si128((const __m128i *)(samples + i));
+        __m256i s32 = _mm256_cvtepi16_epi32(s16);
+        __m256 f = _mm256_cvtepi32_ps(s32);
+        sum_vec = _mm256_fmadd_ps(f, f, sum_vec);
+    }
+    __m128 lo = _mm256_castps256_ps128(sum_vec);
+    __m128 hi = _mm256_extractf128_ps(sum_vec, 1);
+    __m128 sum_128 = _mm_add_ps(lo, hi);
+    sum_128 = _mm_add_ps(sum_128, _mm_shuffle_ps(sum_128, sum_128, 0x4E));
+    sum_128 = _mm_add_ps(sum_128, _mm_shuffle_ps(sum_128, sum_128, 0xB1));
+    float sum_sq = _mm_cvtss_f32(sum_128);
+    for (; i < count; i++) {
+        float f = (float)samples[i];
+        sum_sq += f * f;
+    }
+    return sum_sq / (float)count;
+}
+
 static float find_peak_float_avx2(const float *samples, size_t count) {
     __m256 abs_mask = _mm256_castsi256_ps(_mm256_set1_epi32(0x7FFFFFFF));
     __m256 peak_vec = _mm256_setzero_ps();
@@ -524,6 +690,15 @@ void voice_int16_to_float_stereo(
     float *dst_right,
     size_t frames
 ) {
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        int16_to_float_stereo_avx2(src, dst_left, dst_right, frames);
+        return;
+    }
+#elif defined(VOICE_HAS_NEON)
+    int16_to_float_stereo_neon(src, dst_left, dst_right, frames);
+    return;
+#endif
     const float scale = 1.0f / 32768.0f;
     for (size_t i = 0; i < frames; i++) {
         dst_left[i] = (float)src[i * 2] * scale;
@@ -531,12 +706,13 @@ void voice_int16_to_float_stereo(
     }
 }
 
-void voice_float_to_int16_stereo(
-    const float *src_left,
-    const float *src_right,
-    int16_t *dst,
-    size_t frames
-) {
+void voice_float_to_int16_stereo(const float *src_left, const float *src_right, int16_t *dst, size_t frames) {
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        float_to_int16_stereo_avx2(src_left, src_right, dst, frames);
+        return;
+    }
+#endif
     for (size_t i = 0; i < frames; i++) {
         float l = src_left[i] * 32768.0f;
         float r = src_right[i] * 32768.0f;
@@ -557,6 +733,12 @@ void voice_float_to_int16_stereo(
 
 void voice_apply_gain_int16(int16_t *samples, size_t count, float gain) {
     if (gain == 1.0f) return;
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        voice_apply_gain_int16_avx2(samples, count, gain);
+        return;
+    }
+#endif
 
     for (size_t i = 0; i < count; i++) {
         float sample = (float)samples[i] * gain;
@@ -617,6 +799,12 @@ void voice_apply_gain_float(float *samples, size_t count, float gain) {
 }
 
 void voice_mix_add_int16(int16_t *dst, const int16_t *src, size_t count) {
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        voice_mix_add_int16_avx2(dst, src, count);
+        return;
+    }
+#endif
     for (size_t i = 0; i < count; i++) {
         int32_t sum = (int32_t)dst[i] + (int32_t)src[i];
         if (sum > 32767) sum = 32767;
@@ -675,12 +863,23 @@ void voice_mix_with_gain_float(
     float dst_gain,
     float src_gain
 ) {
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        voice_mix_with_gain_float_avx2(dst, src, count, dst_gain, src_gain);
+        return;
+    }
+#endif
     for (size_t i = 0; i < count; i++) {
         dst[i] = dst[i] * dst_gain + src[i] * src_gain;
     }
 }
 
 int16_t voice_find_peak_int16(const int16_t *samples, size_t count) {
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        return voice_find_peak_int16_avx2(samples, count);
+    }
+#endif
     int16_t peak = 0;
     for (size_t i = 0; i < count; i++) {
         int16_t abs_val = samples[i] < 0 ? -samples[i] : samples[i];
@@ -706,6 +905,11 @@ float voice_find_peak_float(const float *samples, size_t count) {
 
 float voice_compute_energy_int16(const int16_t *samples, size_t count) {
     if (count == 0) return 0.0f;
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        return voice_compute_energy_int16_avx2(samples, count);
+    }
+#endif
 
     int64_t sum_sq = 0;
     for (size_t i = 0; i < count; i++) {
@@ -741,6 +945,12 @@ void voice_soft_clip_float(float *samples, size_t count, float threshold) {
 }
 
 void voice_hard_clip_int16(int16_t *samples, size_t count, int16_t threshold) {
+#if defined(VOICE_HAS_AVX2)
+    if (g_simd_flags & VOICE_SIMD_AVX2) {
+        voice_hard_clip_int16_avx2(samples, count, threshold);
+        return;
+    }
+#endif
     for (size_t i = 0; i < count; i++) {
         if (samples[i] > threshold) samples[i] = threshold;
         else if (samples[i] < -threshold) samples[i] = -threshold;
@@ -1245,3 +1455,4 @@ void voice_fft_butterfly(
         }
     }
 }
+

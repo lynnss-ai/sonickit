@@ -65,6 +65,8 @@ struct voice_pipeline_s {
     int16_t *processing_buffer;
     int16_t *output_buffer;
     uint8_t *encoded_buffer;
+    uint8_t *decrypt_buffer;    /* 预分配的解密缓冲区 */
+    uint8_t *rtp_send_buffer;   /* 预分配的 RTP 封包缓冲区 */
     size_t frame_samples;
 
     /* 时间戳 */
@@ -175,9 +177,12 @@ voice_pipeline_t *voice_pipeline_create(const voice_pipeline_ext_config_t *confi
     pipeline->output_buffer = (int16_t *)calloc(
         pipeline->frame_samples, sizeof(int16_t));
     pipeline->encoded_buffer = (uint8_t *)malloc(1500);
+    pipeline->decrypt_buffer = (uint8_t *)malloc(2048); /* 足够容纳 MTU 大小的包 */
+    pipeline->rtp_send_buffer = (uint8_t *)malloc(2048);
 
     if (!pipeline->processing_buffer || !pipeline->output_buffer ||
-        !pipeline->encoded_buffer) {
+        !pipeline->encoded_buffer || !pipeline->decrypt_buffer ||
+        !pipeline->rtp_send_buffer) {
         voice_pipeline_destroy(pipeline);
         return NULL;
     }
@@ -344,6 +349,14 @@ void voice_pipeline_destroy(voice_pipeline_t *pipeline)
 
     if (pipeline->encoded_buffer) {
         free(pipeline->encoded_buffer);
+    }
+
+    if (pipeline->decrypt_buffer) {
+        free(pipeline->decrypt_buffer);
+    }
+
+    if (pipeline->rtp_send_buffer) {
+        free(pipeline->rtp_send_buffer);
     }
 
     if (pipeline->resampler_cap) {
@@ -531,28 +544,20 @@ voice_error_t voice_pipeline_receive_packet(
 
     /* SRTP 解密 */
     if (pipeline->srtp_recv) {
-        uint8_t *decrypt_buf = (uint8_t *)malloc(size);
-        if (!decrypt_buf) {
-            return VOICE_ERROR_NO_MEMORY;
-        }
-        memcpy(decrypt_buf, data, size);
+        if (size > 2048) return VOICE_ERROR_OVERFLOW;
+        memcpy(pipeline->decrypt_buffer, data, size);
 
-        voice_error_t err = srtp_unprotect(pipeline->srtp_recv, decrypt_buf, &payload_size);
+        voice_error_t err = srtp_unprotect(pipeline->srtp_recv, pipeline->decrypt_buffer, &payload_size);
         if (err != VOICE_OK) {
-            free(decrypt_buf);
             return err;
         }
 
-        payload = decrypt_buf;
+        payload = pipeline->decrypt_buffer;
     }
 
     /* 解析 RTP */
     rtp_packet_t packet;
     voice_error_t err = rtp_session_parse_packet(pipeline->rtp_session, payload, payload_size, &packet);
-
-    if (pipeline->srtp_recv) {
-        free((void *)payload);
-    }
 
     if (err != VOICE_OK) {
         return err;
@@ -755,8 +760,8 @@ static void pipeline_capture_callback(
             pipeline->stats.frames_encoded++;
 
             /* 创建 RTP 包 */
-            uint8_t rtp_packet[1500];
-            size_t rtp_size = sizeof(rtp_packet);
+            size_t rtp_size = 2048;
+            uint8_t *rtp_packet = pipeline->rtp_send_buffer;
 
             err = rtp_session_create_packet(
                 pipeline->rtp_session,
@@ -764,7 +769,7 @@ static void pipeline_capture_callback(
                 encoded_size,
                 pipeline->rtp_timestamp,
                 false,
-                rtp_packet,
+                pipeline->rtp_send_buffer,
                 &rtp_size
             );
 
@@ -772,7 +777,7 @@ static void pipeline_capture_callback(
                 /* SRTP 加密 */
                 if (pipeline->srtp_send) {
                     size_t srtp_size = rtp_size;
-                    err = srtp_protect(pipeline->srtp_send, rtp_packet, &srtp_size, sizeof(rtp_packet));
+                    err = srtp_protect(pipeline->srtp_send, pipeline->rtp_send_buffer, &srtp_size, 2048);
                     if (err == VOICE_OK) {
                         rtp_size = srtp_size;
                     }

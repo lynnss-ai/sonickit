@@ -201,8 +201,12 @@ static int test_transport_create_destroy(void)
     voice_transport_t *transport = voice_transport_create(&config);
     TEST_ASSERT_NOT_NULL(transport, "Transport creation should succeed");
 
+    /* Bind to get a local address assigned by the system */
+    voice_error_t err = voice_transport_bind(transport, NULL, 0);
+    TEST_ASSERT_EQ(err, VOICE_OK, "Binding should succeed");
+
     voice_net_address_t local_addr;
-    voice_error_t err = voice_transport_get_local_address(transport, &local_addr);
+    err = voice_transport_get_local_address(transport, &local_addr);
     TEST_ASSERT_EQ(err, VOICE_OK, "Getting local address should succeed");
     TEST_ASSERT(local_addr.port > 0, "Should have valid port");
 

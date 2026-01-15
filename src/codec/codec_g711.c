@@ -2,11 +2,11 @@
  * @file codec_g711.c
  * @brief G.711 A-law/μ-law codec implementation
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
+ *
  * G.711 is a simple logarithmic companding codec used in telephony.
  * - A-law: Used primarily in Europe (ITU-T G.711)
  * - μ-law: Used primarily in North America and Japan
- * 
+ *
  * Both provide 8-bit samples at 8kHz = 64kbps
  */
 
@@ -104,26 +104,38 @@ static uint8_t linear_to_alaw(int16_t pcm)
     int exponent;
     int mantissa;
     uint8_t alaw;
-    
-    sign = ((~pcm) >> 8) & 0x80;
-    if (!sign) {
+
+    /* For A-law: sign bit 0 = positive (before XOR), 1 = negative (before XOR)
+     * After XOR with 0xD5, sign bit is flipped
+     * Decode table expects: index 0-127 (sign bit 0 after XOR) = negative values
+     *                       index 128-255 (sign bit 1 after XOR) = positive values
+     * So: positive input -> sign=0 before XOR -> sign=1 after XOR -> positive decode
+     *     negative input -> sign=0x80 before XOR -> sign=0 after XOR -> negative decode
+     */
+    sign = (pcm >> 8) & 0x80;  /* sign = 0x80 for negative, 0 for positive */
+    if (sign) {
         pcm = -pcm;
     }
     if (pcm > 32635) {
         pcm = 32635;
     }
-    
+
     if (pcm >= 256) {
-        exponent = 7;
-        for (mantissa = pcm >> 8; mantissa < 0x10; mantissa <<= 1) {
-            exponent--;
+        /* Find exponent by counting shifts needed to get pcm < 256 */
+        exponent = 0;
+        {
+            int temp = pcm;
+            while (temp >= 0x100 && exponent < 7) {
+                temp >>= 1;
+                exponent++;
+            }
         }
         mantissa = (pcm >> (exponent + 3)) & 0x0F;
     } else {
         exponent = 0;
         mantissa = pcm >> 4;
     }
-    
+
     alaw = (uint8_t)(sign | (exponent << 4) | mantissa);
     return alaw ^ 0xD5;
 }
@@ -137,30 +149,34 @@ static uint8_t linear_to_ulaw(int16_t pcm)
     int exponent;
     int mantissa;
     uint8_t ulaw;
-    
+
     /* Get sign and make positive */
     sign = (pcm >> 8) & 0x80;
     if (sign) {
         pcm = -pcm;
     }
-    
+
     /* Clip to 14 bits */
     if (pcm > 32635) {
         pcm = 32635;
     }
-    
+
     /* Add bias */
     pcm += 0x84;
-    
-    /* Find exponent */
-    exponent = 7;
-    for (mantissa = pcm >> 7; mantissa < 0x10 && exponent > 0; mantissa <<= 1) {
-        exponent--;
+
+    /* Find exponent by counting shifts needed to get pcm < 256 */
+    exponent = 0;
+    {
+        int temp = pcm;
+        while (temp >= 0x100 && exponent < 7) {
+            temp >>= 1;
+            exponent++;
+        }
     }
-    
+
     /* Get mantissa */
     mantissa = (pcm >> (exponent + 3)) & 0x0F;
-    
+
     /* Combine and complement */
     ulaw = (uint8_t)(sign | (exponent << 4) | mantissa);
     return ~ulaw;
@@ -187,19 +203,19 @@ static voice_error_t g711_encode(
     size_t *output_size)
 {
     g711_state_t *s = (g711_state_t *)state;
-    
+
     if (!s) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!pcm_input || !output || !output_size) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     if (*output_size < pcm_samples) {
         return VOICE_ERROR_BUFFER_TOO_SMALL;
     }
-    
+
     if (s->config.use_alaw) {
         for (size_t i = 0; i < pcm_samples; i++) {
             output[i] = linear_to_alaw(pcm_input[i]);
@@ -209,7 +225,7 @@ static voice_error_t g711_encode(
             output[i] = linear_to_ulaw(pcm_input[i]);
         }
     }
-    
+
     *output_size = pcm_samples;
     return VOICE_OK;
 }
@@ -233,7 +249,7 @@ static voice_error_t g711_encoder_get_info_impl(
     if (!s || !info) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     memset(info, 0, sizeof(voice_codec_info_t));
     info->codec_id = s->config.use_alaw ? VOICE_CODEC_G711_ALAW : VOICE_CODEC_G711_ULAW;
     info->name = s->config.use_alaw ? "PCMA" : "PCMU";
@@ -244,7 +260,7 @@ static voice_error_t g711_encoder_get_info_impl(
     info->frame_size = 160;  /* 20ms @ 8kHz */
     info->bitrate = 64000;
     info->is_vbr = false;
-    
+
     return VOICE_OK;
 }
 
@@ -262,33 +278,33 @@ voice_encoder_t *voice_g711_encoder_create(const voice_g711_config_t *config)
     if (!config) {
         return NULL;
     }
-    
+
     /* G.711 only supports 8kHz */
     if (config->sample_rate != 8000) {
         VOICE_LOG_E("G.711 only supports 8000Hz sample rate");
         return NULL;
     }
-    
+
     voice_encoder_t *encoder = (voice_encoder_t *)calloc(1, sizeof(voice_encoder_t));
     if (!encoder) {
         return NULL;
     }
-    
+
     g711_state_t *s = (g711_state_t *)calloc(1, sizeof(g711_state_t));
     if (!s) {
         free(encoder);
         return NULL;
     }
-    
+
     s->config = *config;
     s->frame_size = 160;  /* 20ms @ 8kHz */
-    
+
     encoder->codec_id = config->use_alaw ? VOICE_CODEC_G711_ALAW : VOICE_CODEC_G711_ULAW;
     encoder->vtable = &g_g711_encoder_vtable;
     encoder->state = s;
-    
-    VOICE_LOG_I("G.711 %s encoder created", config->use_alaw ? "A-law" : "μ-law");
-    
+
+    VOICE_LOG_I("G.711 %s encoder created", config->use_alaw ? "A-law" : "u-law");
+
     return encoder;
 }
 
@@ -304,26 +320,26 @@ static voice_error_t g711_decode(
     size_t *pcm_samples)
 {
     g711_state_t *s = (g711_state_t *)state;
-    
+
     if (!s) {
         return VOICE_ERROR_NOT_INITIALIZED;
     }
-    
+
     if (!input || !pcm_output || !pcm_samples) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     if (*pcm_samples < input_size) {
         return VOICE_ERROR_BUFFER_TOO_SMALL;
     }
-    
-    const int16_t *decode_table = s->config.use_alaw ? 
+
+    const int16_t *decode_table = s->config.use_alaw ?
         g_alaw_decode_table : g_ulaw_decode_table;
-    
+
     for (size_t i = 0; i < input_size; i++) {
         pcm_output[i] = decode_table[input[i]];
     }
-    
+
     *pcm_samples = input_size;
     return VOICE_OK;
 }
@@ -335,11 +351,11 @@ static voice_error_t g711_plc(
 {
     /* G.711 has no built-in PLC, just output silence */
     (void)state;
-    
+
     if (!pcm_output || !pcm_samples) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     memset(pcm_output, 0, *pcm_samples * sizeof(int16_t));
     return VOICE_OK;
 }
@@ -362,7 +378,7 @@ static voice_error_t g711_decoder_get_info_impl(
     if (!s || !info) {
         return VOICE_ERROR_NULL_POINTER;
     }
-    
+
     memset(info, 0, sizeof(voice_codec_info_t));
     info->codec_id = s->config.use_alaw ? VOICE_CODEC_G711_ALAW : VOICE_CODEC_G711_ULAW;
     info->name = s->config.use_alaw ? "PCMA" : "PCMU";
@@ -372,7 +388,7 @@ static voice_error_t g711_decoder_get_info_impl(
     info->frame_duration_ms = 20;
     info->frame_size = 160;
     info->bitrate = 64000;
-    
+
     return VOICE_OK;
 }
 
@@ -389,31 +405,31 @@ voice_decoder_t *voice_g711_decoder_create(const voice_g711_config_t *config)
     if (!config) {
         return NULL;
     }
-    
+
     if (config->sample_rate != 8000) {
         VOICE_LOG_E("G.711 only supports 8000Hz sample rate");
         return NULL;
     }
-    
+
     voice_decoder_t *decoder = (voice_decoder_t *)calloc(1, sizeof(voice_decoder_t));
     if (!decoder) {
         return NULL;
     }
-    
+
     g711_state_t *s = (g711_state_t *)calloc(1, sizeof(g711_state_t));
     if (!s) {
         free(decoder);
         return NULL;
     }
-    
+
     s->config = *config;
     s->frame_size = 160;
-    
+
     decoder->codec_id = config->use_alaw ? VOICE_CODEC_G711_ALAW : VOICE_CODEC_G711_ULAW;
     decoder->vtable = &g_g711_decoder_vtable;
     decoder->state = s;
-    
-    VOICE_LOG_I("G.711 %s decoder created", config->use_alaw ? "A-law" : "μ-law");
-    
+
+    VOICE_LOG_I("G.711 %s decoder created", config->use_alaw ? "A-law" : "u-law");
+
     return decoder;
 }

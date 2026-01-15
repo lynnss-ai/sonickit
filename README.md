@@ -227,11 +227,77 @@ build/
 ├── test_diagnostics.exe    # Diagnostics tests
 ├── test_datachannel.exe    # DataChannel tests
 ├── test_sip.exe            # SIP protocol tests
+├── benchmark_simd.exe      # SIMD performance benchmark
+├── benchmark_dsp.exe       # DSP performance benchmark
 └── examples/
     ├── example_capture.exe     # Audio capture demo
     ├── example_playback.exe    # Audio playback demo
     ├── example_file_convert.exe # File conversion demo
     └── example_voicechat.exe   # Voice chat demo
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+ctest --test-dir build -C Debug --output-on-failure
+
+# Run specific test
+./build/test_codec.exe
+```
+
+### Performance Benchmarks
+
+SonicKit includes performance benchmarks for SIMD optimizations and DSP modules.
+
+```bash
+# SIMD benchmark (format conversion, gain, mixing, etc.)
+./build/benchmark_simd.exe
+
+# DSP benchmark (AEC, time stretcher, delay estimator)
+./build/benchmark_dsp.exe
+```
+
+**Command-line options:**
+
+| Option | Description |
+|--------|-------------|
+| `-n, --iterations N` | Set number of iterations (default: 10000 for SIMD, 1000 for DSP) |
+| `-h, --help` | Show help message |
+
+**Examples:**
+
+```bash
+# Run SIMD benchmark with 50000 iterations
+./build/benchmark_simd.exe -n 50000
+
+# Run DSP benchmark with 5000 iterations
+./build/benchmark_dsp.exe --iterations 5000
+```
+
+**Sample output:**
+
+```
++================================================================+
+|          SonicKit SIMD Performance Benchmark                   |
++================================================================+
+
+SIMD Capabilities: AVX2 SSE4.1 SSE2
+Test buffer size: 4096 samples
+Iterations: 10000
+
+===================================================================
+                     Format Conversion Tests
+===================================================================
+
+Benchmark: int16_to_float
+  Iterations: 10000
+  Mean:     245.32 ns
+  Median:   241.00 ns
+  Std Dev:   32.45 ns
+  Min/Max:  235.00 / 412.00 ns
+  P95/P99:  298.00 / 345.00 ns
+  Throughput: 16.70 Gsamples/sec
 ```
 
 ### WebAssembly (Browser) Build

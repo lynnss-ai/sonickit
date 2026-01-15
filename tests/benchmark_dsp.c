@@ -19,7 +19,48 @@
 
 #define SAMPLE_RATE     16000
 #define FRAME_SIZE      160     /* 10ms */
-#define TEST_ITERATIONS 1000
+#define DEFAULT_ITERATIONS 1000
+
+static int g_iterations = DEFAULT_ITERATIONS;
+
+/* ============================================
+ * 命令行帮助
+ * ============================================ */
+
+static void print_usage(const char *prog_name) {
+    printf("Usage: %s [OPTIONS]\n\n", prog_name);
+    printf("DSP Performance Benchmark for SonicKit\n\n");
+    printf("Options:\n");
+    printf("  -n, --iterations N   Number of iterations (default: %d)\n", DEFAULT_ITERATIONS);
+    printf("  -h, --help           Show this help message\n");
+    printf("\nExample:\n");
+    printf("  %s -n 5000           Run with 5000 iterations\n", prog_name);
+}
+
+static int parse_args(int argc, char *argv[]) {
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+            print_usage(argv[0]);
+            return -1;  /* Signal to exit */
+        } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--iterations") == 0) {
+            if (i + 1 < argc) {
+                g_iterations = atoi(argv[++i]);
+                if (g_iterations <= 0) {
+                    fprintf(stderr, "Error: iterations must be positive\n");
+                    return 1;
+                }
+            } else {
+                fprintf(stderr, "Error: --iterations requires a value\n");
+                return 1;
+            }
+        } else {
+            fprintf(stderr, "Unknown option: %s\n", argv[i]);
+            print_usage(argv[0]);
+            return 1;
+        }
+    }
+    return 0;
+}
 
 /* ============================================
  * AEC 基准测试
@@ -81,7 +122,7 @@ static void run_aec_benchmark(void) {
     bench_context_t bench;
     bench_init(&bench, "AEC FDAF (10ms frame)", bench_aec_process, &ctx);
     bench_set_throughput(&bench, FRAME_SIZE, "samples/sec");
-    bench_set_iterations(&bench, TEST_ITERATIONS, 50);
+    bench_set_iterations(&bench, g_iterations, 50);
     bench_run(&bench);
     bench_print_result(&bench);
 
@@ -100,7 +141,7 @@ static void run_aec_benchmark(void) {
 
     bench_init(&bench, "AEC NLMS (10ms frame)", bench_aec_process, &ctx);
     bench_set_throughput(&bench, FRAME_SIZE, "samples/sec");
-    bench_set_iterations(&bench, TEST_ITERATIONS, 50);
+    bench_set_iterations(&bench, g_iterations, 50);
     bench_run(&bench);
     bench_print_result(&bench);
 
@@ -259,7 +300,7 @@ static void run_delay_estimator_benchmark(void) {
     bench_context_t bench;
     bench_init(&bench, "GCC-PHAT Delay Estimation", bench_delay_estimate, &ctx);
     bench_set_throughput(&bench, FRAME_SIZE, "samples/sec");
-    bench_set_iterations(&bench, TEST_ITERATIONS, 50);
+    bench_set_iterations(&bench, g_iterations, 50);
     bench_run(&bench);
     bench_print_result(&bench);
 
@@ -280,8 +321,10 @@ cleanup_de:
  * ============================================ */
 
 int main(int argc, char *argv[]) {
-    (void)argc;
-    (void)argv;
+    int ret = parse_args(argc, argv);
+    if (ret != 0) {
+        return ret < 0 ? 0 : ret;  /* -1 means help, exit with 0 */
+    }
 
     printf("+================================================================+\n");
     printf("|          SonicKit DSP Performance Benchmark                    |\n");
@@ -290,7 +333,7 @@ int main(int argc, char *argv[]) {
     printf("Sample Rate: %d Hz\n", SAMPLE_RATE);
     printf("Frame Size: %d samples (%.1f ms)\n", FRAME_SIZE,
            (float)FRAME_SIZE / SAMPLE_RATE * 1000.0f);
-    printf("Iterations: %d\n\n", TEST_ITERATIONS);
+    printf("Iterations: %d\n\n", g_iterations);
 
     run_aec_benchmark();
     run_time_stretcher_benchmark();
