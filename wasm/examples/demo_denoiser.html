@@ -1,417 +1,1098 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <!--
-    SonicKit WASM - 实时降噪演示
+    SonicKit WASM - 实时音频处理演示 (Tailwind CSS 黑白主题)
     作者: wangxuebing <lynnss.codeai@gmail.com>
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SonicKit WASM - 实时降噪演示</title>
+    <title>SonicKit WASM - 实时音频处理演示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 600px;
+        /* 水平滑块样式 */
+        input[type="range"]:not(.eq-slider) {
+            -webkit-appearance: none;
+            appearance: none;
             width: 100%;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .status {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .status.loading {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status.ready {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status.processing {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .controls {
-            margin-bottom: 30px;
-        }
-
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s;
+            position: relative;
+            z-index: 10;
+        }
+        input[type="range"]:not(.eq-slider)::-webkit-slider-runnable-track {
             width: 100%;
-            margin-bottom: 10px;
+            height: 8px;
+            background: #000;
+            border-radius: 4px;
         }
-
-        button:hover:not(:disabled) {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        input[type="range"]:not(.eq-slider)::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 3px solid #000;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            margin-top: -6px;
         }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .parameter {
-            margin-bottom: 20px;
-        }
-
-        .parameter label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
-        }
-
-        .parameter select,
-        .parameter input[type="range"] {
+        input[type="range"]:not(.eq-slider)::-moz-range-track {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
+            height: 8px;
+            background: #000;
+            border-radius: 4px;
         }
-
-        .parameter input[type="range"] {
-            padding: 0;
+        input[type="range"]:not(.eq-slider)::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 3px solid #000;
+            border-radius: 50%;
+            cursor: pointer;
         }
-
-        .value-display {
-            display: inline-block;
-            margin-left: 10px;
-            color: #667eea;
-            font-weight: 600;
+        /* 均衡器垂直滑块 */
+        .eq-slider {
+            -webkit-appearance: slider-vertical;
+            appearance: slider-vertical;
+            width: 10px;
+            height: 120px;
+            background: #000;
+            border-radius: 5px;
+            cursor: pointer;
         }
-
-        canvas {
-            width: 100%;
-            height: 100px;
-            border-radius: 10px;
-            background: #f5f5f5;
-            margin-top: 20px;
+        .eq-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border: 3px solid #000;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #999;
-            font-size: 14px;
+        .eq-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border: 3px solid #000;
+            border-radius: 50%;
+            cursor: pointer;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>🎙️ SonicKit WASM</h1>
-        <p class="subtitle">实时音频降噪演示</p>
-
-        <div id="status" class="status loading">
-            正在加载 WebAssembly 模块...
+<body class="bg-gray-100 min-h-screen py-8 px-6">
+    <div class="max-w-[1920px] mx-auto">
+        <!-- Header -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- 左侧：控制区块 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-black">🎙️ SonicKit WASM</h1>
+                        <p class="text-gray-500 text-sm mt-1">实时音频处理演示</p>
+                    </div>
+                    <div id="status" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
+                        正在加载...
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button id="startBtn" disabled class="flex-1 py-4 bg-black text-white font-semibold rounded-xl disabled:bg-gray-200 disabled:text-gray-400 transition hover:bg-gray-800 text-lg">
+                        🎤 开始处理
+                    </button>
+                    <button id="stopBtn" disabled class="flex-1 py-4 bg-white text-black font-semibold rounded-xl border-2 border-black disabled:border-gray-200 disabled:text-gray-400 transition hover:bg-gray-50 text-lg">
+                        ⏹️ 停止
+                    </button>
+                </div>
+            </div>
+            <!-- 右侧：性能监控区块 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-sm font-bold text-black mb-3">📊 性能监控</h3>
+                <!-- 趋势图 -->
+                <div class="bg-gray-50 rounded-xl p-3 h-16 mb-3">
+                    <canvas id="perfChart" width="400" height="52" class="w-full h-full"></canvas>
+                </div>
+                <!-- 统计数据 -->
+                <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                    <div class="bg-gray-50 rounded-lg p-2">
+                        <div class="text-gray-400">CPU</div>
+                        <div id="cpuUsage" class="font-mono font-bold text-black">0%</div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-2">
+                        <div class="text-gray-400">帧时</div>
+                        <div id="frameTime" class="font-mono font-bold text-black">0ms</div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-2">
+                        <div class="text-gray-400">丢帧</div>
+                        <div id="droppedFrames" class="font-mono font-bold text-black">0</div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-2">
+                        <div class="text-gray-400">欠载</div>
+                        <div id="bufferUnderruns" class="font-mono font-bold text-black">0</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="controls">
-            <button id="startBtn" disabled>开始处理</button>
-            <button id="stopBtn" disabled>停止处理</button>
+        <!-- 可视化 - 占满整行 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+            <h3 class="text-sm font-bold text-black mb-4">📈 可视化</h3>
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <div class="text-xs text-gray-400 mb-2">波形</div>
+                    <canvas id="waveform" class="w-full h-32 bg-black rounded-lg"></canvas>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-400 mb-2">频谱</div>
+                    <canvas id="spectrum" class="w-full h-32 bg-black rounded-lg"></canvas>
+                </div>
+            </div>
         </div>
 
-        <div class="parameter">
-            <label for="engine">
-                降噪引擎:
-            </label>
-            <select id="engine">
-                <option value="0">自动选择</option>
-                <option value="1">SpeexDSP</option>
-                <option value="2">RNNoise</option>
-            </select>
+        <!-- 主内容区 - 四列布局 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- 音频电平 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <h3 class="text-sm font-bold text-black mb-4">📊 音频电平</h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-500">输入</span>
+                            <span id="inputLevelValue" class="font-mono">-∞ dB</span>
+                        </div>
+                        <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+                            <div id="inputLevel" class="h-full bg-black rounded-full transition-all duration-75" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-500">输出</span>
+                            <span id="outputLevelValue" class="font-mono">-∞ dB</span>
+                        </div>
+                        <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+                            <div id="outputLevel" class="h-full bg-gray-600 rounded-full transition-all duration-75" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 状态指示 -->
+                <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100 text-xs">
+                    <div class="flex items-center gap-1.5">
+                        <span id="vadDot" class="w-2 h-2 rounded-full bg-gray-300"></span>
+                        <span class="text-gray-500">VAD</span>
+                        <span id="vadStatus" class="text-black">-</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span id="clippingDot" class="w-2 h-2 rounded-full bg-gray-300"></span>
+                        <span class="text-gray-500">削波</span>
+                        <span id="clippingStatus" class="text-black">正常</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-gray-500">DTMF</span>
+                        <span id="dtmfDigits" class="font-mono text-black">-</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-gray-500">AGC</span>
+                        <span id="agcGain" class="font-mono text-black">1.0x</span>
+                    </div>
+                </div>
+                <!-- 统计 -->
+                <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100 text-center">
+                    <div>
+                        <div id="statsFrames" class="text-lg font-bold text-black">0</div>
+                        <div class="text-[10px] text-gray-400">帧数</div>
+                    </div>
+                    <div>
+                        <div id="statsTime" class="text-lg font-bold text-black">0:00</div>
+                        <div class="text-[10px] text-gray-400">时间</div>
+                    </div>
+                    <div>
+                        <div id="statsLatency" class="text-lg font-bold text-black">0ms</div>
+                        <div class="text-[10px] text-gray-400">延迟</div>
+                    </div>
+                    <div>
+                        <div id="statsSampleRate" class="text-lg font-bold text-black">-</div>
+                        <div class="text-[10px] text-gray-400">采样率</div>
+                    </div>
+                </div>
+            </div>
+            <!-- DSP 模块 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <h3 class="text-sm font-bold text-black mb-4">🔧 DSP 模块</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-gray-500 mb-1 block">降噪引擎</label>
+                        <select id="engine" class="w-full p-2 border border-gray-200 rounded-lg text-sm bg-white">
+                            <option value="0">自动</option>
+                            <option value="1">SpeexDSP</option>
+                            <option value="2">RNNoise</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 mb-1 block">VAD 模式</label>
+                        <select id="vadMode" class="w-full p-2 border border-gray-200 rounded-lg text-sm bg-white">
+                            <option value="0">质量优先</option>
+                            <option value="1" selected>平衡</option>
+                            <option value="2">激进</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 pt-2">
+                        <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-black bg-black text-white" data-module="denoise">降噪</button>
+                        <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="agc">AGC</button>
+                        <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="vad">VAD</button>
+                        <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="compressor">压缩</button>
+                        <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="limiter">限幅</button>
+                        <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="noiseGate">噪声门</button>
+                        <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="dtmf">DTMF</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 均衡器 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-black">🎛️ 均衡器</h3>
+                    <button class="toggle-btn px-2 py-0.5 text-xs rounded border-2 border-gray-200 text-gray-600 hover:border-black" data-module="eq">OFF</button>
+                </div>
+                <div class="flex gap-1 mb-3">
+                    <button id="eqPresetFlat" class="flex-1 px-1.5 py-1 text-[10px] border border-gray-200 rounded hover:bg-gray-50">平坦</button>
+                    <button id="eqPresetBass" class="flex-1 px-1.5 py-1 text-[10px] border border-gray-200 rounded hover:bg-gray-50">低音</button>
+                    <button id="eqPresetVocal" class="flex-1 px-1.5 py-1 text-[10px] border border-gray-200 rounded hover:bg-gray-50">人声</button>
+                </div>
+                <div class="flex justify-between items-end h-40 px-2">
+                    <div class="flex flex-col items-center gap-1">
+                        <input type="range" id="eq60" class="eq-slider" min="-12" max="12" value="0" orient="vertical">
+                        <span class="text-[9px] text-gray-400">60</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <input type="range" id="eq250" class="eq-slider" min="-12" max="12" value="0" orient="vertical">
+                        <span class="text-[9px] text-gray-400">250</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <input type="range" id="eq1k" class="eq-slider" min="-12" max="12" value="0" orient="vertical">
+                        <span class="text-[9px] text-gray-400">1k</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <input type="range" id="eq4k" class="eq-slider" min="-12" max="12" value="0" orient="vertical">
+                        <span class="text-[9px] text-gray-400">4k</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <input type="range" id="eq16k" class="eq-slider" min="-12" max="12" value="0" orient="vertical">
+                        <span class="text-[9px] text-gray-400">16k</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 音效 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <h3 class="text-sm font-bold text-black mb-3">✨ 音效</h3>
+                <div class="flex flex-wrap gap-1.5 mb-3">
+                    <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="reverb">混响</button>
+                    <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="delay">延迟</button>
+                    <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="chorus">合唱</button>
+                    <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="flanger">镶边</button>
+                    <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="pitch">变调</button>
+                    <button class="toggle-btn px-2.5 py-1 text-xs rounded-lg border-2 border-gray-200 text-gray-600 hover:border-black" data-module="timeStretch">变速</button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-500">混响</span>
+                            <span id="reverbSizeValue" class="text-black">50%</span>
+                        </div>
+                        <input type="range" id="reverbSize" min="0" max="100" value="50">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-500">延迟</span>
+                            <span id="delayTimeValue" class="text-black">200ms</span>
+                        </div>
+                        <input type="range" id="delayTime" min="50" max="1000" value="200">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-500">变调</span>
+                            <span id="pitchValue" class="text-black">0</span>
+                        </div>
+                        <input type="range" id="pitchShift" min="-12" max="12" value="0">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-500">变速</span>
+                            <span id="stretchValue" class="text-black">1.0x</span>
+                        </div>
+                        <input type="range" id="timeStretchRate" min="50" max="200" value="100">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 mb-1 block">混响预设</label>
+                        <select id="reverbPreset" class="w-full p-2 border border-gray-200 rounded-lg text-sm bg-white">
+                            <option value="-1">自定义</option>
+                            <option value="0">小房间</option>
+                            <option value="1">中房间</option>
+                            <option value="2">大厅</option>
+                            <option value="3">教堂</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="parameter">
-            <label for="strength">
-                降噪强度:
-                <span class="value-display" id="strengthValue">50%</span>
-            </label>
-            <input type="range" id="strength" min="0" max="100" value="50">
+        <!-- 第二行：空间音频、水印、DTMF拨号盘 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <!-- 空间音频 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-black">🎧 空间音频</h3>
+                    <div class="flex gap-1">
+                        <button class="toggle-btn px-2 py-0.5 text-xs rounded border-2 border-gray-200 text-gray-600 hover:border-black" data-module="spatial">3D</button>
+                        <button class="toggle-btn px-2 py-0.5 text-xs rounded border-2 border-gray-200 text-gray-600 hover:border-black" data-module="hrtf">HRTF</button>
+                    </div>
+                </div>
+                <!-- 3D 位置控制 -->
+                <div class="relative w-full h-32 bg-gray-100 rounded-lg mb-3" id="spatialPad">
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-px h-full bg-gray-300"></div>
+                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="h-px w-full bg-gray-300"></div>
+                    </div>
+                    <div id="spatialDot" class="absolute w-4 h-4 bg-black rounded-full cursor-pointer shadow-lg" style="left: calc(50% - 8px); top: calc(50% - 8px);"></div>
+                    <div class="absolute bottom-1 left-1 text-[9px] text-gray-400">左</div>
+                    <div class="absolute bottom-1 right-1 text-[9px] text-gray-400">右</div>
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] text-gray-400">前</div>
+                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] text-gray-400">后</div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div>
+                        <div class="text-gray-400">方位角</div>
+                        <div id="azimuthValue" class="font-mono">0°</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-400">仰角</div>
+                        <div id="elevationValue" class="font-mono">0°</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-400">距离</div>
+                        <div id="distanceValue" class="font-mono">1.0m</div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-gray-500">仰角</span>
+                        <span id="elevationSliderValue">0°</span>
+                    </div>
+                    <input type="range" id="elevationSlider" class="w-full" min="-90" max="90" value="0">
+                </div>
+            </div>
+
+            <!-- 水印 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-black">🔒 音频水印</h3>
+                    <button class="toggle-btn px-2 py-0.5 text-xs rounded border-2 border-gray-200 text-gray-600 hover:border-black" data-module="watermark">OFF</button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-gray-500 mb-1 block">水印消息</label>
+                        <input type="text" id="watermarkMessage" class="w-full p-2 border border-gray-200 rounded-lg text-sm" placeholder="输入水印文本..." value="SonicKit">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-500">强度</span>
+                            <span id="watermarkStrengthValue">中</span>
+                        </div>
+                        <input type="range" id="watermarkStrength" class="w-full" min="0" max="2" value="1">
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="embedWatermark" class="flex-1 py-2 text-xs bg-black text-white rounded-lg hover:bg-gray-800">嵌入水印</button>
+                        <button id="detectWatermark" class="flex-1 py-2 text-xs border border-gray-200 rounded-lg hover:bg-gray-50">检测水印</button>
+                    </div>
+                    <div class="p-2 bg-gray-50 rounded-lg text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">状态</span>
+                            <span id="watermarkStatus">未启用</span>
+                        </div>
+                        <div class="flex justify-between mt-1">
+                            <span class="text-gray-500">已嵌入</span>
+                            <span id="watermarkBits" class="font-mono">0 bits</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DTMF 拨号盘 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <h3 class="text-sm font-bold text-black mb-3">📞 DTMF 拨号盘</h3>
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="1">1</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="2">2</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="3">3</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="4">4</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="5">5</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="6">6</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="7">7</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="8">8</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="9">9</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="*">*</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="0">0</button>
+                    <button class="dtmf-key py-3 text-lg font-bold bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-black active:text-white transition" data-digit="#">#</button>
+                </div>
+                <div class="flex gap-2">
+                    <div class="flex-1 p-2 bg-gray-100 rounded-lg font-mono text-center" id="dialedDigits">-</div>
+                    <button id="clearDialed" class="px-3 py-2 text-xs border border-gray-200 rounded-lg hover:bg-gray-50">清除</button>
+                </div>
+                <div class="mt-2 text-[10px] text-gray-400 text-center">点击按键播放 DTMF 音调</div>
+            </div>
         </div>
 
-        <canvas id="waveform"></canvas>
-
-        <div class="footer">
-            Powered by SonicKit WebAssembly
+        <!-- Footer -->
+        <div class="text-center mt-8 text-xs text-gray-400">
+            <p>Powered by SonicKit WASM v1.0</p>
+            <p class="mt-1">⌨️ Space 开始/停止 | D 降噪 | A AGC | V VAD | E 均衡器 | R 混响 | S 空间音频</p>
         </div>
     </div>
 
     <script src="../dist/sonickit.js"></script>
     <script>
-        // SonicKit WASM 实时降噪演示
-        // 作者: wangxuebing <lynnss.codeai@gmail.com>
+        // === 状态变量 ===
+        let sonicKit = null, audioContext = null, analyser = null;
+        let isProcessing = false, mediaStream = null;
+        let dtmfBuffer = '';
+        let stats = { framesProcessed: 0, startTime: null, lastProcessTime: 0 };
 
-        let sonicKit = null;
-        let denoiser = null;
-        let audioContext = null;
-        let audioWorkletNode = null;
-        let isProcessing = false;
+        // 性能监控
+        let perfStats = {
+            processTimes: [],
+            maxProcessTime: 0,
+            droppedFrames: 0,
+            bufferUnderruns: 0,
+            lastUpdateTime: 0,
+            cpuPercent: 0
+        };
 
+        // 处理器实例
+        let processors = {
+            denoiser: null, agc: null, vad: null, compressor: null, equalizer: null,
+            reverb: null, delay: null, chorus: null, flanger: null, pitchShifter: null,
+            dtmfDetector: null, dtmfGenerator: null, inputLevel: null, outputLevel: null,
+            limiter: null, noiseGate: null, timeStretcher: null,
+            spatialRenderer: null, hrtf: null,
+            watermarkEmbedder: null, watermarkDetector: null
+        };
+
+        // 启用状态
+        let enabled = {
+            denoise: true, agc: false, vad: false, compressor: false, dtmf: false,
+            eq: false, reverb: false, delay: false, chorus: false, flanger: false, pitch: false,
+            limiter: false, noiseGate: false, timeStretch: false,
+            spatial: false, hrtf: false, watermark: false
+        };
+
+        // 空间音频参数
+        let spatialParams = { azimuth: 0, elevation: 0, distance: 1 };
+
+        // === DOM 元素 ===
         const statusEl = document.getElementById('status');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
         const engineSelect = document.getElementById('engine');
-        const strengthSlider = document.getElementById('strength');
-        const strengthValue = document.getElementById('strengthValue');
-        const canvas = document.getElementById('waveform');
-        const canvasCtx = canvas.getContext('2d');
+        const waveformCanvas = document.getElementById('waveform');
+        const spectrumCanvas = document.getElementById('spectrum');
+        const waveformCtx = waveformCanvas.getContext('2d');
+        const spectrumCtx = spectrumCanvas.getContext('2d');
 
-        // 更新强度显示
-        strengthSlider.addEventListener('input', (e) => {
-            strengthValue.textContent = e.target.value + '%';
+        const eqSliders = {
+            60: document.getElementById('eq60'),
+            250: document.getElementById('eq250'),
+            1000: document.getElementById('eq1k'),
+            4000: document.getElementById('eq4k'),
+            16000: document.getElementById('eq16k')
+        };
+
+        // === 事件监听 ===
+        document.getElementById('reverbSize').addEventListener('input', e => {
+            document.getElementById('reverbSizeValue').textContent = e.target.value + '%';
+            if (processors.reverb) processors.reverb.setRoomSize(e.target.value / 100);
         });
 
-        // 初始化 WASM 模块
+        document.getElementById('delayTime').addEventListener('input', e => {
+            document.getElementById('delayTimeValue').textContent = e.target.value + 'ms';
+            if (processors.delay) processors.delay.setDelayTime(parseFloat(e.target.value));
+        });
+
+        document.getElementById('pitchShift').addEventListener('input', e => {
+            document.getElementById('pitchValue').textContent = e.target.value;
+            if (processors.pitchShifter) processors.pitchShifter.setShift(parseFloat(e.target.value));
+        });
+
+        document.getElementById('reverbPreset').addEventListener('change', e => {
+            const preset = parseInt(e.target.value);
+            if (preset >= 0 && processors.reverb) processors.reverb.setPreset(preset);
+        });
+
+        // 变速滑块
+        document.getElementById('timeStretchRate').addEventListener('input', e => {
+            const rate = e.target.value / 100;
+            document.getElementById('stretchValue').textContent = rate.toFixed(1) + 'x';
+            if (processors.timeStretcher) processors.timeStretcher.setRate(rate);
+        });
+
+        // 仰角滑块
+        document.getElementById('elevationSlider').addEventListener('input', e => {
+            spatialParams.elevation = parseInt(e.target.value);
+            document.getElementById('elevationSliderValue').textContent = spatialParams.elevation + '°';
+            document.getElementById('elevationValue').textContent = spatialParams.elevation + '°';
+        });
+
+        // 水印强度
+        document.getElementById('watermarkStrength').addEventListener('input', e => {
+            const labels = ['低', '中', '高'];
+            document.getElementById('watermarkStrengthValue').textContent = labels[e.target.value];
+        });
+
+        // 水印按钮
+        document.getElementById('embedWatermark').addEventListener('click', () => {
+            if (processors.watermarkEmbedder) {
+                const msg = document.getElementById('watermarkMessage').value || 'SonicKit';
+                processors.watermarkEmbedder.setPayloadString(msg);
+                document.getElementById('watermarkStatus').textContent = '已设置: ' + msg;
+            }
+        });
+
+        document.getElementById('detectWatermark').addEventListener('click', () => {
+            document.getElementById('watermarkStatus').textContent = '检测需要在处理中进行';
+        });
+
+        // 空间音频触控板
+        const spatialPad = document.getElementById('spatialPad');
+        const spatialDot = document.getElementById('spatialDot');
+        let isDragging = false;
+
+        function updateSpatialFromMouse(e) {
+            const rect = spatialPad.getBoundingClientRect();
+            const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+            spatialParams.azimuth = (x - 0.5) * 180;
+            spatialParams.distance = 0.5 + y * 2;
+            spatialDot.style.left = (x * 100) + '%';
+            spatialDot.style.top = (y * 100) + '%';
+            spatialDot.style.transform = 'translate(-50%, -50%)';
+            document.getElementById('azimuthValue').textContent = spatialParams.azimuth.toFixed(0) + '°';
+            document.getElementById('distanceValue').textContent = spatialParams.distance.toFixed(1) + 'm';
+        }
+
+        spatialPad.addEventListener('mousedown', e => { isDragging = true; updateSpatialFromMouse(e); });
+        document.addEventListener('mousemove', e => { if (isDragging) updateSpatialFromMouse(e); });
+        document.addEventListener('mouseup', () => { isDragging = false; });
+
+        // DTMF 拨号盘
+        let dialedDigits = '';
+        document.querySelectorAll('.dtmf-key').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const digit = btn.dataset.digit;
+                dialedDigits += digit;
+                document.getElementById('dialedDigits').textContent = dialedDigits || '-';
+                // 播放 DTMF 音调
+                if (processors.dtmfGenerator && audioContext) {
+                    try {
+                        const tone = processors.dtmfGenerator.generateDigit(digit);
+                        if (tone && tone.length > 0) {
+                            const buffer = audioContext.createBuffer(1, tone.length, audioContext.sampleRate);
+                            const data = buffer.getChannelData(0);
+                            for (let i = 0; i < tone.length; i++) data[i] = tone[i] / 32768;
+                            const source = audioContext.createBufferSource();
+                            source.buffer = buffer;
+                            source.connect(audioContext.destination);
+                            source.start();
+                        }
+                    } catch(e) { console.warn('DTMF generation failed:', e); }
+                }
+            });
+        });
+
+        document.getElementById('clearDialed').addEventListener('click', () => {
+            dialedDigits = '';
+            document.getElementById('dialedDigits').textContent = '-';
+        });
+
+        // 切换按钮
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const module = btn.dataset.module;
+                enabled[module] = !enabled[module];
+                if (enabled[module]) {
+                    btn.classList.add('bg-black', 'text-white', 'border-black');
+                    btn.classList.remove('text-gray-600', 'border-gray-200');
+                    if (btn.textContent === 'OFF') btn.textContent = 'ON';
+                    if (module === 'watermark') document.getElementById('watermarkStatus').textContent = '嵌入中...';
+                } else {
+                    btn.classList.remove('bg-black', 'text-white', 'border-black');
+                    btn.classList.add('text-gray-600', 'border-gray-200');
+                    if (btn.textContent === 'ON') btn.textContent = 'OFF';
+                    if (module === 'watermark') document.getElementById('watermarkStatus').textContent = '未启用';
+                }
+            });
+        });
+
+        // 均衡器预设
+        document.getElementById('eqPresetFlat').addEventListener('click', () => {
+            Object.values(eqSliders).forEach(s => s.value = 0);
+            updateEqualizer();
+        });
+        document.getElementById('eqPresetBass').addEventListener('click', () => {
+            eqSliders[60].value = 8; eqSliders[250].value = 4; eqSliders[1000].value = 0;
+            eqSliders[4000].value = -2; eqSliders[16000].value = -4;
+            updateEqualizer();
+        });
+        document.getElementById('eqPresetVocal').addEventListener('click', () => {
+            eqSliders[60].value = -2; eqSliders[250].value = 0; eqSliders[1000].value = 4;
+            eqSliders[4000].value = 6; eqSliders[16000].value = 2;
+            updateEqualizer();
+        });
+        Object.values(eqSliders).forEach(s => s.addEventListener('input', updateEqualizer));
+
+        function updateEqualizer() {
+            if (!processors.equalizer) return;
+            [60, 250, 1000, 4000, 16000].forEach((freq, i) => {
+                processors.equalizer.setBand(i, freq, parseFloat(eqSliders[freq].value), 1.0);
+            });
+        }
+
+        // 快捷键
+        document.addEventListener('keydown', e => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            switch (e.code) {
+                case 'Space': e.preventDefault(); isProcessing ? stopBtn.click() : startBtn.click(); break;
+                case 'KeyD': document.querySelector('[data-module="denoise"]').click(); break;
+                case 'KeyA': document.querySelector('[data-module="agc"]').click(); break;
+                case 'KeyV': document.querySelector('[data-module="vad"]').click(); break;
+                case 'KeyE': document.querySelector('[data-module="eq"]').click(); break;
+                case 'KeyR': document.querySelector('[data-module="reverb"]').click(); break;
+                case 'KeyS': document.querySelector('[data-module="spatial"]').click(); break;
+                case 'KeyH': document.querySelector('[data-module="hrtf"]').click(); break;
+                case 'KeyW': document.querySelector('[data-module="watermark"]').click(); break;
+            }
+        });
+
+        // === 初始化 ===
         async function initWasm() {
             try {
-                statusEl.textContent = '正在加载 WebAssembly 模块...';
-                statusEl.className = 'status loading';
-
                 sonicKit = await createSonicKit();
-
-                statusEl.textContent = '✓ WebAssembly 模块加载成功！';
-                statusEl.className = 'status ready';
+                statusEl.textContent = '✓ 就绪';
+                statusEl.className = 'px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-700';
                 startBtn.disabled = false;
-
-                console.log('SonicKit WASM initialized successfully');
             } catch (error) {
-                statusEl.textContent = '✗ 加载失败: ' + error.message;
-                statusEl.className = 'status error';
-                console.error('Failed to initialize SonicKit:', error);
+                statusEl.textContent = '✗ 加载失败';
+                statusEl.className = 'px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-700';
             }
         }
 
-        // 开始音频处理
+        function createProcessors(sampleRate, frameSize) {
+            const engine = parseInt(engineSelect.value);
+            const vadMode = parseInt(document.getElementById('vadMode').value);
+            try { processors.denoiser = new sonicKit.Denoiser(sampleRate, frameSize, engine); } catch(e) { console.warn('Denoiser not available'); }
+            try { processors.agc = new sonicKit.AGC(sampleRate, frameSize, 0, -3); } catch(e) { console.warn('AGC not available'); }
+            try { processors.vad = new sonicKit.VAD(sampleRate, frameSize, vadMode); } catch(e) { console.warn('VAD not available'); }
+            try { processors.compressor = new sonicKit.Compressor(sampleRate, -20, 4, 10, 100); } catch(e) { console.warn('Compressor not available'); }
+            try { processors.equalizer = new sonicKit.Equalizer(sampleRate, 5); } catch(e) { console.warn('Equalizer not available'); }
+            try { processors.reverb = new sonicKit.Reverb(sampleRate, 0.5, 0.5, 0.3, 0.7); } catch(e) { console.warn('Reverb not available'); }
+            try { processors.delay = new sonicKit.Delay(sampleRate, 200, 0.3, 0.5); } catch(e) { console.warn('Delay not available'); }
+            try { processors.chorus = new sonicKit.Chorus(sampleRate, 1.5, 0.5, 0.5); } catch(e) { console.warn('Chorus not available'); }
+            try { processors.flanger = new sonicKit.Flanger(sampleRate, 0.5, 0.5, 0.5, 0.5); } catch(e) { console.warn('Flanger not available'); }
+            try { processors.pitchShifter = new sonicKit.PitchShifter(sampleRate, 0); } catch(e) { console.warn('PitchShifter not available'); }
+            try { processors.dtmfDetector = new sonicKit.DTMFDetector(sampleRate, frameSize); } catch(e) { console.warn('DTMFDetector not available'); }
+            try { processors.dtmfGenerator = new sonicKit.DTMFGenerator(sampleRate, 100, 50); } catch(e) { console.warn('DTMFGenerator not available'); }
+            try { processors.inputLevel = new sonicKit.LevelMeter(sampleRate, frameSize); } catch(e) { console.warn('LevelMeter not available'); }
+            try { processors.outputLevel = new sonicKit.LevelMeter(sampleRate, frameSize); } catch(e) { console.warn('LevelMeter not available'); }
+            try { processors.limiter = new sonicKit.Limiter(sampleRate, -3); } catch(e) { console.warn('Limiter not available'); }
+            try { processors.noiseGate = new sonicKit.NoiseGate(sampleRate, -40, 10, 50); } catch(e) { console.warn('NoiseGate not available'); }
+            try { processors.timeStretcher = new sonicKit.TimeStretcher(sampleRate, frameSize, 1.0); } catch(e) { console.warn('TimeStretcher not available'); }
+            try { processors.spatialRenderer = new sonicKit.SpatialRenderer(sampleRate, frameSize); } catch(e) { console.warn('SpatialRenderer not available'); }
+            try { processors.hrtf = new sonicKit.HRTFProcessor(sampleRate, frameSize); } catch(e) { console.warn('HRTFProcessor not available'); }
+            try {
+                const strength = parseInt(document.getElementById('watermarkStrength').value);
+                processors.watermarkEmbedder = new sonicKit.WatermarkEmbedder(sampleRate, strength, 12345);
+                const msg = document.getElementById('watermarkMessage').value || 'SonicKit';
+                processors.watermarkEmbedder.setPayloadString(msg);
+            } catch(e) { console.warn('WatermarkEmbedder not available'); }
+            try { processors.watermarkDetector = new sonicKit.WatermarkDetector(sampleRate, 12345); } catch(e) { console.warn('WatermarkDetector not available'); }
+            updateEqualizer();
+        }
+
+        function destroyProcessors() {
+            Object.keys(processors).forEach(key => {
+                if (processors[key]) { processors[key].delete(); processors[key] = null; }
+            });
+        }
+
+        // 模块耗时记录
+        let moduleTimes = { denoise: 0, agc: 0, effects: 0, spatial: 0 };
+
+        function processFrame(frame) {
+            let result = frame;
+            let t0, t1;
+
+            if (processors.inputLevel) processors.inputLevel.process(frame);
+
+            // 降噪
+            t0 = performance.now();
+            if (enabled.denoise && processors.denoiser) try { result = processors.denoiser.process(result); } catch(e) {}
+            moduleTimes.denoise = performance.now() - t0;
+
+            // AGC
+            t0 = performance.now();
+            if (enabled.agc && processors.agc) try { result = processors.agc.process(result); } catch(e) {}
+            moduleTimes.agc = performance.now() - t0;
+
+            if (enabled.vad && processors.vad) {
+                try {
+                    const isSpeech = processors.vad.isSpeech(result);
+                    updateVadIndicator(isSpeech, processors.vad.getProbability());
+                } catch(e) {}
+            }
+
+            // 动态处理 + 均衡器 + 音效
+            t0 = performance.now();
+            if (enabled.compressor && processors.compressor) try { result = processors.compressor.process(result); } catch(e) {}
+            if (enabled.eq && processors.equalizer) try { result = processors.equalizer.process(result); } catch(e) {}
+            if (enabled.reverb && processors.reverb) try { result = processors.reverb.process(result); } catch(e) {}
+            if (enabled.delay && processors.delay) try { result = processors.delay.process(result); } catch(e) {}
+            if (enabled.chorus && processors.chorus) try { result = processors.chorus.process(result); } catch(e) {}
+            if (enabled.flanger && processors.flanger) try { result = processors.flanger.process(result); } catch(e) {}
+            if (enabled.pitch && processors.pitchShifter) try { result = processors.pitchShifter.process(result); } catch(e) {}
+            if (enabled.timeStretch && processors.timeStretcher) try { result = processors.timeStretcher.process(result); } catch(e) {}
+            if (enabled.limiter && processors.limiter) try { result = processors.limiter.process(result); } catch(e) {}
+            if (enabled.noiseGate && processors.noiseGate) try { result = processors.noiseGate.process(result); } catch(e) {}
+            moduleTimes.effects = performance.now() - t0;
+
+            // 空间音频
+            t0 = performance.now();
+            if (enabled.spatial && processors.spatialRenderer) {
+                try {
+                    processors.spatialRenderer.setSourcePosition(0, spatialParams.azimuth, spatialParams.elevation, spatialParams.distance);
+                    result = processors.spatialRenderer.process(result);
+                } catch(e) {}
+            }
+            if (enabled.hrtf && processors.hrtf) {
+                try {
+                    processors.hrtf.setPosition(spatialParams.azimuth, spatialParams.elevation);
+                    result = processors.hrtf.process(result);
+                } catch(e) {}
+            }
+            moduleTimes.spatial = performance.now() - t0;
+
+            if (enabled.watermark && processors.watermarkEmbedder) {
+                try {
+                    result = processors.watermarkEmbedder.embed(Array.from(result));
+                    if (Array.isArray(result)) result = new Int16Array(result);
+                    const bits = processors.watermarkEmbedder.getBitsEmbedded();
+                    document.getElementById('watermarkBits').textContent = bits + ' bits';
+                } catch(e) {}
+            }
+            if (enabled.dtmf && processors.dtmfDetector) {
+                try {
+                    const digit = processors.dtmfDetector.process(result);
+                    if (digit) { dtmfBuffer = (dtmfBuffer + digit).slice(-16); document.getElementById('dtmfDigits').textContent = dtmfBuffer; }
+                } catch(e) {}
+            }
+            if (processors.outputLevel) processors.outputLevel.process(result);
+            return result;
+        }
+
+        function updateLevelMeters() {
+            if (!isProcessing) return;
+            if (processors.inputLevel) {
+                const rms = processors.inputLevel.getRmsDb();
+                const level = Math.max(0, Math.min(100, (rms + 60) * 100 / 60));
+                document.getElementById('inputLevel').style.width = level + '%';
+                document.getElementById('inputLevelValue').textContent = rms > -100 ? rms.toFixed(1) + ' dB' : '-∞ dB';
+                try {
+                    const clip = processors.inputLevel.isClipping();
+                    document.getElementById('clippingDot').className = 'w-2.5 h-2.5 rounded-full ' + (clip ? 'bg-red-500' : 'bg-gray-300');
+                    document.getElementById('clippingStatus').textContent = clip ? '⚠️' : '正常';
+                } catch(e) {}
+            }
+            if (processors.outputLevel) {
+                const rms = processors.outputLevel.getRmsDb();
+                const level = Math.max(0, Math.min(100, (rms + 60) * 100 / 60));
+                document.getElementById('outputLevel').style.width = level + '%';
+                document.getElementById('outputLevelValue').textContent = rms > -100 ? rms.toFixed(1) + ' dB' : '-∞ dB';
+            }
+            if (enabled.agc && processors.agc) {
+                try { document.getElementById('agcGain').textContent = processors.agc.getGain().toFixed(2) + 'x'; } catch(e) {}
+            }
+            requestAnimationFrame(updateLevelMeters);
+        }
+
+        function updateVadIndicator(isSpeech, prob) {
+            document.getElementById('vadDot').className = 'w-2.5 h-2.5 rounded-full ' + (isSpeech ? 'bg-green-500' : 'bg-gray-300');
+            document.getElementById('vadStatus').textContent = isSpeech ? `${(prob*100).toFixed(0)}%` : '-';
+        }
+
+        function updateStats() {
+            if (!isProcessing) return;
+            document.getElementById('statsFrames').textContent = stats.framesProcessed.toLocaleString();
+            if (stats.startTime) {
+                const s = Math.floor((Date.now() - stats.startTime) / 1000);
+                document.getElementById('statsTime').textContent = `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+            }
+            document.getElementById('statsLatency').textContent = stats.lastProcessTime.toFixed(1) + 'ms';
+            setTimeout(updateStats, 500);
+        }
+
+        // 性能监控更新
+        const perfChartCanvas = document.getElementById('perfChart');
+        const perfChartCtx = perfChartCanvas ? perfChartCanvas.getContext('2d') : null;
+        const FRAME_TIME_BUDGET = 10; // 10ms 预算 (480 samples @ 48kHz)
+
+        function updatePerfStats(processTime) {
+            // 记录处理时间
+            perfStats.processTimes.push(processTime);
+            if (perfStats.processTimes.length > 100) perfStats.processTimes.shift();
+
+            // 更新峰值
+            if (processTime > perfStats.maxProcessTime) {
+                perfStats.maxProcessTime = processTime;
+            }
+
+            // 检测丢帧 (处理时间超过帧预算)
+            if (processTime > FRAME_TIME_BUDGET) {
+                perfStats.droppedFrames++;
+            }
+
+            // 计算 CPU 占用 (处理时间 / 帧预算)
+            perfStats.cpuPercent = Math.min(100, (processTime / FRAME_TIME_BUDGET) * 100);
+        }
+
+        function updatePerfDisplay() {
+            if (!isProcessing) return;
+
+            const times = perfStats.processTimes;
+            if (times.length === 0) {
+                requestAnimationFrame(updatePerfDisplay);
+                return;
+            }
+
+            // 平均值
+            const avg = times.reduce((a, b) => a + b, 0) / times.length;
+            const current = times[times.length - 1] || 0;
+
+            // 更新 Header 中的性能统计显示
+            const cpuEl = document.getElementById('cpuUsage');
+            const frameTimeEl = document.getElementById('frameTime');
+            const droppedEl = document.getElementById('droppedFrames');
+            const underrunsEl = document.getElementById('bufferUnderruns');
+
+            if (cpuEl) cpuEl.textContent = perfStats.cpuPercent.toFixed(0) + '%';
+            if (frameTimeEl) frameTimeEl.textContent = current.toFixed(1) + 'ms';
+            if (droppedEl) droppedEl.textContent = perfStats.droppedFrames;
+            if (underrunsEl) underrunsEl.textContent = perfStats.bufferUnderruns;
+
+            // 绘制图表
+            drawPerfChart();
+
+            requestAnimationFrame(updatePerfDisplay);
+        }
+
+        function drawPerfChart() {
+            if (!perfChartCtx || !perfChartCanvas) return;
+
+            const w = perfChartCanvas.width;
+            const h = perfChartCanvas.height;
+            const times = perfStats.processTimes;
+
+            perfChartCtx.fillStyle = '#f3f4f6';
+            perfChartCtx.fillRect(0, 0, w, h);
+
+            if (times.length < 2) return;
+
+            // 绘制预算线
+            const budgetY = h - (FRAME_TIME_BUDGET / 20) * h;
+            perfChartCtx.strokeStyle = '#ef4444';
+            perfChartCtx.lineWidth = 1;
+            perfChartCtx.setLineDash([4, 4]);
+            perfChartCtx.beginPath();
+            perfChartCtx.moveTo(0, budgetY);
+            perfChartCtx.lineTo(w, budgetY);
+            perfChartCtx.stroke();
+            perfChartCtx.setLineDash([]);
+
+            // 绘制处理时间曲线
+            perfChartCtx.strokeStyle = '#000';
+            perfChartCtx.lineWidth = 1.5;
+            perfChartCtx.beginPath();
+
+            const step = w / (times.length - 1);
+            for (let i = 0; i < times.length; i++) {
+                const x = i * step;
+                const y = h - Math.min(1, times[i] / 20) * h;
+                if (i === 0) perfChartCtx.moveTo(x, y);
+                else perfChartCtx.lineTo(x, y);
+            }
+            perfChartCtx.stroke();
+        }
+
+        // === 开始/停止 ===
         startBtn.addEventListener('click', async () => {
             try {
-                statusEl.textContent = '正在初始化音频系统...';
-                statusEl.className = 'status loading';
-
-                // 请求麦克风权限
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: false, // 禁用浏览器的回声消除
-                        noiseSuppression: false, // 禁用浏览器的降噪
-                        autoGainControl: false,  // 禁用浏览器的 AGC
-                        sampleRate: 48000
-                    }
+                statusEl.textContent = '初始化...';
+                statusEl.className = 'px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700';
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, sampleRate: 48000 }
                 });
-
-                // 创建音频上下文
-                audioContext = new (window.AudioContext || window.webkitAudioContext)({
-                    sampleRate: 48000
-                });
-
-                // 创建降噪器
-                const engine = parseInt(engineSelect.value);
-                const denoiseFrameSize = 480; // 降噪器需要 10ms @ 48kHz
-                const bufferSize = 512; // ScriptProcessor 需要 2 的幂次方
-                denoiser = new sonicKit.Denoiser(48000, denoiseFrameSize, engine);
-
-                // 创建音频源
-                const source = audioContext.createMediaStreamSource(stream);
-
-                // 创建 ScriptProcessor（简单演示用）
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+                const sampleRate = audioContext.sampleRate, frameSize = 480, bufferSize = 512;
+                createProcessors(sampleRate, frameSize);
+                analyser = audioContext.createAnalyser(); analyser.fftSize = 256;
+                const source = audioContext.createMediaStreamSource(mediaStream);
                 const processor = audioContext.createScriptProcessor(bufferSize, 1, 1);
-
-                // 音频缓冲区，用于处理帧大小不匹配
                 let audioBuffer = new Int16Array(0);
 
-                processor.onaudioprocess = (e) => {
-                    const inputData = e.inputBuffer.getChannelData(0);
-
-                    // 转换为 Int16 并追加到缓冲区
-                    const int16Input = new Int16Array(inputData.length);
-                    for (let i = 0; i < inputData.length; i++) {
-                        int16Input[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
+                processor.onaudioprocess = e => {
+                    const input = e.inputBuffer.getChannelData(0);
+                    const int16 = new Int16Array(input.length);
+                    for (let i = 0; i < input.length; i++) int16[i] = Math.max(-32768, Math.min(32767, input[i] * 32768));
+                    const newBuf = new Int16Array(audioBuffer.length + int16.length);
+                    newBuf.set(audioBuffer); newBuf.set(int16, audioBuffer.length); audioBuffer = newBuf;
+                    const output = e.outputBuffer.getChannelData(0);
+                    let offset = 0;
+                    while (audioBuffer.length >= frameSize && offset < output.length) {
+                        const frame = audioBuffer.slice(0, frameSize); audioBuffer = audioBuffer.slice(frameSize);
+                        const t0 = performance.now();
+                        const processed = processFrame(frame);
+                        const processTime = performance.now() - t0;
+                        stats.lastProcessTime = processTime;
+                        stats.framesProcessed++;
+                        updatePerfStats(processTime);
+                        const len = Math.min(processed.length, output.length - offset);
+                        for (let i = 0; i < len; i++) output[offset + i] = processed[i] / 32768;
+                        offset += len;
                     }
-
-                    // 合并缓冲区
-                    const newBuffer = new Int16Array(audioBuffer.length + int16Input.length);
-                    newBuffer.set(audioBuffer);
-                    newBuffer.set(int16Input, audioBuffer.length);
-                    audioBuffer = newBuffer;
-
-                    // 处理输出
-                    const outputData = e.outputBuffer.getChannelData(0);
-                    let outputOffset = 0;
-
-                    // 处理完整的降噪帧
-                    while (audioBuffer.length >= denoiseFrameSize && outputOffset < outputData.length) {
-                        const frame = audioBuffer.slice(0, denoiseFrameSize);
-                        audioBuffer = audioBuffer.slice(denoiseFrameSize);
-
-                        let processedFrame;
-                        try {
-                            processedFrame = denoiser.process(frame);
-                        } catch (error) {
-                            console.error('Denoising failed:', error);
-                            processedFrame = frame;
-                        }
-
-                        // 复制到输出（可能不完整）
-                        const copyLen = Math.min(processedFrame.length, outputData.length - outputOffset);
-                        for (let i = 0; i < copyLen; i++) {
-                            outputData[outputOffset + i] = processedFrame[i] / 32768.0;
-                        }
-                        outputOffset += copyLen;
-
-                        // 如果输出已满但帧还有剩余，放回缓冲区
-                        if (copyLen < processedFrame.length) {
-                            const remaining = new Int16Array(processedFrame.length - copyLen);
-                            for (let i = copyLen; i < processedFrame.length; i++) {
-                                remaining[i - copyLen] = processedFrame[i];
-                            }
-                            const tempBuffer = new Int16Array(remaining.length + audioBuffer.length);
-                            tempBuffer.set(remaining);
-                            tempBuffer.set(audioBuffer, remaining.length);
-                            audioBuffer = tempBuffer;
-                        }
-                    }
-
-                    // 填充剩余输出为静音
-                    for (let i = outputOffset; i < outputData.length; i++) {
-                        outputData[i] = 0;
-                    }
-
-                    // 绘制波形
-                    drawWaveform(outputData);
+                    for (let i = offset; i < output.length; i++) output[i] = 0;
+                    drawWaveform(output);
                 };
 
-                // 连接音频图
-                source.connect(processor);
-                processor.connect(audioContext.destination);
-
-                isProcessing = true;
-                startBtn.disabled = true;
-                stopBtn.disabled = false;
-                engineSelect.disabled = true;
-
-                statusEl.textContent = '🎤 正在处理音频...';
-                statusEl.className = 'status processing';
-
-            } catch (error) {
-                statusEl.textContent = '✗ 启动失败: ' + error.message;
-                statusEl.className = 'status error';
-                console.error('Failed to start audio processing:', error);
+                source.connect(processor); processor.connect(analyser); analyser.connect(audioContext.destination);
+                isProcessing = true; startBtn.disabled = true; stopBtn.disabled = false; engineSelect.disabled = true;
+                stats.framesProcessed = 0; stats.startTime = Date.now();
+                document.getElementById('statsSampleRate').textContent = (sampleRate/1000).toFixed(1) + 'k';
+                statusEl.textContent = '● 处理中';
+                statusEl.className = 'px-4 py-2 rounded-full text-sm font-medium bg-black text-white';
+                updateLevelMeters(); updateStats(); drawSpectrum(); updatePerfDisplay();
+            } catch (err) {
+                statusEl.textContent = '✗ ' + err.message;
+                statusEl.className = 'px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-700';
             }
         });
 
-        // 停止音频处理
         stopBtn.addEventListener('click', () => {
-            if (audioContext) {
-                audioContext.close();
-                audioContext = null;
-            }
-
-            if (denoiser) {
-                denoiser.delete();
-                denoiser = null;
-            }
-
             isProcessing = false;
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-            engineSelect.disabled = false;
-
-            statusEl.textContent = '✓ 已停止处理';
-            statusEl.className = 'status ready';
-
-            // 清空画布
-            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+            if (audioContext) { audioContext.close(); audioContext = null; }
+            if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+            destroyProcessors();
+            startBtn.disabled = false; stopBtn.disabled = true; engineSelect.disabled = false;
+            statusEl.textContent = '✓ 已停止';
+            statusEl.className = 'px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600';
+            document.getElementById('inputLevel').style.width = '0%';
+            document.getElementById('outputLevel').style.width = '0%';
+            document.getElementById('inputLevelValue').textContent = '-∞ dB';
+            document.getElementById('outputLevelValue').textContent = '-∞ dB';
+            document.getElementById('vadDot').className = 'w-2.5 h-2.5 rounded-full bg-gray-300';
+            document.getElementById('vadStatus').textContent = '-';
+            document.getElementById('clippingDot').className = 'w-2.5 h-2.5 rounded-full bg-gray-300';
+            document.getElementById('clippingStatus').textContent = '正常';
+            document.getElementById('dtmfDigits').textContent = '-';
+            document.getElementById('agcGain').textContent = '1.0x';
+            dtmfBuffer = '';
+            // 重置性能统计
+            perfStats.processTimes = [];
+            perfStats.maxProcessTime = 0;
+            perfStats.droppedFrames = 0;
+            perfStats.bufferUnderruns = 0;
+            perfStats.cpuPercent = 0;
+            document.getElementById('cpuUsage').textContent = '0%';
+            document.getElementById('frameTime').textContent = '0ms';
+            document.getElementById('droppedFrames').textContent = '0';
+            document.getElementById('bufferUnderruns').textContent = '0';
+            // 重置模块计时
+            moduleTimes.denoise = 0;
+            moduleTimes.agc = 0;
+            moduleTimes.effects = 0;
+            moduleTimes.spatial = 0;
+            // 重置统计
+            stats.framesProcessed = 0;
+            stats.startTime = 0;
+            stats.lastProcessTime = 0;
+            document.getElementById('statsFrames').textContent = '0';
+            document.getElementById('statsTime').textContent = '0.0';
+            document.getElementById('statsSampleRate').textContent = '-';
+            // 清空趋势图
+            if (perfChartCtx && perfChartCanvas) {
+                perfChartCtx.fillStyle = '#f3f4f6';
+                perfChartCtx.fillRect(0, 0, perfChartCanvas.width, perfChartCanvas.height);
+            }
+            waveformCtx.fillStyle = '#000'; waveformCtx.fillRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+            spectrumCtx.fillStyle = '#000'; spectrumCtx.fillRect(0, 0, spectrumCanvas.width, spectrumCanvas.height);
         });
 
-        // 绘制波形
+        // === 可视化 ===
         function drawWaveform(data) {
-            const width = canvas.width;
-            const height = canvas.height;
-
-            canvasCtx.fillStyle = '#f5f5f5';
-            canvasCtx.fillRect(0, 0, width, height);
-
-            canvasCtx.lineWidth = 2;
-            canvasCtx.strokeStyle = '#667eea';
-            canvasCtx.beginPath();
-
-            const sliceWidth = width / data.length;
-            let x = 0;
-
+            const w = waveformCanvas.width, h = waveformCanvas.height;
+            waveformCtx.fillStyle = '#000'; waveformCtx.fillRect(0, 0, w, h);
+            waveformCtx.strokeStyle = '#fff'; waveformCtx.lineWidth = 1.5; waveformCtx.beginPath();
+            const step = w / data.length; let x = 0;
             for (let i = 0; i < data.length; i++) {
-                const v = data[i];
-                const y = (v + 1) * height / 2;
-
-                if (i === 0) {
-                    canvasCtx.moveTo(x, y);
-                } else {
-                    canvasCtx.lineTo(x, y);
-                }
-
-                x += sliceWidth;
+                const y = (1 - data[i]) * h / 2;
+                i === 0 ? waveformCtx.moveTo(x, y) : waveformCtx.lineTo(x, y);
+                x += step;
             }
-
-            canvasCtx.stroke();
+            waveformCtx.stroke();
         }
 
-        // 初始化
-        window.addEventListener('load', () => {
-            // 设置画布分辨率
-            canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-            canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+        function drawSpectrum() {
+            if (!isProcessing || !analyser) return;
+            const w = spectrumCanvas.width, h = spectrumCanvas.height;
+            const len = analyser.frequencyBinCount, data = new Uint8Array(len);
+            analyser.getByteFrequencyData(data);
+            spectrumCtx.fillStyle = '#000'; spectrumCtx.fillRect(0, 0, w, h);
+            const barW = Math.max(1, (w / len) * 1.5);
+            const gap = 1;
+            let x = 0;
+            for (let i = 0; i < len && x < w; i++) {
+                const barH = (data[i] / 255) * h;
+                const gray = 255 - Math.floor((i / len) * 100);
+                spectrumCtx.fillStyle = `rgb(${gray},${gray},${gray})`;
+                spectrumCtx.fillRect(x, h - barH, barW, barH);
+                x += barW + gap;
+            }
+            requestAnimationFrame(drawSpectrum);
+        }
 
-            // 初始化 WASM
+        // === 启动 ===
+        window.addEventListener('load', () => {
+            const dpr = window.devicePixelRatio || 1;
+            waveformCanvas.width = waveformCanvas.offsetWidth * dpr;
+            waveformCanvas.height = waveformCanvas.offsetHeight * dpr;
+            spectrumCanvas.width = spectrumCanvas.offsetWidth * dpr;
+            spectrumCanvas.height = spectrumCanvas.offsetHeight * dpr;
+            if (perfChartCanvas) {
+                perfChartCanvas.width = perfChartCanvas.offsetWidth * dpr;
+                perfChartCanvas.height = perfChartCanvas.offsetHeight * dpr;
+            }
             initWasm();
+        });
+
+        window.addEventListener('resize', () => {
+            const dpr = window.devicePixelRatio || 1;
+            waveformCanvas.width = waveformCanvas.offsetWidth * dpr;
+            waveformCanvas.height = waveformCanvas.offsetHeight * dpr;
+            spectrumCanvas.width = spectrumCanvas.offsetWidth * dpr;
+            spectrumCanvas.height = spectrumCanvas.offsetHeight * dpr;
+            if (perfChartCanvas && perfChartCanvas.offsetWidth > 0) {
+                perfChartCanvas.width = perfChartCanvas.offsetWidth * dpr;
+                perfChartCanvas.height = perfChartCanvas.offsetHeight * dpr;
+            }
         });
     </script>
 </body>

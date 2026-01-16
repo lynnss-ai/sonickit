@@ -9,6 +9,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # ============================================
 option(SONICKIT_BUILD_EXAMPLES "Build example programs" ON)
 option(SONICKIT_BUILD_TESTS "Build tests" ON)
+option(SONICKIT_BUILD_SHARED "Build shared library (DLL/SO/DYLIB)" OFF)
 option(SONICKIT_ENABLE_RNNOISE "Enable RNNoise denoiser" ON)
 option(SONICKIT_ENABLE_OPUS "Enable Opus codec" ON)
 option(SONICKIT_ENABLE_SPEEX "Enable Speex codec" OFF)
@@ -184,12 +185,13 @@ endif()
 # 主库源文件
 # ============================================
 set(SONICKIT_SOURCES
-    # 核心
+    # Core
     src/voice/voice_init.c
     src/voice/pipeline.c
     src/voice/statistics.c
+    src/voice/version.c
 
-    # 音频
+    # Audio
     src/audio/audio_buffer.c
     src/audio/device.c
     src/audio/file_io.c
@@ -261,9 +263,37 @@ endif()
 # SRTP 已包含在主源文件列表中
 
 # ============================================
-# 主库目标
+# Main Library Target
 # ============================================
-add_library(voice STATIC ${SONICKIT_SOURCES})
+
+# Shared or Static library based on option
+if(SONICKIT_BUILD_SHARED)
+    add_library(voice SHARED ${SONICKIT_SOURCES})
+    target_compile_definitions(voice PRIVATE SONICKIT_BUILDING_DLL)
+
+    # Set library version
+    set_target_properties(voice PROPERTIES
+        VERSION 1.0.0
+        SOVERSION 1
+    )
+
+    # Hide symbols by default on Unix
+    if(NOT WIN32)
+        set_target_properties(voice PROPERTIES
+            C_VISIBILITY_PRESET hidden
+            VISIBILITY_INLINES_HIDDEN ON
+        )
+    endif()
+
+    message(STATUS "Building SonicKit as SHARED library")
+else()
+    add_library(voice STATIC ${SONICKIT_SOURCES})
+    target_compile_definitions(voice PUBLIC SONICKIT_STATIC)
+    message(STATUS "Building SonicKit as STATIC library")
+endif()
+
+# Create alias for modern CMake usage
+add_library(SonicKit::voice ALIAS voice)
 
 target_include_directories(voice PUBLIC
     include

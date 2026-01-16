@@ -10,43 +10,44 @@
 #include "voice/types.h"
 #include "voice/error.h"
 #include "voice/config.h"
+#include "voice/export.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* ============================================
- * 音频设备上下文
+ * Audio Device Context
  * ============================================ */
 
-/** 设备上下文 (全局单例) */
+/** Device context (global singleton) */
 typedef struct voice_device_context_s voice_device_context_t;
 
 /**
- * @brief 初始化设备上下文
- * @return 错误码
+ * @brief Initialize device context
+ * @return Error code
  */
-voice_error_t voice_device_context_init(void);
+VOICE_API voice_error_t voice_device_context_init(void);
 
 /**
- * @brief 销毁设备上下文
+ * @brief Destroy device context
  */
-void voice_device_context_deinit(void);
+VOICE_API void voice_device_context_deinit(void);
 
 /**
- * @brief 获取设备上下文
- * @return 设备上下文指针
+ * @brief Get device context
+ * @return Device context pointer
  */
-voice_device_context_t *voice_device_context_get(void);
+VOICE_API voice_device_context_t *voice_device_context_get(void);
 
 /* ============================================
- * 音频设备
+ * Audio Device
  * ============================================ */
 
-/** 音频设备句柄 */
+/** Audio device handle */
 typedef struct voice_device_s voice_device_t;
 
-/** 设备数据回调 */
+/** Device data callback */
 typedef void (*voice_device_data_callback_t)(
     voice_device_t *device,
     void *output,
@@ -55,25 +56,25 @@ typedef void (*voice_device_data_callback_t)(
     void *user_data
 );
 
-/** 设备停止回调 */
+/** Device stop callback */
 typedef void (*voice_device_stop_callback_t)(
     voice_device_t *device,
     void *user_data
 );
 
-/** 设备类型 */
+/** Device type */
 typedef enum {
-    VOICE_DEVICE_CAPTURE,           /**< 仅采集 */
-    VOICE_DEVICE_PLAYBACK,          /**< 仅播放 */
-    VOICE_DEVICE_DUPLEX             /**< 全双工 */
+    VOICE_DEVICE_CAPTURE,           /**< Capture only */
+    VOICE_DEVICE_PLAYBACK,          /**< Playback only */
+    VOICE_DEVICE_DUPLEX             /**< Full duplex */
 } voice_device_mode_t;
 
-/* 兼容别名 - 示例代码使用 */
+/* Compatibility aliases - for example code */
 #define VOICE_DEVICE_MODE_CAPTURE   VOICE_DEVICE_CAPTURE
 #define VOICE_DEVICE_MODE_PLAYBACK  VOICE_DEVICE_PLAYBACK
 #define VOICE_DEVICE_MODE_DUPLEX    VOICE_DEVICE_DUPLEX
 
-/** 采集数据回调 (简化版) */
+/** Capture data callback (simplified) */
 typedef void (*voice_capture_callback_t)(
     voice_device_t *device,
     const int16_t *input,
@@ -81,7 +82,7 @@ typedef void (*voice_capture_callback_t)(
     void *user_data
 );
 
-/** 播放数据回调 (简化版) */
+/** Playback data callback (simplified) */
 typedef void (*voice_playback_callback_t)(
     voice_device_t *device,
     int16_t *output,
@@ -89,104 +90,104 @@ typedef void (*voice_playback_callback_t)(
     void *user_data
 );
 
-/** 设备配置 */
+/** Device configuration */
 typedef struct {
-    voice_device_mode_t mode;       /**< 设备模式 */
+    voice_device_mode_t mode;       /**< Device mode */
 
-    /* 采集配置 */
+    /* Capture configuration */
     struct {
-        const char *device_id;      /**< 设备ID (NULL=默认) */
-        voice_format_t format;      /**< 格式 */
-        uint8_t channels;           /**< 通道数 */
-        uint32_t sample_rate;       /**< 采样率 */
+        const char *device_id;      /**< Device ID (NULL=default) */
+        voice_format_t format;      /**< Format */
+        uint8_t channels;           /**< Channel count */
+        uint32_t sample_rate;       /**< Sample rate */
     } capture;
 
-    /* 播放配置 */
+    /* Playback configuration */
     struct {
-        const char *device_id;      /**< 设备ID (NULL=默认) */
-        voice_format_t format;      /**< 格式 */
-        uint8_t channels;           /**< 通道数 */
-        uint32_t sample_rate;       /**< 采样率 */
+        const char *device_id;      /**< Device ID (NULL=default) */
+        voice_format_t format;      /**< Format */
+        uint8_t channels;           /**< Channel count */
+        uint32_t sample_rate;       /**< Sample rate */
     } playback;
 
-    uint32_t period_size_frames;    /**< 周期大小(帧) */
-    uint32_t periods;               /**< 周期数 */
+    uint32_t period_size_frames;    /**< Period size (frames) */
+    uint32_t periods;               /**< Number of periods */
 
-    /* 回调 */
+    /* Callbacks */
     voice_device_data_callback_t data_callback;
     voice_device_stop_callback_t stop_callback;
     void *user_data;
 } voice_device_desc_t;
 
 /**
- * @brief 初始化默认设备描述
- * @param desc 设备描述指针
- * @param mode 设备模式
+ * @brief Initialize default device descriptor
+ * @param desc Device descriptor pointer
+ * @param mode Device mode
  */
-void voice_device_desc_init(voice_device_desc_t *desc, voice_device_mode_t mode);
+VOICE_API void voice_device_desc_init(voice_device_desc_t *desc, voice_device_mode_t mode);
 
 /**
- * @brief 创建音频设备
- * @param desc 设备描述
- * @return 设备句柄
+ * @brief Create audio device
+ * @param desc Device descriptor
+ * @return Device handle
  */
-voice_device_t *voice_device_create(const voice_device_desc_t *desc);
+VOICE_API voice_device_t *voice_device_create(const voice_device_desc_t *desc);
 
 /**
- * @brief 销毁音频设备
- * @param device 设备句柄
+ * @brief Destroy audio device
+ * @param device Device handle
  */
-void voice_device_destroy(voice_device_t *device);
+VOICE_API void voice_device_destroy(voice_device_t *device);
 
 /**
- * @brief 启动设备
- * @param device 设备句柄
- * @return 错误码
+ * @brief Start device
+ * @param device Device handle
+ * @return Error code
  */
-voice_error_t voice_device_start(voice_device_t *device);
+VOICE_API voice_error_t voice_device_start(voice_device_t *device);
 
 /**
- * @brief 停止设备
- * @param device 设备句柄
- * @return 错误码
+ * @brief Stop device
+ * @param device Device handle
+ * @return Error code
  */
-voice_error_t voice_device_stop(voice_device_t *device);
+VOICE_API voice_error_t voice_device_stop(voice_device_t *device);
 
 /**
- * @brief 检查设备是否运行中
- * @param device 设备句柄
- * @return true 运行中
+ * @brief Check if device is running
+ * @param device Device handle
+ * @return true if running
  */
-bool voice_device_is_started(voice_device_t *device);
+VOICE_API bool voice_device_is_started(voice_device_t *device);
 
 /**
- * @brief 获取设备采样率
- * @param device 设备句柄
- * @return 采样率
+ * @brief Get device sample rate
+ * @param device Device handle
+ * @return Sample rate
  */
-uint32_t voice_device_get_sample_rate(voice_device_t *device);
+VOICE_API uint32_t voice_device_get_sample_rate(voice_device_t *device);
 
 /**
- * @brief 获取设备通道数
- * @param device 设备句柄
- * @param mode 设备模式 (采集/播放)
- * @return 通道数
+ * @brief Get device channel count
+ * @param device Device handle
+ * @param mode Device mode (capture/playback)
+ * @return Channel count
  */
-uint8_t voice_device_get_channels(voice_device_t *device, voice_device_mode_t mode);
+VOICE_API uint8_t voice_device_get_channels(voice_device_t *device, voice_device_mode_t mode);
 
 /**
- * @brief 获取设备格式
- * @param device 设备句柄
- * @param mode 设备模式
- * @return 格式
+ * @brief Get device format
+ * @param device Device handle
+ * @param mode Device mode
+ * @return Format
  */
-voice_format_t voice_device_get_format(voice_device_t *device, voice_device_mode_t mode);
+VOICE_API voice_format_t voice_device_get_format(voice_device_t *device, voice_device_mode_t mode);
 
 /* ============================================
- * 设备枚举
+ * Device Enumeration
  * ============================================ */
 
-/** 设备信息 */
+/** Device info */
 typedef struct {
     char id[256];
     char name[256];
@@ -198,84 +199,84 @@ typedef struct {
 } voice_device_enum_info_t;
 
 /**
- * @brief 获取采集设备数量
- * @return 设备数量
+ * @brief Get capture device count
+ * @return Device count
  */
-uint32_t voice_device_get_capture_count(void);
+VOICE_API uint32_t voice_device_get_capture_count(void);
 
 /**
- * @brief 获取播放设备数量
- * @return 设备数量
+ * @brief Get playback device count
+ * @return Device count
  */
-uint32_t voice_device_get_playback_count(void);
+VOICE_API uint32_t voice_device_get_playback_count(void);
 
 /**
- * @brief 获取采集设备信息
- * @param index 设备索引
- * @param info 设备信息输出
- * @return 错误码
+ * @brief Get capture device info
+ * @param index Device index
+ * @param info Device info output
+ * @return Error code
  */
-voice_error_t voice_device_get_capture_info(uint32_t index, voice_device_enum_info_t *info);
+VOICE_API voice_error_t voice_device_get_capture_info(uint32_t index, voice_device_enum_info_t *info);
 
 /**
- * @brief 获取播放设备信息
- * @param index 设备索引
- * @param info 设备信息输出
- * @return 错误码
+ * @brief Get playback device info
+ * @param index Device index
+ * @param info Device info output
+ * @return Error code
  */
-voice_error_t voice_device_get_playback_info(uint32_t index, voice_device_enum_info_t *info);
+VOICE_API voice_error_t voice_device_get_playback_info(uint32_t index, voice_device_enum_info_t *info);
 
 /* ============================================
- * 兼容性 API (用于示例代码)
+ * Compatibility API (for example code)
  * ============================================ */
 
 #ifndef VOICE_DEVICE_INFO_T_DEFINED
 #define VOICE_DEVICE_INFO_T_DEFINED
-/** 设备信息 (简化版，用于枚举) */
+/** Device info (simplified, for enumeration) */
 typedef struct {
-    char id[256];                   /**< 设备ID */
-    char name[256];                 /**< 设备名称 */
-    bool is_default;                /**< 是否默认设备 */
+    char id[256];                   /**< Device ID */
+    char name[256];                 /**< Device name */
+    bool is_default;                /**< Is default device */
 } voice_device_info_t;
 #endif
 
-/** 设备配置 (扩展版，包含回调) */
+/** Device config (extended, with callbacks) */
 typedef struct {
-    voice_device_mode_t mode;       /**< 设备模式 */
-    uint32_t sample_rate;           /**< 采样率 */
-    uint8_t channels;               /**< 通道数 */
-    uint32_t frame_size;            /**< 帧大小 (样本数) */
+    voice_device_mode_t mode;       /**< Device mode */
+    uint32_t sample_rate;           /**< Sample rate */
+    uint8_t channels;               /**< Channel count */
+    uint32_t frame_size;            /**< Frame size (samples) */
 
-    /* 采集回调 */
+    /* Capture callback */
     voice_capture_callback_t capture_callback;
     void *capture_user_data;
 
-    /* 播放回调 */
+    /* Playback callback */
     voice_playback_callback_t playback_callback;
     void *playback_user_data;
 } voice_device_ext_config_t;
 
 /**
- * @brief 初始化默认设备配置
- * @param config 配置结构指针
+ * @brief Initialize default device configuration
+ * @param config Configuration struct pointer
  */
-void voice_device_config_init(voice_device_ext_config_t *config);
+VOICE_API void voice_device_config_init(voice_device_ext_config_t *config);
 
 /**
- * @brief 使用简化配置创建设备
- * @param config 简化配置
- * @return 设备句柄
+ * @brief Create device with simplified configuration
+ * @param config Simplified configuration
+ * @return Device handle
  */
-voice_device_t *voice_device_create_simple(const voice_device_ext_config_t *config);
+VOICE_API voice_device_t *voice_device_create_simple(const voice_device_ext_config_t *config);
 
 /**
- * @brief 枚举设备 (兼容API)
- * @param mode 设备模式
- * @param devices 设备信息数组
- * @param count 输入：数组大小，输出：实际设备数
- * @return 错误码
+ * @brief Enumerate devices (compatibility API)
+ * @param mode Device mode
+ * @param devices Device info array
+ * @param count Input: array size, Output: actual device count
+ * @return Error code
  */
-voice_error_t voice_device_enumerate(
+VOICE_API voice_error_t voice_device_enumerate(
     voice_device_mode_t mode,
     voice_device_info_t *devices,
     size_t *count

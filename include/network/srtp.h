@@ -12,6 +12,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include "network/rtp.h"
 
 #ifdef __cplusplus
@@ -19,7 +20,7 @@ extern "C" {
 #endif
 
 /* ============================================
- * SRTP 常量
+ * SRTP Constants
  * ============================================ */
 
 #define SRTP_MASTER_KEY_LEN     16
@@ -28,7 +29,7 @@ extern "C" {
 #define SRTP_MAX_TRAILER_LEN    (SRTP_MAX_AUTH_TAG_LEN + 4)
 
 /* ============================================
- * 加密套件
+ * Encryption Profiles
  * ============================================ */
 
 typedef enum {
@@ -39,7 +40,7 @@ typedef enum {
 } srtp_profile_t;
 
 /* ============================================
- * SRTP 句柄
+ * SRTP Handle
  * ============================================ */
 
 typedef struct srtp_session_s srtp_session_t;
@@ -74,43 +75,43 @@ typedef struct {
  * ============================================ */
 
 /**
- * @brief 初始化 SRTP 库
- * @return 错误码
+ * @brief Initialize SRTP library
+ * @return Error code
  */
-voice_error_t srtp_init(void);
+VOICE_API voice_error_t srtp_init(void);
 
 /**
- * @brief 清理 SRTP 库
+ * @brief Cleanup SRTP library
  */
-void srtp_shutdown(void);
+VOICE_API void srtp_shutdown(void);
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
  */
-void srtp_config_init(srtp_config_t *config);
+VOICE_API void srtp_config_init(srtp_config_t *config);
 
 /**
- * @brief 创建 SRTP 会话
- * @param config 配置
- * @return SRTP会话句柄
+ * @brief Create SRTP session
+ * @param config Configuration
+ * @return SRTP session handle
  */
-srtp_session_t *srtp_session_create(const srtp_config_t *config);
+VOICE_API srtp_session_t *srtp_session_create(const srtp_config_t *config);
 
 /**
- * @brief 销毁 SRTP 会话
+ * @brief Destroy SRTP session
  */
-void srtp_session_destroy(srtp_session_t *session);
+VOICE_API void srtp_session_destroy(srtp_session_t *session);
 
 /**
- * @brief 保护 RTP 包 (加密+认证)
+ * @brief Protect RTP packet (encrypt + authenticate)
  *
- * @param session SRTP会话
- * @param rtp_packet RTP包数据 (原地加密)
- * @param rtp_len RTP包长度(输入)/SRTP包长度(输出)
- * @param max_len 缓冲区最大长度
- * @return 错误码
+ * @param session SRTP session
+ * @param rtp_packet RTP packet data (in-place encryption)
+ * @param rtp_len RTP packet length (input) / SRTP packet length (output)
+ * @param max_len Maximum buffer length
+ * @return Error code
  */
-voice_error_t srtp_protect(
+VOICE_API voice_error_t srtp_protect(
     srtp_session_t *session,
     uint8_t *rtp_packet,
     size_t *rtp_len,
@@ -118,23 +119,23 @@ voice_error_t srtp_protect(
 );
 
 /**
- * @brief 解保护 SRTP 包 (验证+解密)
+ * @brief Unprotect SRTP packet (verify + decrypt)
  *
- * @param session SRTP会话
- * @param srtp_packet SRTP包数据 (原地解密)
- * @param srtp_len SRTP包长度(输入)/RTP包长度(输出)
- * @return 错误码
+ * @param session SRTP session
+ * @param srtp_packet SRTP packet data (in-place decryption)
+ * @param srtp_len SRTP packet length (input) / RTP packet length (output)
+ * @return Error code
  */
-voice_error_t srtp_unprotect(
+VOICE_API voice_error_t srtp_unprotect(
     srtp_session_t *session,
     uint8_t *srtp_packet,
     size_t *srtp_len
 );
 
 /**
- * @brief 保护 RTCP 包
+ * @brief Protect RTCP packet
  */
-voice_error_t srtcp_protect(
+VOICE_API voice_error_t srtcp_protect(
     srtp_session_t *session,
     uint8_t *rtcp_packet,
     size_t *rtcp_len,
@@ -142,18 +143,18 @@ voice_error_t srtcp_protect(
 );
 
 /**
- * @brief 解保护 SRTCP 包
+ * @brief Unprotect SRTCP packet
  */
-voice_error_t srtcp_unprotect(
+VOICE_API voice_error_t srtcp_unprotect(
     srtp_session_t *session,
     uint8_t *srtcp_packet,
     size_t *srtcp_len
 );
 
 /**
- * @brief 更新 SRTP 密钥
+ * @brief Update SRTP key
  */
-voice_error_t srtp_session_update_key(
+VOICE_API voice_error_t srtp_session_update_key(
     srtp_session_t *session,
     const uint8_t *master_key,
     size_t key_len,
@@ -162,19 +163,19 @@ voice_error_t srtp_session_update_key(
 );
 
 /**
- * @brief 获取认证标签长度
+ * @brief Get authentication tag length
  */
-size_t srtp_get_auth_tag_len(srtp_profile_t profile);
+VOICE_API size_t srtp_get_auth_tag_len(srtp_profile_t profile);
 
 /**
- * @brief 获取密钥长度
+ * @brief Get key length
  */
-size_t srtp_get_key_len(srtp_profile_t profile);
+VOICE_API size_t srtp_get_key_len(srtp_profile_t profile);
 
 /**
- * @brief 获取盐值长度
+ * @brief Get salt length
  */
-size_t srtp_get_salt_len(srtp_profile_t profile);
+VOICE_API size_t srtp_get_salt_len(srtp_profile_t profile);
 
 /* ============================================
  * DTLS-SRTP API
@@ -224,92 +225,92 @@ typedef int (*dtls_send_callback_t)(
 );
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
  */
-void dtls_srtp_config_init(dtls_srtp_config_t *config);
+VOICE_API void dtls_srtp_config_init(dtls_srtp_config_t *config);
 
 /**
- * @brief 创建 DTLS-SRTP 会话
+ * @brief Create DTLS-SRTP session
  */
-dtls_srtp_session_t *dtls_srtp_create(const dtls_srtp_config_t *config);
+VOICE_API dtls_srtp_session_t *dtls_srtp_create(const dtls_srtp_config_t *config);
 
 /**
- * @brief 销毁 DTLS-SRTP 会话
+ * @brief Destroy DTLS-SRTP session
  */
-void dtls_srtp_destroy(dtls_srtp_session_t *session);
+VOICE_API void dtls_srtp_destroy(dtls_srtp_session_t *session);
 
 /**
- * @brief 设置发送回调
+ * @brief Set send callback
  */
-void dtls_srtp_set_send_callback(
+VOICE_API void dtls_srtp_set_send_callback(
     dtls_srtp_session_t *session,
     dtls_send_callback_t callback,
     void *user_data
 );
 
 /**
- * @brief 设置事件回调
+ * @brief Set event callback
  */
-void dtls_srtp_set_event_callback(
+VOICE_API void dtls_srtp_set_event_callback(
     dtls_srtp_session_t *session,
     dtls_event_callback_t callback,
     void *user_data
 );
 
 /**
- * @brief 开始握手
+ * @brief Start handshake
  */
-voice_error_t dtls_srtp_start_handshake(dtls_srtp_session_t *session);
+VOICE_API voice_error_t dtls_srtp_start_handshake(dtls_srtp_session_t *session);
 
 /**
- * @brief 处理接收的 DTLS 数据
+ * @brief Handle incoming DTLS data
  */
-voice_error_t dtls_srtp_handle_incoming(
+VOICE_API voice_error_t dtls_srtp_handle_incoming(
     dtls_srtp_session_t *session,
     const uint8_t *data,
     size_t len
 );
 
 /**
- * @brief 检查是否已连接
+ * @brief Check if connected
  */
-bool dtls_srtp_is_connected(dtls_srtp_session_t *session);
+VOICE_API bool dtls_srtp_is_connected(dtls_srtp_session_t *session);
 
 /**
- * @brief 获取协商的 SRTP 配置
+ * @brief Get negotiated SRTP profile
  */
-srtp_profile_t dtls_srtp_get_profile(dtls_srtp_session_t *session);
+VOICE_API srtp_profile_t dtls_srtp_get_profile(dtls_srtp_session_t *session);
 
 /**
- * @brief 获取 SRTP 密钥材料
+ * @brief Get SRTP key material
  */
-voice_error_t dtls_srtp_get_keys(
+VOICE_API voice_error_t dtls_srtp_get_keys(
     dtls_srtp_session_t *session,
     srtp_keying_material_t *keys
 );
 
 /**
- * @brief 从 DTLS 会话创建 SRTP 会话
+ * @brief Create SRTP session from DTLS session
  */
-srtp_session_t *dtls_srtp_create_srtp_session(
+VOICE_API srtp_session_t *dtls_srtp_create_srtp_session(
     dtls_srtp_session_t *dtls,
     bool is_sender,
     uint32_t ssrc
 );
 
 /**
- * @brief 获取本地指纹
+ * @brief Get local fingerprint
  */
-voice_error_t dtls_srtp_get_fingerprint(
+VOICE_API voice_error_t dtls_srtp_get_fingerprint(
     dtls_srtp_session_t *session,
     char *fingerprint,
     size_t max_len
 );
 
 /**
- * @brief 设置远端指纹 (用于验证)
+ * @brief Set remote fingerprint (for verification)
  */
-voice_error_t dtls_srtp_set_remote_fingerprint(
+VOICE_API voice_error_t dtls_srtp_set_remote_fingerprint(
     dtls_srtp_session_t *session,
     const char *fingerprint
 );

@@ -2,9 +2,9 @@
  * @file dtmf.h
  * @brief DTMF (Dual-Tone Multi-Frequency) detection and generation
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
- * DTMF 信号检测和生成模块
- * 用于电话系统按键音的编解码
+ *
+ * DTMF signal detection and generation module.
+ * Used for telephone system keypad tone encoding/decoding.
  */
 
 #ifndef VOICE_DTMF_H
@@ -12,6 +12,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -21,10 +22,10 @@ extern "C" {
 #endif
 
 /* ============================================
- * DTMF 字符定义
+ * DTMF Character Definitions
  * ============================================ */
 
-/** 
+/**
  * DTMF 字符
  * 标准按键: 0-9, *, #
  * 扩展按键: A, B, C, D
@@ -50,86 +51,86 @@ typedef enum {
 } voice_dtmf_digit_t;
 
 /* ============================================
- * DTMF 检测器
+ * DTMF Detector
  * ============================================ */
 
 typedef struct voice_dtmf_detector_s voice_dtmf_detector_t;
 
-/** 检测器配置 */
+/** Detector configuration */
 typedef struct {
     uint32_t sample_rate;
     uint32_t frame_size;
-    
-    /* Goertzel 参数 */
-    float detection_threshold;      /**< 检测阈值 */
-    float twist_threshold;          /**< 高低频能量比阈值 */
-    float reverse_twist_threshold;  /**< 反向 twist 阈值 */
-    
-    /* 时间参数 */
-    uint32_t min_on_time_ms;        /**< 最小按键持续时间 */
-    uint32_t min_off_time_ms;       /**< 最小按键间隔时间 */
-    
-    /* 回调 */
+
+    /* Goertzel parameters */
+    float detection_threshold;      /**< Detection threshold */
+    float twist_threshold;          /**< High/low frequency energy ratio threshold */
+    float reverse_twist_threshold;  /**< Reverse twist threshold */
+
+    /* Time parameters */
+    uint32_t min_on_time_ms;        /**< Minimum key press duration */
+    uint32_t min_off_time_ms;       /**< Minimum key interval time */
+
+    /* Callback */
     void (*on_digit)(voice_dtmf_digit_t digit, uint32_t duration_ms, void *user_data);
     void *callback_user_data;
 } voice_dtmf_detector_config_t;
 
-/** 检测结果 */
+/** Detection result */
 typedef struct {
-    voice_dtmf_digit_t digit;       /**< 检测到的数字 */
-    bool valid;                     /**< 是否有效 */
-    float low_freq_energy;          /**< 低频能量 */
-    float high_freq_energy;         /**< 高频能量 */
-    float twist;                    /**< 能量比 */
-    uint32_t duration_ms;           /**< 持续时间 */
+    voice_dtmf_digit_t digit;       /**< Detected digit */
+    bool valid;                     /**< Whether valid */
+    float low_freq_energy;          /**< Low frequency energy */
+    float high_freq_energy;         /**< High frequency energy */
+    float twist;                    /**< Energy ratio */
+    uint32_t duration_ms;           /**< Duration */
 } voice_dtmf_result_t;
 
 /* ============================================
- * DTMF 生成器
+ * DTMF Generator
  * ============================================ */
 
 typedef struct voice_dtmf_generator_s voice_dtmf_generator_t;
 
-/** 生成器配置 */
+/** Generator configuration */
 typedef struct {
     uint32_t sample_rate;
-    float amplitude;                /**< 振幅 (0.0-1.0) */
-    float low_freq_gain;            /**< 低频增益调整 */
-    float high_freq_gain;           /**< 高频增益调整 */
-    uint32_t tone_duration_ms;      /**< 音调持续时间 */
-    uint32_t pause_duration_ms;     /**< 音调间隔时间 */
+    float amplitude;                /**< Amplitude (0.0-1.0) */
+    float low_freq_gain;            /**< Low frequency gain adjustment */
+    float high_freq_gain;           /**< High frequency gain adjustment */
+    uint32_t tone_duration_ms;      /**< Tone duration */
+    uint32_t pause_duration_ms;     /**< Tone interval time */
 } voice_dtmf_generator_config_t;
 
 /* ============================================
- * DTMF 检测器 API
+ * DTMF Detector API
  * ============================================ */
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
  */
-void voice_dtmf_detector_config_init(voice_dtmf_detector_config_t *config);
+VOICE_API void voice_dtmf_detector_config_init(voice_dtmf_detector_config_t *config);
 
 /**
- * @brief 创建检测器
+ * @brief Create detector
  */
-voice_dtmf_detector_t *voice_dtmf_detector_create(
+VOICE_API voice_dtmf_detector_t *voice_dtmf_detector_create(
     const voice_dtmf_detector_config_t *config
 );
 
 /**
- * @brief 销毁检测器
+ * @brief Destroy detector
  */
-void voice_dtmf_detector_destroy(voice_dtmf_detector_t *detector);
+VOICE_API void voice_dtmf_detector_destroy(voice_dtmf_detector_t *detector);
 
 /**
- * @brief 处理音频帧
- * @param detector 检测器
- * @param samples 音频样本
- * @param num_samples 样本数
- * @param result 检测结果 (可选)
- * @return 检测到的数字，未检测到返回 VOICE_DTMF_NONE
+ * @brief Process audio frame
+ * @param detector Detector
+ * @param samples Audio samples
+ * @param num_samples Number of samples
+ * @param result Detection result (optional)
+ * @return Detected digit, VOICE_DTMF_NONE if none detected
  */
-voice_dtmf_digit_t voice_dtmf_detector_process(
+VOICE_API voice_dtmf_digit_t voice_dtmf_detector_process(
     voice_dtmf_detector_t *detector,
     const int16_t *samples,
     size_t num_samples,
@@ -137,58 +138,58 @@ voice_dtmf_digit_t voice_dtmf_detector_process(
 );
 
 /**
- * @brief 重置检测器
+ * @brief Reset detector
  */
-void voice_dtmf_detector_reset(voice_dtmf_detector_t *detector);
+VOICE_API void voice_dtmf_detector_reset(voice_dtmf_detector_t *detector);
 
 /**
- * @brief 获取检测到的数字序列
- * @param detector 检测器
- * @param buffer 输出缓冲区
- * @param buffer_size 缓冲区大小
- * @return 数字个数
+ * @brief Get detected digit sequence
+ * @param detector Detector
+ * @param buffer Output buffer
+ * @param buffer_size Buffer size
+ * @return Number of digits
  */
-size_t voice_dtmf_detector_get_digits(
+VOICE_API size_t voice_dtmf_detector_get_digits(
     voice_dtmf_detector_t *detector,
     char *buffer,
     size_t buffer_size
 );
 
 /**
- * @brief 清除数字缓冲区
+ * @brief Clear digit buffer
  */
-void voice_dtmf_detector_clear_digits(voice_dtmf_detector_t *detector);
+VOICE_API void voice_dtmf_detector_clear_digits(voice_dtmf_detector_t *detector);
 
 /* ============================================
- * DTMF 生成器 API
+ * DTMF Generator API
  * ============================================ */
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
  */
-void voice_dtmf_generator_config_init(voice_dtmf_generator_config_t *config);
+VOICE_API void voice_dtmf_generator_config_init(voice_dtmf_generator_config_t *config);
 
 /**
- * @brief 创建生成器
+ * @brief Create generator
  */
-voice_dtmf_generator_t *voice_dtmf_generator_create(
+VOICE_API voice_dtmf_generator_t *voice_dtmf_generator_create(
     const voice_dtmf_generator_config_t *config
 );
 
 /**
- * @brief 销毁生成器
+ * @brief Destroy generator
  */
-void voice_dtmf_generator_destroy(voice_dtmf_generator_t *generator);
+VOICE_API void voice_dtmf_generator_destroy(voice_dtmf_generator_t *generator);
 
 /**
- * @brief 生成单个 DTMF 音调
- * @param generator 生成器
- * @param digit 数字
- * @param output 输出缓冲区
- * @param num_samples 样本数
- * @return 生成的样本数
+ * @brief Generate single DTMF tone
+ * @param generator Generator
+ * @param digit Digit
+ * @param output Output buffer
+ * @param num_samples Number of samples
+ * @return Generated sample count
  */
-size_t voice_dtmf_generator_generate(
+VOICE_API size_t voice_dtmf_generator_generate(
     voice_dtmf_generator_t *generator,
     voice_dtmf_digit_t digit,
     int16_t *output,
@@ -196,14 +197,14 @@ size_t voice_dtmf_generator_generate(
 );
 
 /**
- * @brief 生成 DTMF 序列
- * @param generator 生成器
- * @param digits 数字序列 (以 '\0' 结尾)
- * @param output 输出缓冲区
- * @param max_samples 缓冲区大小
- * @return 生成的样本数
+ * @brief Generate DTMF sequence
+ * @param generator Generator
+ * @param digits Digit sequence (null-terminated)
+ * @param output Output buffer
+ * @param max_samples Buffer size
+ * @return Generated sample count
  */
-size_t voice_dtmf_generator_generate_sequence(
+VOICE_API size_t voice_dtmf_generator_generate_sequence(
     voice_dtmf_generator_t *generator,
     const char *digits,
     int16_t *output,
@@ -211,26 +212,26 @@ size_t voice_dtmf_generator_generate_sequence(
 );
 
 /**
- * @brief 重置生成器
+ * @brief Reset generator
  */
-void voice_dtmf_generator_reset(voice_dtmf_generator_t *generator);
+VOICE_API void voice_dtmf_generator_reset(voice_dtmf_generator_t *generator);
 
 /* ============================================
- * 辅助函数
+ * Utility Functions
  * ============================================ */
 
 /**
- * @brief 验证 DTMF 字符是否有效
+ * @brief Validate if DTMF character is valid
  */
-bool voice_dtmf_is_valid_digit(char c);
+VOICE_API bool voice_dtmf_is_valid_digit(char c);
 
 /**
- * @brief 获取 DTMF 频率
- * @param digit 数字
- * @param low_freq 输出低频率
- * @param high_freq 输出高频率
+ * @brief Get DTMF frequencies
+ * @param digit Digit
+ * @param low_freq Output low frequency
+ * @param high_freq Output high frequency
  */
-void voice_dtmf_get_frequencies(
+VOICE_API void voice_dtmf_get_frequencies(
     voice_dtmf_digit_t digit,
     float *low_freq,
     float *high_freq

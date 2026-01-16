@@ -3,7 +3,7 @@
  * @brief Network transport layer abstraction
  * @author wangxuebing <lynnss.codeai@gmail.com>
  *
- * 提供网络传输层抽象，封装 UDP/TCP socket 操作
+ * Provides network transport layer abstraction, encapsulating UDP/TCP socket operations
  */
 
 #ifndef VOICE_TRANSPORT_H
@@ -11,6 +11,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -31,11 +32,11 @@ extern "C" {
 #endif
 
 /* ============================================
- * 类型定义
+ * Type Definitions
  * ============================================ */
 
 /**
- * @brief 传输类型
+ * @brief Transport type
  */
 typedef enum {
     VOICE_TRANSPORT_UDP,        /**< UDP transport */
@@ -45,7 +46,7 @@ typedef enum {
 } voice_transport_type_t;
 
 /**
- * @brief 地址族
+ * @brief Address family
  */
 typedef enum {
     VOICE_AF_INET,              /**< IPv4 */
@@ -53,7 +54,7 @@ typedef enum {
 } voice_address_family_t;
 
 /**
- * @brief 网络地址
+ * @brief Network address
  */
 typedef struct {
     voice_address_family_t family;
@@ -62,7 +63,7 @@ typedef struct {
 } voice_net_address_t;
 
 /**
- * @brief 传输配置
+ * @brief Transport configuration
  */
 typedef struct {
     voice_transport_type_t type;    /**< Transport type */
@@ -91,7 +92,7 @@ typedef struct {
 } voice_transport_config_t;
 
 /**
- * @brief 传输统计
+ * @brief Transport statistics
  */
 typedef struct {
     uint64_t bytes_sent;            /**< Bytes sent */
@@ -104,78 +105,78 @@ typedef struct {
 } voice_transport_stats_t;
 
 /* ============================================
- * 前向声明
+ * Forward Declarations
  * ============================================ */
 
 typedef struct voice_transport_s voice_transport_t;
 
 /* ============================================
- * 配置初始化
+ * Configuration Initialization
  * ============================================ */
 
 /**
- * @brief 初始化传输配置 (UDP)
+ * @brief Initialize transport configuration (UDP)
  */
-void voice_transport_config_init(voice_transport_config_t *config);
+VOICE_API void voice_transport_config_init(voice_transport_config_t *config);
 
 /* ============================================
- * 生命周期
+ * Lifecycle
  * ============================================ */
 
 /**
- * @brief 创建传输实例
+ * @brief Create transport instance
  */
-voice_transport_t *voice_transport_create(const voice_transport_config_t *config);
+VOICE_API voice_transport_t *voice_transport_create(const voice_transport_config_t *config);
 
 /**
- * @brief 销毁传输实例
+ * @brief Destroy transport instance
  */
-void voice_transport_destroy(voice_transport_t *transport);
+VOICE_API void voice_transport_destroy(voice_transport_t *transport);
 
 /* ============================================
- * 连接管理
+ * Connection Management
  * ============================================ */
 
 /**
- * @brief 绑定到本地地址
+ * @brief Bind to local address
  */
-voice_error_t voice_transport_bind(
+VOICE_API voice_error_t voice_transport_bind(
     voice_transport_t *transport,
     const char *address,
     uint16_t port
 );
 
 /**
- * @brief 连接到远端 (UDP: 设置默认目标)
+ * @brief Connect to remote (UDP: set default destination)
  */
-voice_error_t voice_transport_connect(
+VOICE_API voice_error_t voice_transport_connect(
     voice_transport_t *transport,
     const char *address,
     uint16_t port
 );
 
 /**
- * @brief 关闭传输
+ * @brief Close transport
  */
-voice_error_t voice_transport_close(voice_transport_t *transport);
+VOICE_API voice_error_t voice_transport_close(voice_transport_t *transport);
 
 /* ============================================
- * 数据传输
+ * Data Transmission
  * ============================================ */
 
 /**
- * @brief 发送数据到已连接的目标
+ * @brief Send data to connected destination
  */
-ssize_t voice_transport_send(
+VOICE_API ssize_t voice_transport_send(
     voice_transport_t *transport,
     const uint8_t *data,
     size_t size
 );
 
 /**
- * @brief 发送数据到指定地址 (UDP)
+ * @brief Send data to specified address (UDP)
  */
-ssize_t voice_transport_sendto(
+VOICE_API ssize_t voice_transport_sendto(
     voice_transport_t *transport,
     const uint8_t *data,
     size_t size,
@@ -183,18 +184,18 @@ ssize_t voice_transport_sendto(
 );
 
 /**
- * @brief 接收数据
+ * @brief Receive data
  */
-ssize_t voice_transport_recv(
+VOICE_API ssize_t voice_transport_recv(
     voice_transport_t *transport,
     uint8_t *buffer,
     size_t buffer_size
 );
 
 /**
- * @brief 接收数据并获取源地址 (UDP)
+ * @brief Receive data with source address (UDP)
  */
-ssize_t voice_transport_recvfrom(
+VOICE_API ssize_t voice_transport_recvfrom(
     voice_transport_t *transport,
     uint8_t *buffer,
     size_t buffer_size,
@@ -202,104 +203,104 @@ ssize_t voice_transport_recvfrom(
 );
 
 /* ============================================
- * 事件处理
+ * Event Handling
  * ============================================ */
 
 /**
- * @brief 处理挂起的 IO 事件
- * @param timeout_ms 超时时间 (ms)，0=立即返回，-1=无限等待
- * @return 处理的事件数，0=超时，<0=错误
+ * @brief Process pending IO events
+ * @param timeout_ms Timeout (ms), 0=return immediately, -1=wait indefinitely
+ * @return Number of events processed, 0=timeout, <0=error
  */
-int voice_transport_poll(
+VOICE_API int voice_transport_poll(
     voice_transport_t *transport,
     int timeout_ms
 );
 
 /**
- * @brief 检查是否可读
+ * @brief Check if readable
  */
-bool voice_transport_readable(voice_transport_t *transport);
+VOICE_API bool voice_transport_readable(voice_transport_t *transport);
 
 /**
- * @brief 检查是否可写
+ * @brief Check if writable
  */
-bool voice_transport_writable(voice_transport_t *transport);
+VOICE_API bool voice_transport_writable(voice_transport_t *transport);
 
 /* ============================================
- * 状态查询
+ * Status Query
  * ============================================ */
 
 /**
- * @brief 获取本地地址
+ * @brief Get local address
  */
-voice_error_t voice_transport_get_local_address(
+VOICE_API voice_error_t voice_transport_get_local_address(
     voice_transport_t *transport,
     voice_net_address_t *address
 );
 
 /**
- * @brief 获取远端地址
+ * @brief Get remote address
  */
-voice_error_t voice_transport_get_remote_address(
+VOICE_API voice_error_t voice_transport_get_remote_address(
     voice_transport_t *transport,
     voice_net_address_t *address
 );
 
 /**
- * @brief 获取统计信息
+ * @brief Get statistics
  */
-voice_error_t voice_transport_get_stats(
+VOICE_API voice_error_t voice_transport_get_stats(
     voice_transport_t *transport,
     voice_transport_stats_t *stats
 );
 
 /**
- * @brief 重置统计
+ * @brief Reset statistics
  */
-void voice_transport_reset_stats(voice_transport_t *transport);
+VOICE_API void voice_transport_reset_stats(voice_transport_t *transport);
 
 /* ============================================
- * Socket 选项
+ * Socket Options
  * ============================================ */
 
 /**
- * @brief 设置 QoS (ToS/DSCP)
+ * @brief Set QoS (ToS/DSCP)
  */
-voice_error_t voice_transport_set_qos(
+VOICE_API voice_error_t voice_transport_set_qos(
     voice_transport_t *transport,
     int tos
 );
 
 /**
- * @brief 获取底层 socket 描述符
+ * @brief Get underlying socket descriptor
  */
-int voice_transport_get_fd(voice_transport_t *transport);
+VOICE_API int voice_transport_get_fd(voice_transport_t *transport);
 
 /* ============================================
- * 地址辅助函数
+ * Address Helper Functions
  * ============================================ */
 
 /**
- * @brief 解析地址字符串
+ * @brief Parse address string
  */
-voice_error_t voice_net_address_parse(
+VOICE_API voice_error_t voice_net_address_parse(
     voice_net_address_t *addr,
     const char *address_str
 );
 
 /**
- * @brief 格式化地址为字符串
+ * @brief Format address as string
  */
-size_t voice_net_address_format(
+VOICE_API size_t voice_net_address_format(
     const voice_net_address_t *addr,
     char *buffer,
     size_t buffer_size
 );
 
 /**
- * @brief 比较地址
+ * @brief Compare addresses
  */
-bool voice_net_address_equal(
+VOICE_API bool voice_net_address_equal(
     const voice_net_address_t *a,
     const voice_net_address_t *b
 );

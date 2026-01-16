@@ -18,6 +18,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -91,7 +92,7 @@ typedef struct {
  *
  * @return HRTF dataset, or NULL on failure
  */
-voice_hrtf_t *voice_hrtf_load_builtin(void);
+VOICE_API voice_hrtf_t *voice_hrtf_load_builtin(void);
 
 /**
  * @brief Create a custom HRTF dataset
@@ -101,9 +102,9 @@ voice_hrtf_t *voice_hrtf_load_builtin(void);
  * @param sample_rate Sample rate of HRIR data
  * @return HRTF dataset, or NULL on failure
  */
-voice_hrtf_t *voice_hrtf_create(size_t num_positions,
-                                 size_t hrir_length,
-                                 uint32_t sample_rate);
+VOICE_API voice_hrtf_t *voice_hrtf_create(size_t num_positions,
+                                           size_t hrir_length,
+                                           uint32_t sample_rate);
 
 /**
  * @brief Add an HRIR measurement to the dataset
@@ -116,25 +117,25 @@ voice_hrtf_t *voice_hrtf_create(size_t num_positions,
  * @param length Number of samples
  * @return Error code
  */
-voice_error_t voice_hrtf_add_hrir(voice_hrtf_t *hrtf,
-                                   float azimuth,
-                                   float elevation,
-                                   const float *left,
-                                   const float *right,
-                                   size_t length);
+VOICE_API voice_error_t voice_hrtf_add_hrir(voice_hrtf_t *hrtf,
+                                             float azimuth,
+                                             float elevation,
+                                             const float *left,
+                                             const float *right,
+                                             size_t length);
 
 /**
  * @brief Destroy an HRTF dataset
  */
-void voice_hrtf_destroy(voice_hrtf_t *hrtf);
+VOICE_API void voice_hrtf_destroy(voice_hrtf_t *hrtf);
 
 /**
  * @brief Get HRTF dataset info
  */
-void voice_hrtf_get_info(const voice_hrtf_t *hrtf,
-                          size_t *num_positions,
-                          size_t *hrir_length,
-                          uint32_t *sample_rate);
+VOICE_API void voice_hrtf_get_info(const voice_hrtf_t *hrtf,
+                                    size_t *num_positions,
+                                    size_t *hrir_length,
+                                    uint32_t *sample_rate);
 
 /* ============================================
  * HRTF Processor
@@ -143,7 +144,7 @@ void voice_hrtf_get_info(const voice_hrtf_t *hrtf,
 /**
  * @brief Initialize default HRTF processor config
  */
-void voice_hrtf_config_init(voice_hrtf_config_t *config);
+VOICE_API void voice_hrtf_config_init(voice_hrtf_config_t *config);
 
 /**
  * @brief Create an HRTF processor
@@ -152,19 +153,19 @@ void voice_hrtf_config_init(voice_hrtf_config_t *config);
  * @param config Processor configuration
  * @return Processor handle, or NULL on failure
  */
-voice_hrtf_processor_t *voice_hrtf_processor_create(
+VOICE_API voice_hrtf_processor_t *voice_hrtf_processor_create(
     const voice_hrtf_t *hrtf,
     const voice_hrtf_config_t *config);
 
 /**
  * @brief Destroy an HRTF processor
  */
-void voice_hrtf_processor_destroy(voice_hrtf_processor_t *processor);
+VOICE_API void voice_hrtf_processor_destroy(voice_hrtf_processor_t *processor);
 
 /**
  * @brief Reset processor state
  */
-void voice_hrtf_processor_reset(voice_hrtf_processor_t *processor);
+VOICE_API void voice_hrtf_processor_reset(voice_hrtf_processor_t *processor);
 
 /**
  * @brief Process mono audio to binaural stereo
@@ -180,7 +181,7 @@ void voice_hrtf_processor_reset(voice_hrtf_processor_t *processor);
  * @param elevation Elevation angle in degrees (-90 to 90, 0 = horizontal)
  * @return Error code
  */
-voice_error_t voice_hrtf_process(
+VOICE_API voice_error_t voice_hrtf_process(
     voice_hrtf_processor_t *processor,
     const float *mono_input,
     float *binaural_output,
@@ -191,7 +192,7 @@ voice_error_t voice_hrtf_process(
 /**
  * @brief Process with int16 samples
  */
-voice_error_t voice_hrtf_process_int16(
+VOICE_API voice_error_t voice_hrtf_process_int16(
     voice_hrtf_processor_t *processor,
     const int16_t *mono_input,
     int16_t *binaural_output,

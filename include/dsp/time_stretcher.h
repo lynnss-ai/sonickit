@@ -13,6 +13,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,7 +51,7 @@ typedef struct voice_time_stretcher voice_time_stretcher_t;
  *
  * @param config Configuration to initialize
  */
-void voice_time_stretcher_config_init(voice_time_stretcher_config_t *config);
+VOICE_API void voice_time_stretcher_config_init(voice_time_stretcher_config_t *config);
 
 /**
  * @brief Create a time stretcher instance
@@ -58,14 +59,14 @@ void voice_time_stretcher_config_init(voice_time_stretcher_config_t *config);
  * @param config Configuration parameters
  * @return Time stretcher handle, or NULL on failure
  */
-voice_time_stretcher_t *voice_time_stretcher_create(const voice_time_stretcher_config_t *config);
+VOICE_API voice_time_stretcher_t *voice_time_stretcher_create(const voice_time_stretcher_config_t *config);
 
 /**
  * @brief Destroy a time stretcher instance
  *
  * @param ts Time stretcher handle
  */
-void voice_time_stretcher_destroy(voice_time_stretcher_t *ts);
+VOICE_API void voice_time_stretcher_destroy(voice_time_stretcher_t *ts);
 
 /**
  * @brief Reset the time stretcher state
@@ -73,7 +74,7 @@ void voice_time_stretcher_destroy(voice_time_stretcher_t *ts);
  * @param ts Time stretcher handle
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_time_stretcher_reset(voice_time_stretcher_t *ts);
+VOICE_API voice_error_t voice_time_stretcher_reset(voice_time_stretcher_t *ts);
 
 /**
  * @brief Set the time stretch rate
@@ -86,7 +87,7 @@ voice_error_t voice_time_stretcher_reset(voice_time_stretcher_t *ts);
  * @param rate Stretch rate (0.5 to 2.0)
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_time_stretcher_set_rate(voice_time_stretcher_t *ts, float rate);
+VOICE_API voice_error_t voice_time_stretcher_set_rate(voice_time_stretcher_t *ts, float rate);
 
 /**
  * @brief Get the current stretch rate
@@ -94,7 +95,7 @@ voice_error_t voice_time_stretcher_set_rate(voice_time_stretcher_t *ts, float ra
  * @param ts Time stretcher handle
  * @return Current rate
  */
-float voice_time_stretcher_get_rate(voice_time_stretcher_t *ts);
+VOICE_API float voice_time_stretcher_get_rate(voice_time_stretcher_t *ts);
 
 /**
  * @brief Process audio samples
@@ -110,7 +111,7 @@ float voice_time_stretcher_get_rate(voice_time_stretcher_t *ts);
  * @param output_count Actual number of output samples written
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_time_stretcher_process(
+VOICE_API voice_error_t voice_time_stretcher_process(
     voice_time_stretcher_t *ts,
     const int16_t *input,
     size_t input_count,
@@ -130,7 +131,7 @@ voice_error_t voice_time_stretcher_process(
  * @param output_count Actual output count
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_time_stretcher_process_float(
+VOICE_API voice_error_t voice_time_stretcher_process_float(
     voice_time_stretcher_t *ts,
     const float *input,
     size_t input_count,
@@ -145,7 +146,7 @@ voice_error_t voice_time_stretcher_process_float(
  * @param ts Time stretcher handle
  * @return Number of buffered samples
  */
-size_t voice_time_stretcher_get_buffered(voice_time_stretcher_t *ts);
+VOICE_API size_t voice_time_stretcher_get_buffered(voice_time_stretcher_t *ts);
 
 /**
  * @brief Flush remaining samples from internal buffer
@@ -156,7 +157,7 @@ size_t voice_time_stretcher_get_buffered(voice_time_stretcher_t *ts);
  * @param output_count Actual output count
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_time_stretcher_flush(
+VOICE_API voice_error_t voice_time_stretcher_flush(
     voice_time_stretcher_t *ts,
     int16_t *output,
     size_t output_capacity,
@@ -170,7 +171,7 @@ voice_error_t voice_time_stretcher_flush(
  * @param state State output
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_time_stretcher_get_state(
+VOICE_API voice_error_t voice_time_stretcher_get_state(
     voice_time_stretcher_t *ts,
     voice_time_stretcher_state_t *state
 );
@@ -182,7 +183,7 @@ voice_error_t voice_time_stretcher_get_state(
  * @param rate Current stretch rate
  * @return Required output buffer size (with safety margin)
  */
-size_t voice_time_stretcher_get_output_size(size_t input_count, float rate);
+VOICE_API size_t voice_time_stretcher_get_output_size(size_t input_count, float rate);
 
 #ifdef __cplusplus
 }

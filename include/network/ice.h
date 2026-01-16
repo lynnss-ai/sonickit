@@ -2,9 +2,9 @@
  * @file ice.h
  * @brief ICE (Interactive Connectivity Establishment) support
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
- * ICE/STUN/TURN 支持，用于 NAT 穿透
- * 基于 RFC 5245 (ICE), RFC 5389 (STUN), RFC 5766 (TURN)
+ *
+ * ICE/STUN/TURN support for NAT traversal
+ * Based on RFC 5245 (ICE), RFC 5389 (STUN), RFC 5766 (TURN)
  */
 
 #ifndef VOICE_ICE_H
@@ -12,6 +12,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -21,21 +22,21 @@ extern "C" {
 #endif
 
 /* ============================================
- * 类型定义
+ * Type Definitions
  * ============================================ */
 
 typedef struct voice_ice_agent_s voice_ice_agent_t;
 typedef struct voice_stun_client_s voice_stun_client_t;
 
-/** ICE 候选类型 */
+/** ICE candidate type */
 typedef enum {
-    VOICE_ICE_CANDIDATE_HOST,       /**< 本地地址 */
-    VOICE_ICE_CANDIDATE_SRFLX,      /**< 服务器反射地址 (STUN) */
-    VOICE_ICE_CANDIDATE_PRFLX,      /**< 对等反射地址 */
-    VOICE_ICE_CANDIDATE_RELAY,      /**< 中继地址 (TURN) */
+    VOICE_ICE_CANDIDATE_HOST,       /**< Host address */
+    VOICE_ICE_CANDIDATE_SRFLX,      /**< Server reflexive address (STUN) */
+    VOICE_ICE_CANDIDATE_PRFLX,      /**< Peer reflexive address */
+    VOICE_ICE_CANDIDATE_RELAY,      /**< Relay address (TURN) */
 } voice_ice_candidate_type_t;
 
-/** ICE 连接状态 */
+/** ICE connection state */
 typedef enum {
     VOICE_ICE_STATE_NEW,
     VOICE_ICE_STATE_CHECKING,
@@ -46,24 +47,24 @@ typedef enum {
     VOICE_ICE_STATE_CLOSED,
 } voice_ice_state_t;
 
-/** ICE 角色 */
+/** ICE role */
 typedef enum {
     VOICE_ICE_ROLE_CONTROLLING,
     VOICE_ICE_ROLE_CONTROLLED,
 } voice_ice_role_t;
 
-/** ICE 模式 */
+/** ICE mode */
 typedef enum {
-    VOICE_ICE_FULL,                 /**< 完整 ICE */
+    VOICE_ICE_FULL,                 /**< Full ICE */
     VOICE_ICE_LITE,                 /**< ICE Lite */
 } voice_ice_mode_t;
 
 /* ============================================
- * 地址结构
+ * Address Structure
  * ============================================ */
 
 typedef struct {
-    uint8_t family;                 /**< AF_INET 或 AF_INET6 */
+    uint8_t family;                 /**< AF_INET or AF_INET6 */
     uint16_t port;
     union {
         uint8_t ipv4[4];
@@ -72,44 +73,44 @@ typedef struct {
 } voice_network_addr_t;
 
 /* ============================================
- * ICE 候选
+ * ICE Candidate
  * ============================================ */
 
 typedef struct {
-    char foundation[33];            /**< 基础 ID */
-    uint32_t component_id;          /**< 组件 ID (1=RTP, 2=RTCP) */
-    char transport[8];              /**< "udp" 或 "tcp" */
-    uint32_t priority;              /**< 优先级 */
-    voice_network_addr_t address;   /**< 地址 */
-    voice_ice_candidate_type_t type;/**< 候选类型 */
-    voice_network_addr_t related;   /**< 相关地址 (SRFLX/RELAY) */
-    char ufrag[256];                /**< 用户片段 */
-    char pwd[256];                  /**< 密码 */
+    char foundation[33];            /**< Foundation ID */
+    uint32_t component_id;          /**< Component ID (1=RTP, 2=RTCP) */
+    char transport[8];              /**< "udp" or "tcp" */
+    uint32_t priority;              /**< Priority */
+    voice_network_addr_t address;   /**< Address */
+    voice_ice_candidate_type_t type;/**< Candidate type */
+    voice_network_addr_t related;   /**< Related address (SRFLX/RELAY) */
+    char ufrag[256];                /**< User fragment */
+    char pwd[256];                  /**< Password */
 } voice_ice_candidate_t;
 
 /* ============================================
- * STUN 配置
+ * STUN Configuration
  * ============================================ */
 
 typedef struct {
-    char server[256];               /**< STUN 服务器地址 */
-    uint16_t port;                  /**< STUN 服务器端口 (默认 3478) */
-    uint32_t timeout_ms;            /**< 超时时间 */
-    uint32_t retries;               /**< 重试次数 */
+    char server[256];               /**< STUN server address */
+    uint16_t port;                  /**< STUN server port (default 3478) */
+    uint32_t timeout_ms;            /**< Timeout */
+    uint32_t retries;               /**< Retry count */
 } voice_stun_config_t;
 
 /* ============================================
- * TURN 配置
+ * TURN Configuration
  * ============================================ */
 
 typedef struct {
-    char server[256];               /**< TURN 服务器地址 */
-    uint16_t port;                  /**< TURN 服务器端口 (默认 3478) */
-    char username[256];             /**< 用户名 */
-    char password[256];             /**< 密码 */
-    char realm[256];                /**< 域 */
-    uint32_t lifetime;              /**< 分配生命周期 (秒) */
-    bool use_tls;                   /**< 使用 TLS (TURNS) */
+    char server[256];               /**< TURN server address */
+    uint16_t port;                  /**< TURN server port (default 3478) */
+    char username[256];             /**< Username */
+    char password[256];             /**< Password */
+    char realm[256];                /**< Realm */
+    uint32_t lifetime;              /**< Allocation lifetime (seconds) */
+    bool use_tls;                   /**< Use TLS (TURNS) */
 } voice_turn_config_t;
 
 /* ============================================
@@ -119,22 +120,22 @@ typedef struct {
 typedef struct {
     voice_ice_mode_t mode;
     voice_ice_role_t initial_role;
-    
+
     /* STUN/TURN 服务器 */
     voice_stun_config_t stun_servers[4];
     size_t stun_server_count;
     voice_turn_config_t turn_servers[2];
     size_t turn_server_count;
-    
+
     /* 超时 */
     uint32_t connectivity_check_timeout_ms;
     uint32_t nomination_timeout_ms;
-    
+
     /* 候选收集 */
     bool gather_host_candidates;
     bool gather_srflx_candidates;
     bool gather_relay_candidates;
-    
+
     /* 回调 */
     void (*on_candidate)(const voice_ice_candidate_t *candidate, void *user_data);
     void (*on_state_change)(voice_ice_state_t state, void *user_data);
@@ -148,55 +149,55 @@ typedef struct {
  * ============================================ */
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
  */
-void voice_ice_config_init(voice_ice_config_t *config);
+VOICE_API void voice_ice_config_init(voice_ice_config_t *config);
 
 /**
- * @brief 创建 ICE Agent
+ * @brief Create ICE Agent
  */
-voice_ice_agent_t *voice_ice_agent_create(const voice_ice_config_t *config);
+VOICE_API voice_ice_agent_t *voice_ice_agent_create(const voice_ice_config_t *config);
 
 /**
- * @brief 销毁 ICE Agent
+ * @brief Destroy ICE Agent
  */
-void voice_ice_agent_destroy(voice_ice_agent_t *agent);
+VOICE_API void voice_ice_agent_destroy(voice_ice_agent_t *agent);
 
 /**
- * @brief 开始收集候选
+ * @brief Start gathering candidates
  */
-voice_error_t voice_ice_gather_candidates(voice_ice_agent_t *agent);
+VOICE_API voice_error_t voice_ice_gather_candidates(voice_ice_agent_t *agent);
 
 /**
- * @brief 获取本地候选列表
+ * @brief Get local candidate list
  */
-voice_error_t voice_ice_get_local_candidates(
+VOICE_API voice_error_t voice_ice_get_local_candidates(
     voice_ice_agent_t *agent,
     voice_ice_candidate_t *candidates,
     size_t *count
 );
 
 /**
- * @brief 添加远端候选
+ * @brief Add remote candidate
  */
-voice_error_t voice_ice_add_remote_candidate(
+VOICE_API voice_error_t voice_ice_add_remote_candidate(
     voice_ice_agent_t *agent,
     const voice_ice_candidate_t *candidate
 );
 
 /**
- * @brief 设置远端凭据
+ * @brief Set remote credentials
  */
-voice_error_t voice_ice_set_remote_credentials(
+VOICE_API voice_error_t voice_ice_set_remote_credentials(
     voice_ice_agent_t *agent,
     const char *ufrag,
     const char *pwd
 );
 
 /**
- * @brief 获取本地凭据
+ * @brief Get local credentials
  */
-voice_error_t voice_ice_get_local_credentials(
+VOICE_API voice_error_t voice_ice_get_local_credentials(
     voice_ice_agent_t *agent,
     char *ufrag,
     size_t ufrag_size,
@@ -205,19 +206,19 @@ voice_error_t voice_ice_get_local_credentials(
 );
 
 /**
- * @brief 开始连接检查
+ * @brief Start connectivity checks
  */
-voice_error_t voice_ice_start_checks(voice_ice_agent_t *agent);
+VOICE_API voice_error_t voice_ice_start_checks(voice_ice_agent_t *agent);
 
 /**
- * @brief 获取当前状态
+ * @brief Get current state
  */
-voice_ice_state_t voice_ice_get_state(voice_ice_agent_t *agent);
+VOICE_API voice_ice_state_t voice_ice_get_state(voice_ice_agent_t *agent);
 
 /**
- * @brief 发送数据 (通过选定的候选对)
+ * @brief Send data (through selected candidate pair)
  */
-voice_error_t voice_ice_send(
+VOICE_API voice_error_t voice_ice_send(
     voice_ice_agent_t *agent,
     uint32_t component_id,
     const uint8_t *data,
@@ -225,9 +226,9 @@ voice_error_t voice_ice_send(
 );
 
 /**
- * @brief 处理收到的数据
+ * @brief Process received data
  */
-voice_error_t voice_ice_process_incoming(
+VOICE_API voice_error_t voice_ice_process_incoming(
     voice_ice_agent_t *agent,
     const uint8_t *data,
     size_t size,
@@ -235,49 +236,49 @@ voice_error_t voice_ice_process_incoming(
 );
 
 /**
- * @brief 关闭 ICE Agent
+ * @brief Close ICE Agent
  */
-void voice_ice_close(voice_ice_agent_t *agent);
+VOICE_API void voice_ice_close(voice_ice_agent_t *agent);
 
 /* ============================================
  * STUN Client API
  * ============================================ */
 
 /**
- * @brief 创建 STUN 客户端
+ * @brief Create STUN client
  */
-voice_stun_client_t *voice_stun_client_create(const voice_stun_config_t *config);
+VOICE_API voice_stun_client_t *voice_stun_client_create(const voice_stun_config_t *config);
 
 /**
- * @brief 销毁 STUN 客户端
+ * @brief Destroy STUN client
  */
-void voice_stun_client_destroy(voice_stun_client_t *client);
+VOICE_API void voice_stun_client_destroy(voice_stun_client_t *client);
 
 /**
- * @brief 绑定请求 (获取公网地址)
+ * @brief Binding request (get public address)
  */
-voice_error_t voice_stun_binding_request(
+VOICE_API voice_error_t voice_stun_binding_request(
     voice_stun_client_t *client,
     voice_network_addr_t *mapped_addr
 );
 
 /* ============================================
- * SDP 工具函数
+ * SDP Utility Functions
  * ============================================ */
 
 /**
- * @brief 将候选序列化为 SDP 属性
+ * @brief Serialize candidate to SDP attribute
  */
-size_t voice_ice_candidate_to_sdp(
+VOICE_API size_t voice_ice_candidate_to_sdp(
     const voice_ice_candidate_t *candidate,
     char *buffer,
     size_t buffer_size
 );
 
 /**
- * @brief 从 SDP 属性解析候选
+ * @brief Parse candidate from SDP attribute
  */
-voice_error_t voice_ice_candidate_from_sdp(
+VOICE_API voice_error_t voice_ice_candidate_from_sdp(
     const char *sdp_line,
     voice_ice_candidate_t *candidate
 );

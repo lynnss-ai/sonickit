@@ -15,95 +15,96 @@
 #include "voice/types.h"
 #include "voice/error.h"
 #include "voice/config.h"
+#include "voice/export.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* ============================================
- * 回声消除器
+ * Echo Canceller
  * ============================================ */
 
-/** 回声消除器句柄 */
+/** Echo canceller handle */
 typedef struct voice_aec_s voice_aec_t;
 
-/** AEC 算法类型 */
+/** AEC algorithm type */
 typedef enum {
-    VOICE_AEC_ALG_NLMS,         /**< 时域 NLMS */
-    VOICE_AEC_ALG_FDAF,         /**< 频域自适应滤波 (推荐) */
-    VOICE_AEC_ALG_SPEEX,        /**< SpeexDSP 后端 (如可用) */
+    VOICE_AEC_ALG_NLMS,         /**< Time-domain NLMS */
+    VOICE_AEC_ALG_FDAF,         /**< Frequency-domain adaptive filter (recommended) */
+    VOICE_AEC_ALG_SPEEX,        /**< SpeexDSP backend (if available) */
 } voice_aec_algorithm_t;
 
-/** 双讲检测状态 */
+/** Double-talk detection state */
 typedef enum {
-    VOICE_DTD_IDLE,             /**< 无活动 */
-    VOICE_DTD_FAR_END,          /**< 仅远端说话 */
-    VOICE_DTD_NEAR_END,         /**< 仅近端说话 */
-    VOICE_DTD_DOUBLE_TALK,      /**< 双讲 */
+    VOICE_DTD_IDLE,             /**< No activity */
+    VOICE_DTD_FAR_END,          /**< Far-end only speaking */
+    VOICE_DTD_NEAR_END,         /**< Near-end only speaking */
+    VOICE_DTD_DOUBLE_TALK,      /**< Double-talk */
 } voice_dtd_state_t;
 
-/** 回声消除器扩展配置 (包含额外选项) */
+/** Echo canceller extended configuration (includes additional options) */
 typedef struct {
-    uint32_t sample_rate;               /**< 采样率 */
-    uint32_t frame_size;                /**< 帧大小(样本数) */
-    uint32_t filter_length;             /**< 滤波器长度(样本数) */
-    int echo_suppress_db;               /**< 回声抑制量 (负dB) */
-    int echo_suppress_active_db;        /**< 近端活跃时抑制量 */
-    bool enable_residual_echo_suppress; /**< 启用残余回声抑制 */
-    bool enable_comfort_noise;          /**< 启用舒适噪声 */
+    uint32_t sample_rate;               /**< Sample rate */
+    uint32_t frame_size;                /**< Frame size (samples) */
+    uint32_t filter_length;             /**< Filter length (samples) */
+    int echo_suppress_db;               /**< Echo suppression amount (negative dB) */
+    int echo_suppress_active_db;        /**< Suppression amount when near-end active */
+    bool enable_residual_echo_suppress; /**< Enable residual echo suppression */
+    bool enable_comfort_noise;          /**< Enable comfort noise */
 
-    /* Phase 1 新增配置 */
-    voice_aec_algorithm_t algorithm;    /**< 算法类型 */
-    bool enable_delay_estimation;       /**< 启用自动延迟估算 */
-    bool enable_dtd;                    /**< 启用双讲检测 */
-    uint32_t tail_length_ms;            /**< 回声尾长(ms), 默认200 */
-    float nlms_step_size;               /**< NLMS 步长 (0.1-1.0) */
-    float dtd_threshold;                /**< DTD 阈值 (0.5-0.9) */
+    /* Phase 1 new configuration */
+    voice_aec_algorithm_t algorithm;    /**< Algorithm type */
+    bool enable_delay_estimation;       /**< Enable automatic delay estimation */
+    bool enable_dtd;                    /**< Enable double-talk detection */
+    uint32_t tail_length_ms;            /**< Echo tail length (ms), default 200 */
+    float nlms_step_size;               /**< NLMS step size (0.1-1.0) */
+    float dtd_threshold;                /**< DTD threshold (0.5-0.9) */
 } voice_aec_ext_config_t;
 
-/** AEC 状态信息 */
+/** AEC state information */
 typedef struct {
-    voice_dtd_state_t dtd_state;        /**< 当前双讲状态 */
-    int32_t estimated_delay_samples;    /**< 估计的延迟(样本数) */
-    float   estimated_delay_ms;         /**< 估计的延迟(ms) */
-    float   erle_db;                    /**< 回声返回损耗增强(dB) */
-    float   convergence;                /**< 滤波器收敛度(0-1) */
-    bool    delay_stable;               /**< 延迟估计是否稳定 */
-    uint64_t frames_processed;          /**< 已处理帧数 */
+    voice_dtd_state_t dtd_state;        /**< Current double-talk state */
+    int32_t estimated_delay_samples;    /**< Estimated delay (samples) */
+    float   estimated_delay_ms;         /**< Estimated delay (ms) */
+    float   erle_db;                    /**< Echo Return Loss Enhancement (dB) */
+    float   convergence;                /**< Filter convergence (0-1) */
+    bool    delay_stable;               /**< Whether delay estimate is stable */
+    uint64_t frames_processed;          /**< Frames processed */
 } voice_aec_state_t;
 
 /**
- * @brief 初始化默认配置
- * @param config 配置结构指针
+ * @brief Initialize default configuration
+ * @param config Configuration struct pointer
  */
-void voice_aec_ext_config_init(voice_aec_ext_config_t *config);
+VOICE_API void voice_aec_ext_config_init(voice_aec_ext_config_t *config);
 
 /**
- * @brief 创建回声消除器
- * @param config 配置
- * @return 回声消除器句柄
+ * @brief Create echo canceller
+ * @param config Configuration
+ * @return Echo canceller handle
  */
-voice_aec_t *voice_aec_create(const voice_aec_ext_config_t *config);
+VOICE_API voice_aec_t *voice_aec_create(const voice_aec_ext_config_t *config);
 
 /**
- * @brief 销毁回声消除器
- * @param aec 回声消除器句柄
+ * @brief Destroy echo canceller
+ * @param aec Echo canceller handle
  */
-void voice_aec_destroy(voice_aec_t *aec);
+VOICE_API void voice_aec_destroy(voice_aec_t *aec);
 
 /**
- * @brief 处理回声消除 (同步模式)
+ * @brief Process echo cancellation (synchronous mode)
  *
- * 要求播放信号和麦克风信号时间对齐
+ * Requires playback signal and microphone signal to be time-aligned
  *
- * @param aec 回声消除器句柄
- * @param mic_input 麦克风输入 (含回声)
- * @param speaker_ref 扬声器参考信号
- * @param output 输出 (回声消除后)
- * @param frame_count 帧数(样本数)
- * @return 错误码
+ * @param aec Echo canceller handle
+ * @param mic_input Microphone input (contains echo)
+ * @param speaker_ref Speaker reference signal
+ * @param output Output (after echo cancellation)
+ * @param frame_count Frame count (samples)
+ * @return Error code
  */
-voice_error_t voice_aec_process(
+VOICE_API voice_error_t voice_aec_process(
     voice_aec_t *aec,
     const int16_t *mic_input,
     const int16_t *speaker_ref,
@@ -112,33 +113,33 @@ voice_error_t voice_aec_process(
 );
 
 /**
- * @brief 播放端回调 (异步模式)
+ * @brief Playback callback (asynchronous mode)
  *
- * 在播放线程中调用，缓存播放数据用于AEC
+ * Called in playback thread, caches playback data for AEC
  *
- * @param aec 回声消除器句柄
- * @param speaker_data 扬声器数据
- * @param frame_count 帧数
- * @return 错误码
+ * @param aec Echo canceller handle
+ * @param speaker_data Speaker data
+ * @param frame_count Frame count
+ * @return Error code
  */
-voice_error_t voice_aec_playback(
+VOICE_API voice_error_t voice_aec_playback(
     voice_aec_t *aec,
     const int16_t *speaker_data,
     size_t frame_count
 );
 
 /**
- * @brief 采集端回调 (异步模式)
+ * @brief Capture callback (asynchronous mode)
  *
- * 在采集线程中调用，处理回声消除
+ * Called in capture thread, processes echo cancellation
  *
- * @param aec 回声消除器句柄
- * @param mic_input 麦克风输入
- * @param output 输出
- * @param frame_count 帧数
- * @return 错误码
+ * @param aec Echo canceller handle
+ * @param mic_input Microphone input
+ * @param output Output
+ * @param frame_count Frame count
+ * @return Error code
  */
-voice_error_t voice_aec_capture(
+VOICE_API voice_error_t voice_aec_capture(
     voice_aec_t *aec,
     const int16_t *mic_input,
     int16_t *output,
@@ -146,82 +147,82 @@ voice_error_t voice_aec_capture(
 );
 
 /**
- * @brief 设置回声抑制量
- * @param aec 回声消除器句柄
- * @param suppress_db 抑制量 (负dB)
- * @param suppress_active_db 近端活跃时抑制量
- * @return 错误码
+ * @brief Set echo suppression amount
+ * @param aec Echo canceller handle
+ * @param suppress_db Suppression amount (negative dB)
+ * @param suppress_active_db Suppression amount when near-end active
+ * @return Error code
  */
-voice_error_t voice_aec_set_suppress(
+VOICE_API voice_error_t voice_aec_set_suppress(
     voice_aec_t *aec,
     int suppress_db,
     int suppress_active_db
 );
 
 /**
- * @brief 启用/禁用回声消除
- * @param aec 回声消除器句柄
- * @param enabled 是否启用
- * @return 错误码
+ * @brief Enable/disable echo cancellation
+ * @param aec Echo canceller handle
+ * @param enabled Whether to enable
+ * @return Error code
  */
-voice_error_t voice_aec_set_enabled(voice_aec_t *aec, bool enabled);
+VOICE_API voice_error_t voice_aec_set_enabled(voice_aec_t *aec, bool enabled);
 
 /**
- * @brief 检查是否启用
- * @param aec 回声消除器句柄
- * @return true 已启用
+ * @brief Check if enabled
+ * @param aec Echo canceller handle
+ * @return true if enabled
  */
-bool voice_aec_is_enabled(voice_aec_t *aec);
+VOICE_API bool voice_aec_is_enabled(voice_aec_t *aec);
 
 /**
- * @brief 重置回声消除器状态
- * @param aec 回声消除器句柄
+ * @brief Reset echo canceller state
+ * @param aec Echo canceller handle
  */
-void voice_aec_reset(voice_aec_t *aec);
+VOICE_API void voice_aec_reset(voice_aec_t *aec);
 
 /**
- * @brief 获取滤波器延迟估计
- * @param aec 回声消除器句柄
- * @return 延迟(样本数)
+ * @brief Get filter delay estimate
+ * @param aec Echo canceller handle
+ * @return Delay (samples)
  */
-int voice_aec_get_delay(voice_aec_t *aec);
+VOICE_API int voice_aec_get_delay(voice_aec_t *aec);
 
 /**
- * @brief 设置已知的系统延迟
+ * @brief Set known system delay
  *
- * 当从硬件API获得精确延迟时使用
+ * Use when precise delay is obtained from hardware API
  *
- * @param aec 回声消除器句柄
- * @param delay_samples 延迟(样本数)
- * @return 错误码
+ * @param aec Echo canceller handle
+ * @param delay_samples Delay (samples)
+ * @return Error code
  */
-voice_error_t voice_aec_set_delay(voice_aec_t *aec, int delay_samples);
+VOICE_API voice_error_t voice_aec_set_delay(voice_aec_t *aec, int delay_samples);
 
 /**
- * @brief 获取当前AEC状态
+ * @brief Get current AEC state
  *
- * @param aec 回声消除器句柄
- * @param state 状态输出
- * @return 错误码
+ * @param aec Echo canceller handle
+ * @param state State output
+ * @return Error code
  */
-voice_error_t voice_aec_get_state(voice_aec_t *aec, voice_aec_state_t *state);
+VOICE_API voice_error_t voice_aec_get_state(voice_aec_t *aec, voice_aec_state_t *state);
 
 /**
- * @brief 获取当前双讲检测状态
+ * @brief Get current double-talk detection state
  *
- * @param aec 回声消除器句柄
- * @return DTD 状态
+ * @param aec Echo canceller handle
+ * @return DTD state
  */
-voice_dtd_state_t voice_aec_get_dtd_state(voice_aec_t *aec);
+VOICE_API voice_dtd_state_t voice_aec_get_dtd_state(voice_aec_t *aec);
 
 /**
- * @brief 启用/禁用延迟估算
+ * @brief Enable/disable delay estimation
  *
- * @param aec 回声消除器句柄
- * @param enabled 是否启用
- * @return 错误码
+ * @param aec Echo canceller handle
+ * @param enabled Whether to enable
+ * @return Error code
  */
-voice_error_t voice_aec_enable_delay_estimation(voice_aec_t *aec, bool enabled);
+VOICE_API voice_error_t voice_aec_enable_delay_estimation(voice_aec_t *aec, bool enabled);
 
 #ifdef __cplusplus
 }

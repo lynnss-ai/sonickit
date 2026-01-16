@@ -14,6 +14,7 @@
 #include "voice/types.h"
 #include "voice/error.h"
 #include "voice/config.h"
+#include "voice/export.h"
 #include "audio/device.h"
 #include "audio/audio_buffer.h"
 #include "dsp/resampler.h"
@@ -159,37 +160,37 @@ typedef struct {
 /**
  * @brief Initialize default configuration
  */
-void voice_pipeline_ext_config_init(voice_pipeline_ext_config_t *config);
+VOICE_API void voice_pipeline_ext_config_init(voice_pipeline_ext_config_t *config);
 
 /**
  * @brief Create pipeline
  */
-voice_pipeline_t *voice_pipeline_create(const voice_pipeline_ext_config_t *config);
+VOICE_API voice_pipeline_t *voice_pipeline_create(const voice_pipeline_ext_config_t *config);
 
 /**
  * @brief Destroy pipeline
  */
-void voice_pipeline_destroy(voice_pipeline_t *pipeline);
+VOICE_API void voice_pipeline_destroy(voice_pipeline_t *pipeline);
 
 /**
  * @brief Start pipeline
  */
-voice_error_t voice_pipeline_start(voice_pipeline_t *pipeline);
+VOICE_API voice_error_t voice_pipeline_start(voice_pipeline_t *pipeline);
 
 /**
  * @brief Stop pipeline
  */
-voice_error_t voice_pipeline_stop(voice_pipeline_t *pipeline);
+VOICE_API voice_error_t voice_pipeline_stop(voice_pipeline_t *pipeline);
 
 /**
  * @brief Get state
  */
-pipeline_state_t voice_pipeline_get_state(voice_pipeline_t *pipeline);
+VOICE_API pipeline_state_t voice_pipeline_get_state(voice_pipeline_t *pipeline);
 
 /**
  * @brief Set encoded data callback
  */
-void voice_pipeline_set_encoded_callback(
+VOICE_API void voice_pipeline_set_encoded_callback(
     voice_pipeline_t *pipeline,
     pipeline_encoded_callback_t callback,
     void *user_data
@@ -198,7 +199,7 @@ void voice_pipeline_set_encoded_callback(
 /**
  * @brief Set decoded data callback
  */
-void voice_pipeline_set_decoded_callback(
+VOICE_API void voice_pipeline_set_decoded_callback(
     voice_pipeline_t *pipeline,
     pipeline_decoded_callback_t callback,
     void *user_data
@@ -207,7 +208,7 @@ void voice_pipeline_set_decoded_callback(
 /**
  * @brief Set state callback
  */
-void voice_pipeline_set_state_callback(
+VOICE_API void voice_pipeline_set_state_callback(
     voice_pipeline_t *pipeline,
     pipeline_state_callback_t callback,
     void *user_data
@@ -216,7 +217,7 @@ void voice_pipeline_set_state_callback(
 /**
  * @brief Set error callback
  */
-void voice_pipeline_set_error_callback(
+VOICE_API void voice_pipeline_set_error_callback(
     voice_pipeline_t *pipeline,
     pipeline_error_callback_t callback,
     void *user_data
@@ -225,7 +226,7 @@ void voice_pipeline_set_error_callback(
 /**
  * @brief Input received network data
  */
-voice_error_t voice_pipeline_receive_packet(
+VOICE_API voice_error_t voice_pipeline_receive_packet(
     voice_pipeline_t *pipeline,
     const uint8_t *data,
     size_t size
@@ -234,7 +235,7 @@ voice_error_t voice_pipeline_receive_packet(
 /**
  * @brief Input local PCM data (when not using device capture)
  */
-voice_error_t voice_pipeline_push_capture(
+VOICE_API voice_error_t voice_pipeline_push_capture(
     voice_pipeline_t *pipeline,
     const int16_t *pcm,
     size_t samples
@@ -243,7 +244,7 @@ voice_error_t voice_pipeline_push_capture(
 /**
  * @brief Get playback PCM data (when not using device playback)
  */
-voice_error_t voice_pipeline_pull_playback(
+VOICE_API voice_error_t voice_pipeline_pull_playback(
     voice_pipeline_t *pipeline,
     int16_t *pcm,
     size_t samples,
@@ -253,7 +254,7 @@ voice_error_t voice_pipeline_pull_playback(
 /**
  * @brief Get statistics
  */
-voice_error_t voice_pipeline_get_stats(
+VOICE_API voice_error_t voice_pipeline_get_stats(
     voice_pipeline_t *pipeline,
     voice_pipeline_stats_t *stats
 );
@@ -261,7 +262,7 @@ voice_error_t voice_pipeline_get_stats(
 /**
  * @brief Reset statistics
  */
-void voice_pipeline_reset_stats(voice_pipeline_t *pipeline);
+VOICE_API void voice_pipeline_reset_stats(voice_pipeline_t *pipeline);
 
 /* ============================================
  * Pipeline Control
@@ -270,7 +271,7 @@ void voice_pipeline_reset_stats(voice_pipeline_t *pipeline);
 /**
  * @brief Enable/disable AEC
  */
-voice_error_t voice_pipeline_set_aec_enabled(
+VOICE_API voice_error_t voice_pipeline_set_aec_enabled(
     voice_pipeline_t *pipeline,
     bool enabled
 );
@@ -278,7 +279,7 @@ voice_error_t voice_pipeline_set_aec_enabled(
 /**
  * @brief Enable/disable denoising
  */
-voice_error_t voice_pipeline_set_denoise_enabled(
+VOICE_API voice_error_t voice_pipeline_set_denoise_enabled(
     voice_pipeline_t *pipeline,
     bool enabled
 );
@@ -286,7 +287,7 @@ voice_error_t voice_pipeline_set_denoise_enabled(
 /**
  * @brief Set denoising level
  */
-voice_error_t voice_pipeline_set_denoise_level(
+VOICE_API voice_error_t voice_pipeline_set_denoise_level(
     voice_pipeline_t *pipeline,
     int level
 );
@@ -294,7 +295,7 @@ voice_error_t voice_pipeline_set_denoise_level(
 /**
  * @brief Enable/disable AGC
  */
-voice_error_t voice_pipeline_set_agc_enabled(
+VOICE_API voice_error_t voice_pipeline_set_agc_enabled(
     voice_pipeline_t *pipeline,
     bool enabled
 );
@@ -302,7 +303,7 @@ voice_error_t voice_pipeline_set_agc_enabled(
 /**
  * @brief Set encoding bit rate
  */
-voice_error_t voice_pipeline_set_bitrate(
+VOICE_API voice_error_t voice_pipeline_set_bitrate(
     voice_pipeline_t *pipeline,
     uint32_t bitrate
 );
@@ -310,7 +311,7 @@ voice_error_t voice_pipeline_set_bitrate(
 /**
  * @brief Mute capture
  */
-voice_error_t voice_pipeline_set_capture_muted(
+VOICE_API voice_error_t voice_pipeline_set_capture_muted(
     voice_pipeline_t *pipeline,
     bool muted
 );
@@ -318,7 +319,7 @@ voice_error_t voice_pipeline_set_capture_muted(
 /**
  * @brief Mute playback
  */
-voice_error_t voice_pipeline_set_playback_muted(
+VOICE_API voice_error_t voice_pipeline_set_playback_muted(
     voice_pipeline_t *pipeline,
     bool muted
 );
@@ -326,7 +327,7 @@ voice_error_t voice_pipeline_set_playback_muted(
 /**
  * @brief Set playback volume
  */
-voice_error_t voice_pipeline_set_playback_volume(
+VOICE_API voice_error_t voice_pipeline_set_playback_volume(
     voice_pipeline_t *pipeline,
     float volume  /**< 0.0 - 1.0 */
 );
@@ -338,7 +339,7 @@ voice_error_t voice_pipeline_set_playback_volume(
 /**
  * @brief Set SRTP send key
  */
-voice_error_t voice_pipeline_set_srtp_send_key(
+VOICE_API voice_error_t voice_pipeline_set_srtp_send_key(
     voice_pipeline_t *pipeline,
     const uint8_t *key,
     size_t key_len,
@@ -349,7 +350,7 @@ voice_error_t voice_pipeline_set_srtp_send_key(
 /**
  * @brief Set SRTP receive key
  */
-voice_error_t voice_pipeline_set_srtp_recv_key(
+VOICE_API voice_error_t voice_pipeline_set_srtp_recv_key(
     voice_pipeline_t *pipeline,
     const uint8_t *key,
     size_t key_len,

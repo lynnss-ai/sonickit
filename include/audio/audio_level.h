@@ -3,7 +3,7 @@
  * @brief Audio level metering and analysis
  * @author wangxuebing <lynnss.codeai@gmail.com>
  *
- * 音频电平测量和分析工具
+ * Audio level metering and analysis tools
  */
 
 #ifndef VOICE_AUDIO_LEVEL_H
@@ -11,6 +11,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -21,67 +22,67 @@ extern "C" {
 #endif
 
 /* ============================================
- * 电平计类型
+ * Level Meter Types
  * ============================================ */
 
 typedef struct voice_level_meter_s voice_level_meter_t;
 
-/** 测量类型 */
+/** Measurement type */
 typedef enum {
-    VOICE_LEVEL_PEAK,           /**< 峰值电平 */
-    VOICE_LEVEL_RMS,            /**< RMS 电平 */
-    VOICE_LEVEL_LUFS,           /**< LUFS 响度 (ITU-R BS.1770) */
+    VOICE_LEVEL_PEAK,           /**< Peak level */
+    VOICE_LEVEL_RMS,            /**< RMS level */
+    VOICE_LEVEL_LUFS,           /**< LUFS loudness (ITU-R BS.1770) */
 } voice_level_type_t;
 
 /* ============================================
- * 配置
+ * Configuration
  * ============================================ */
 
 typedef struct {
     uint32_t sample_rate;
     uint8_t channels;
-    uint32_t window_size_ms;    /**< 测量窗口大小 */
-    float attack_ms;            /**< 攻击时间 (ms) */
-    float release_ms;           /**< 释放时间 (ms) */
-    bool enable_true_peak;      /**< 启用真峰值测量 (过采样) */
+    uint32_t window_size_ms;    /**< Measurement window size */
+    float attack_ms;            /**< Attack time (ms) */
+    float release_ms;           /**< Release time (ms) */
+    bool enable_true_peak;      /**< Enable true peak measurement (oversampling) */
 } voice_level_meter_config_t;
 
 /* ============================================
- * 测量结果
+ * Measurement Results
  * ============================================ */
 
 typedef struct {
-    float peak_db;              /**< 峰值电平 (dBFS) */
-    float rms_db;               /**< RMS 电平 (dBFS) */
-    float peak_sample;          /**< 峰值样本值 (线性) */
-    float rms_linear;           /**< RMS 值 (线性) */
-    bool clipping;              /**< 是否削波 */
-    uint32_t clip_count;        /**< 削波样本数 */
+    float peak_db;              /**< Peak level (dBFS) */
+    float rms_db;               /**< RMS level (dBFS) */
+    float peak_sample;          /**< Peak sample value (linear) */
+    float rms_linear;           /**< RMS value (linear) */
+    bool clipping;              /**< Clipping detected */
+    uint32_t clip_count;        /**< Clipping sample count */
 } voice_level_result_t;
 
 /* ============================================
- * 电平计 API
+ * Level Meter API
  * ============================================ */
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
  */
-void voice_level_meter_config_init(voice_level_meter_config_t *config);
+VOICE_API void voice_level_meter_config_init(voice_level_meter_config_t *config);
 
 /**
- * @brief 创建电平计
+ * @brief Create level meter
  */
-voice_level_meter_t *voice_level_meter_create(const voice_level_meter_config_t *config);
+VOICE_API voice_level_meter_t *voice_level_meter_create(const voice_level_meter_config_t *config);
 
 /**
- * @brief 销毁电平计
+ * @brief Destroy level meter
  */
-void voice_level_meter_destroy(voice_level_meter_t *meter);
+VOICE_API void voice_level_meter_destroy(voice_level_meter_t *meter);
 
 /**
- * @brief 处理音频样本
+ * @brief Process audio samples
  */
-voice_error_t voice_level_meter_process(
+VOICE_API voice_error_t voice_level_meter_process(
     voice_level_meter_t *meter,
     const int16_t *samples,
     size_t num_samples,
@@ -89,9 +90,9 @@ voice_error_t voice_level_meter_process(
 );
 
 /**
- * @brief 处理浮点音频样本
+ * @brief Process float audio samples
  */
-voice_error_t voice_level_meter_process_float(
+VOICE_API voice_error_t voice_level_meter_process_float(
     voice_level_meter_t *meter,
     const float *samples,
     size_t num_samples,
@@ -99,31 +100,31 @@ voice_error_t voice_level_meter_process_float(
 );
 
 /**
- * @brief 获取当前电平
+ * @brief Get current level
  */
-float voice_level_meter_get_level_db(voice_level_meter_t *meter);
+VOICE_API float voice_level_meter_get_level_db(voice_level_meter_t *meter);
 
 /**
- * @brief 重置电平计
+ * @brief Reset level meter
  */
-void voice_level_meter_reset(voice_level_meter_t *meter);
+VOICE_API void voice_level_meter_reset(voice_level_meter_t *meter);
 
 /* ============================================
- * 快捷函数 (无状态)
+ * Shortcut Functions (stateless)
  * ============================================ */
 
 /**
- * @brief 计算音频块的峰值电平 (dB)
+ * @brief Calculate peak level of audio block (dB)
  */
-float voice_audio_peak_db(const int16_t *samples, size_t num_samples);
+VOICE_API float voice_audio_peak_db(const int16_t *samples, size_t num_samples);
 
 /**
- * @brief 计算音频块的 RMS 电平 (dB)
+ * @brief Calculate RMS level of audio block (dB)
  */
-float voice_audio_rms_db(const int16_t *samples, size_t num_samples);
+VOICE_API float voice_audio_rms_db(const int16_t *samples, size_t num_samples);
 
 /**
- * @brief 线性值转 dB
+ * @brief Convert linear value to dB
  */
 static inline float voice_linear_to_db(float linear) {
     if (linear <= 0.0f) return -96.0f;
@@ -132,28 +133,28 @@ static inline float voice_linear_to_db(float linear) {
 }
 
 /**
- * @brief dB 转线性值
+ * @brief Convert dB to linear value
  */
 static inline float voice_db_to_linear(float db) {
     return powf(10.0f, db / 20.0f);
 }
 
 /* ============================================
- * RTP 音频电平扩展 (RFC 6464)
+ * RTP Audio Level Extension (RFC 6464)
  * ============================================ */
 
 /**
- * @brief 计算 RTP 扩展头中的音频电平 (RFC 6464)
- * @param samples 音频样本
- * @param num_samples 样本数
- * @return 音频电平 (0-127, 0 = 0dBov, 127 = -127dBov)
+ * @brief Calculate audio level for RTP extension header (RFC 6464)
+ * @param samples Audio samples
+ * @param num_samples Number of samples
+ * @return Audio level (0-127, 0 = 0dBov, 127 = -127dBov)
  */
-uint8_t voice_audio_level_rfc6464(const int16_t *samples, size_t num_samples);
+VOICE_API uint8_t voice_audio_level_rfc6464(const int16_t *samples, size_t num_samples);
 
 /**
- * @brief 解析 RFC 6464 音频电平
- * @param level RFC 6464 电平值
- * @return dBov 值 (0 到 -127)
+ * @brief Parse RFC 6464 audio level
+ * @param level RFC 6464 level value
+ * @return dBov value (0 to -127)
  */
 static inline float voice_audio_level_rfc6464_to_db(uint8_t level) {
     return -(float)(level & 0x7F);

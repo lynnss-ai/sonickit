@@ -2,8 +2,8 @@
  * @file bandwidth_estimator.h
  * @brief Network bandwidth estimation
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
- * 网络带宽估计器，用于自适应比特率控制
+ *
+ * Network bandwidth estimator for adaptive bitrate control
  */
 
 #ifndef VOICE_BANDWIDTH_ESTIMATOR_H
@@ -11,6 +11,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -20,47 +21,47 @@ extern "C" {
 #endif
 
 /* ============================================
- * 类型定义
+ * Type Definitions
  * ============================================ */
 
 typedef struct voice_bwe_s voice_bwe_t;
 
-/** 网络状况 */
+/** Network quality */
 typedef enum {
-    VOICE_NETWORK_EXCELLENT,   /**< 优秀 (< 1% 丢包, < 50ms 延迟) */
-    VOICE_NETWORK_GOOD,        /**< 良好 (< 3% 丢包, < 100ms 延迟) */
-    VOICE_NETWORK_FAIR,        /**< 一般 (< 10% 丢包, < 200ms 延迟) */
-    VOICE_NETWORK_POOR,        /**< 较差 (< 20% 丢包, < 400ms 延迟) */
-    VOICE_NETWORK_BAD,         /**< 很差 (>= 20% 丢包 或 >= 400ms 延迟) */
+    VOICE_NETWORK_EXCELLENT,   /**< Excellent (< 1% loss, < 50ms latency) */
+    VOICE_NETWORK_GOOD,        /**< Good (< 3% loss, < 100ms latency) */
+    VOICE_NETWORK_FAIR,        /**< Fair (< 10% loss, < 200ms latency) */
+    VOICE_NETWORK_POOR,        /**< Poor (< 20% loss, < 400ms latency) */
+    VOICE_NETWORK_BAD,         /**< Bad (>= 20% loss or >= 400ms latency) */
 } voice_network_quality_t;
 
 /* ============================================
- * 配置
+ * Configuration
  * ============================================ */
 
 typedef struct {
-    uint32_t initial_bitrate;       /**< 初始比特率 */
-    uint32_t min_bitrate;           /**< 最小比特率 */
-    uint32_t max_bitrate;           /**< 最大比特率 */
-    
-    /* 估计窗口 */
-    uint32_t window_size_ms;        /**< 统计窗口大小 */
-    
-    /* AIMD 参数 */
-    float increase_rate;            /**< 增加速率 (加法增加) */
-    float decrease_factor;          /**< 减少因子 (乘法减少) */
-    
-    /* 阈值 */
-    float loss_threshold_increase;  /**< 允许增加的丢包阈值 */
-    float loss_threshold_decrease;  /**< 触发减少的丢包阈值 */
-    uint32_t rtt_threshold_ms;      /**< RTT 阈值 */
-    
-    /* 稳定期 */
-    uint32_t hold_time_ms;          /**< 调整后的稳定期 */
+    uint32_t initial_bitrate;       /**< Initial bitrate */
+    uint32_t min_bitrate;           /**< Minimum bitrate */
+    uint32_t max_bitrate;           /**< Maximum bitrate */
+
+    /* Estimation window */
+    uint32_t window_size_ms;        /**< Statistics window size */
+
+    /* AIMD parameters */
+    float increase_rate;            /**< Increase rate (additive increase) */
+    float decrease_factor;          /**< Decrease factor (multiplicative decrease) */
+
+    /* Thresholds */
+    float loss_threshold_increase;  /**< Loss threshold to allow increase */
+    float loss_threshold_decrease;  /**< Loss threshold to trigger decrease */
+    uint32_t rtt_threshold_ms;      /**< RTT threshold */
+
+    /* Hold period */
+    uint32_t hold_time_ms;          /**< Hold period after adjustment */
 } voice_bwe_config_t;
 
 /* ============================================
- * 反馈数据
+ * Feedback Data
  * ============================================ */
 
 typedef struct {
@@ -70,21 +71,21 @@ typedef struct {
     uint32_t bytes_sent;
     uint32_t rtt_ms;
     uint32_t jitter_ms;
-    uint32_t timestamp;             /**< 反馈时间戳 */
+    uint32_t timestamp;             /**< Feedback timestamp */
 } voice_bwe_feedback_t;
 
 /* ============================================
- * 估计结果
+ * Estimation Result
  * ============================================ */
 
 typedef struct {
-    uint32_t estimated_bitrate;     /**< 估计的可用带宽 */
-    uint32_t target_bitrate;        /**< 建议的目标比特率 */
-    float packet_loss_rate;         /**< 丢包率 */
-    uint32_t rtt_ms;                /**< 往返延迟 */
-    uint32_t jitter_ms;             /**< 抖动 */
-    voice_network_quality_t quality;/**< 网络质量 */
-    bool should_adjust;             /**< 是否需要调整比特率 */
+    uint32_t estimated_bitrate;     /**< Estimated available bandwidth */
+    uint32_t target_bitrate;        /**< Recommended target bitrate */
+    float packet_loss_rate;         /**< Packet loss rate */
+    uint32_t rtt_ms;                /**< Round-trip time */
+    uint32_t jitter_ms;             /**< Jitter */
+    voice_network_quality_t quality;/**< Network quality */
+    bool should_adjust;             /**< Whether bitrate adjustment is needed */
 } voice_bwe_estimate_t;
 
 /* ============================================
@@ -92,24 +93,24 @@ typedef struct {
  * ============================================ */
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
  */
-void voice_bwe_config_init(voice_bwe_config_t *config);
+VOICE_API void voice_bwe_config_init(voice_bwe_config_t *config);
 
 /**
- * @brief 创建带宽估计器
+ * @brief Create bandwidth estimator
  */
-voice_bwe_t *voice_bwe_create(const voice_bwe_config_t *config);
+VOICE_API voice_bwe_t *voice_bwe_create(const voice_bwe_config_t *config);
 
 /**
- * @brief 销毁带宽估计器
+ * @brief Destroy bandwidth estimator
  */
-void voice_bwe_destroy(voice_bwe_t *bwe);
+VOICE_API void voice_bwe_destroy(voice_bwe_t *bwe);
 
 /**
- * @brief 更新发送统计
+ * @brief Update send statistics
  */
-void voice_bwe_on_packet_sent(
+VOICE_API void voice_bwe_on_packet_sent(
     voice_bwe_t *bwe,
     uint16_t sequence,
     size_t size,
@@ -117,38 +118,38 @@ void voice_bwe_on_packet_sent(
 );
 
 /**
- * @brief 处理接收反馈 (RTCP RR)
+ * @brief Process received feedback (RTCP RR)
  */
-voice_error_t voice_bwe_on_feedback(
+VOICE_API voice_error_t voice_bwe_on_feedback(
     voice_bwe_t *bwe,
     const voice_bwe_feedback_t *feedback
 );
 
 /**
- * @brief 获取带宽估计
+ * @brief Get bandwidth estimate
  */
-voice_error_t voice_bwe_get_estimate(
+VOICE_API voice_error_t voice_bwe_get_estimate(
     voice_bwe_t *bwe,
     voice_bwe_estimate_t *estimate
 );
 
 /**
- * @brief 获取建议比特率
+ * @brief Get recommended bitrate
  */
-uint32_t voice_bwe_get_target_bitrate(voice_bwe_t *bwe);
+VOICE_API uint32_t voice_bwe_get_target_bitrate(voice_bwe_t *bwe);
 
 /**
- * @brief 获取网络质量
+ * @brief Get network quality
  */
-voice_network_quality_t voice_bwe_get_network_quality(voice_bwe_t *bwe);
+VOICE_API voice_network_quality_t voice_bwe_get_network_quality(voice_bwe_t *bwe);
 
 /**
- * @brief 重置估计器
+ * @brief Reset estimator
  */
-void voice_bwe_reset(voice_bwe_t *bwe);
+VOICE_API void voice_bwe_reset(voice_bwe_t *bwe);
 
 /**
- * @brief 带宽变化回调
+ * @brief Bandwidth change callback
  */
 typedef void (*voice_bwe_callback_t)(
     voice_bwe_t *bwe,
@@ -158,7 +159,7 @@ typedef void (*voice_bwe_callback_t)(
     void *user_data
 );
 
-void voice_bwe_set_callback(
+VOICE_API void voice_bwe_set_callback(
     voice_bwe_t *bwe,
     voice_bwe_callback_t callback,
     void *user_data

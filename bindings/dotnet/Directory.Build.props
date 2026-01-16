@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Package Metadata -->
+    <Authors>SonicKit Contributors</Authors>
+    <Company>SonicKit</Company>
+    <Copyright>Copyright (c) 2024 SonicKit Contributors</Copyright>
+    <Description>High-performance audio processing library for .NET</Description>
+    <PackageTags>audio;dsp;voice;codec;effects;spatial;voip</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/example/sonickit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/example/sonickit</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>

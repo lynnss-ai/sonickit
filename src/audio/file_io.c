@@ -9,7 +9,9 @@
 #include <string.h>
 
 /* miniaudio decoder configuration - use third_party implementation */
+#ifndef MA_NO_DEVICE_IO
 #define MA_NO_DEVICE_IO
+#endif
 #include "miniaudio.h"
 
 /* ============================================

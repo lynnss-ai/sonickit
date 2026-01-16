@@ -1,0 +1,83 @@
+[build-system]
+requires = ["scikit-build-core>=0.4.0", "pybind11>=2.11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "sonickit"
+version = "1.0.0"
+description = "High-performance audio processing library for Python"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "SonicKit Team", email = "lynnss.codeai@gmail.com"}
+]
+keywords = [
+    "audio",
+    "dsp",
+    "voice",
+    "noise-reduction",
+    "echo-cancellation",
+    "agc",
+    "vad",
+    "codec",
+    "spatial-audio",
+    "real-time"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: C++",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.20.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "mypy>=1.0",
+]
+docs = [
+    "sphinx>=6.0",
+    "sphinx-rtd-theme>=1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/sonickit/sonickit"
+Documentation = "https://sonickit.readthedocs.io"
+Repository = "https://github.com/sonickit/sonickit"
+Issues = "https://github.com/sonickit/sonickit/issues"
+
+[tool.scikit-build]
+wheel.packages = ["sonickit"]
+cmake.args = ["-DCMAKE_BUILD_TYPE=Release"]
+build-dir = "build/{wheel_tag}"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+
+[tool.black]
+line-length = 88
+target-version = ["py38", "py39", "py310", "py311", "py312"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true

@@ -31,6 +31,7 @@
 #include "error.h"
 #include "config.h"
 #include "platform.h"
+#include "export.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,7 +51,7 @@ extern "C" {
  * @brief Get version string
  * @return Version string
  */
-const char *voice_version(void);
+VOICE_API const char *voice_version(void);
 
 /**
  * @brief Get version numbers
@@ -58,7 +59,7 @@ const char *voice_version(void);
  * @param minor Minor version
  * @param patch Patch version
  */
-void voice_version_get(int *major, int *minor, int *patch);
+VOICE_API void voice_version_get(int *major, int *minor, int *patch);
 
 /* ============================================
  * Library Initialization
@@ -69,18 +70,18 @@ void voice_version_get(int *major, int *minor, int *patch);
  * @param config Global configuration (NULL for defaults)
  * @return Error code
  */
-voice_error_t voice_init(const voice_global_config_t *config);
+VOICE_API voice_error_t voice_init(const voice_global_config_t *config);
 
 /**
  * @brief Release voice library resources
  */
-void voice_deinit(void);
+VOICE_API void voice_deinit(void);
 
 /**
  * @brief Check if library is initialized
  * @return true if initialized
  */
-bool voice_is_initialized(void);
+VOICE_API bool voice_is_initialized(void);
 
 /* ============================================
  * Audio Device Management
@@ -112,7 +113,7 @@ typedef struct {
  * @param type Device type
  * @return Device count
  */
-int voice_device_get_count(voice_device_type_t type);
+VOICE_API int voice_device_get_count(voice_device_type_t type);
 
 /**
  * @brief Get audio device information
@@ -121,7 +122,7 @@ int voice_device_get_count(voice_device_type_t type);
  * @param info Device information output
  * @return Error code
  */
-voice_error_t voice_device_get_info(
+VOICE_API voice_error_t voice_device_get_info(
     voice_device_type_t type,
     int index,
     voice_device_info_t *info
@@ -133,7 +134,7 @@ voice_error_t voice_device_get_info(
  * @param info Device information output
  * @return Error code
  */
-voice_error_t voice_device_get_default(
+VOICE_API voice_error_t voice_device_get_default(
     voice_device_type_t type,
     voice_device_info_t *info
 );
@@ -151,35 +152,35 @@ typedef struct voice_pipeline_s voice_pipeline_t;
  * @param config Pipeline configuration
  * @return Pipeline handle (NULL on failure)
  */
-voice_pipeline_t *voice_pipeline_create(const voice_pipeline_config_t *config);
+VOICE_API voice_pipeline_t *voice_pipeline_create(const voice_pipeline_config_t *config);
 #endif /* VOICE_PIPELINE_H */
 
 /**
  * @brief Destroy audio processing pipeline
  * @param pipeline Pipeline handle
  */
-void voice_pipeline_destroy(voice_pipeline_t *pipeline);
+VOICE_API void voice_pipeline_destroy(voice_pipeline_t *pipeline);
 
 /**
  * @brief Start audio processing
  * @param pipeline Pipeline handle
  * @return Error code
  */
-voice_error_t voice_pipeline_start(voice_pipeline_t *pipeline);
+VOICE_API voice_error_t voice_pipeline_start(voice_pipeline_t *pipeline);
 
 /**
  * @brief Stop audio processing
  * @param pipeline Pipeline handle
  * @return Error code
  */
-voice_error_t voice_pipeline_stop(voice_pipeline_t *pipeline);
+VOICE_API voice_error_t voice_pipeline_stop(voice_pipeline_t *pipeline);
 
 /**
  * @brief Check if pipeline is running
  * @param pipeline Pipeline handle
  * @return true if running
  */
-bool voice_pipeline_is_running(voice_pipeline_t *pipeline);
+VOICE_API bool voice_pipeline_is_running(voice_pipeline_t *pipeline);
 
 /**
  * @brief Set denoising engine
@@ -187,7 +188,7 @@ bool voice_pipeline_is_running(voice_pipeline_t *pipeline);
  * @param engine Denoising engine type
  * @return Error code
  */
-voice_error_t voice_pipeline_set_denoise_engine(
+VOICE_API voice_error_t voice_pipeline_set_denoise_engine(
     voice_pipeline_t *pipeline,
     voice_denoise_engine_t engine
 );
@@ -198,7 +199,7 @@ voice_error_t voice_pipeline_set_denoise_engine(
  * @param type Codec type
  * @return Error code
  */
-voice_error_t voice_pipeline_set_codec(
+VOICE_API voice_error_t voice_pipeline_set_codec(
     voice_pipeline_t *pipeline,
     voice_codec_type_t type
 );
@@ -209,7 +210,7 @@ voice_error_t voice_pipeline_set_codec(
  * @param bitrate Bit rate (bps)
  * @return Error code
  */
-voice_error_t voice_pipeline_set_bitrate(
+VOICE_API voice_error_t voice_pipeline_set_bitrate(
     voice_pipeline_t *pipeline,
     uint32_t bitrate
 );
@@ -220,7 +221,7 @@ voice_error_t voice_pipeline_set_bitrate(
  * @param enabled Enable or not
  * @return Error code
  */
-voice_error_t voice_pipeline_set_aec_enabled(
+VOICE_API voice_error_t voice_pipeline_set_aec_enabled(
     voice_pipeline_t *pipeline,
     bool enabled
 );
@@ -231,7 +232,7 @@ voice_error_t voice_pipeline_set_aec_enabled(
  * @param enabled Enable or not
  * @return Error code
  */
-voice_error_t voice_pipeline_set_denoise_enabled(
+VOICE_API voice_error_t voice_pipeline_set_denoise_enabled(
     voice_pipeline_t *pipeline,
     bool enabled
 );
@@ -242,7 +243,7 @@ voice_error_t voice_pipeline_set_denoise_enabled(
  * @param stats Statistics output
  * @return Error code
  */
-voice_error_t voice_pipeline_get_network_stats(
+VOICE_API voice_error_t voice_pipeline_get_network_stats(
     voice_pipeline_t *pipeline,
     voice_network_stats_t *stats
 );
@@ -263,7 +264,7 @@ typedef struct voice_player_s voice_player_t;
  * @param output_file Output file path (NULL to not save file)
  * @return Recorder handle
  */
-voice_recorder_t *voice_recorder_create(
+VOICE_API voice_recorder_t *voice_recorder_create(
     const voice_device_config_t *config,
     const char *output_file
 );
@@ -272,21 +273,21 @@ voice_recorder_t *voice_recorder_create(
  * @brief Destroy recorder
  * @param recorder Recorder handle
  */
-void voice_recorder_destroy(voice_recorder_t *recorder);
+VOICE_API void voice_recorder_destroy(voice_recorder_t *recorder);
 
 /**
  * @brief Start recording
  * @param recorder Recorder handle
  * @return Error code
  */
-voice_error_t voice_recorder_start(voice_recorder_t *recorder);
+VOICE_API voice_error_t voice_recorder_start(voice_recorder_t *recorder);
 
 /**
  * @brief Stop recording
  * @param recorder Recorder handle
  * @return Error code
  */
-voice_error_t voice_recorder_stop(voice_recorder_t *recorder);
+VOICE_API voice_error_t voice_recorder_stop(voice_recorder_t *recorder);
 
 /**
  * @brief Set recording data callback
@@ -294,7 +295,7 @@ voice_error_t voice_recorder_stop(voice_recorder_t *recorder);
  * @param callback Callback function
  * @param user_data User data
  */
-void voice_recorder_set_callback(
+VOICE_API void voice_recorder_set_callback(
     voice_recorder_t *recorder,
     voice_audio_callback_t callback,
     void *user_data
@@ -305,13 +306,13 @@ void voice_recorder_set_callback(
  * @param config Device configuration
  * @return Player handle
  */
-voice_player_t *voice_player_create(const voice_device_config_t *config);
+VOICE_API voice_player_t *voice_player_create(const voice_device_config_t *config);
 
 /**
  * @brief Destroy player
  * @param player Player handle
  */
-void voice_player_destroy(voice_player_t *player);
+VOICE_API void voice_player_destroy(voice_player_t *player);
 
 /**
  * @brief Play file
@@ -319,7 +320,7 @@ void voice_player_destroy(voice_player_t *player);
  * @param path File path
  * @return Error code
  */
-voice_error_t voice_player_play_file(voice_player_t *player, const char *path);
+VOICE_API voice_error_t voice_player_play_file(voice_player_t *player, const char *path);
 
 /**
  * @brief Play PCM data
@@ -328,7 +329,7 @@ voice_error_t voice_player_play_file(voice_player_t *player, const char *path);
  * @param size Data size
  * @return Error code
  */
-voice_error_t voice_player_play_pcm(
+VOICE_API voice_error_t voice_player_play_pcm(
     voice_player_t *player,
     const void *data,
     size_t size
@@ -339,7 +340,7 @@ voice_error_t voice_player_play_pcm(
  * @param player Player handle
  * @return Error code
  */
-voice_error_t voice_player_stop(voice_player_t *player);
+VOICE_API voice_error_t voice_player_stop(voice_player_t *player);
 
 /* ============================================
  * Platform-Specific Functions
@@ -350,37 +351,37 @@ voice_error_t voice_player_stop(voice_player_t *player);
  * @param platform Platform type
  * @return Platform name string
  */
-const char *voice_platform_name(voice_platform_t platform);
+VOICE_API const char *voice_platform_name(voice_platform_t platform);
 
 /**
  * @brief Get CPU usage
  * @return CPU usage (0-100)
  */
-float voice_platform_get_cpu_usage(void);
+VOICE_API float voice_platform_get_cpu_usage(void);
 
 /**
  * @brief Get battery level
  * @return Battery level (0-100, -1 means no battery)
  */
-int voice_platform_get_battery_level(void);
+VOICE_API int voice_platform_get_battery_level(void);
 
 /**
  * @brief Check if on battery power
  * @return true if on battery
  */
-bool voice_platform_on_battery(void);
+VOICE_API bool voice_platform_on_battery(void);
 
 /**
  * @brief Request audio focus (mobile)
  * @return Error code
  */
-voice_error_t voice_platform_request_audio_focus(void);
+VOICE_API voice_error_t voice_platform_request_audio_focus(void);
 
 /**
  * @brief Release audio focus (mobile)
  * @return Error code
  */
-voice_error_t voice_platform_release_audio_focus(void);
+VOICE_API voice_error_t voice_platform_release_audio_focus(void);
 
 #ifdef __cplusplus
 }

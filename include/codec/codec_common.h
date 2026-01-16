@@ -8,16 +8,17 @@
 #define CODEC_COMMON_H
 
 #include "codec/codec.h"
+#include "voice/export.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* ============================================
- * 编码器内部结构
+ * Encoder Internal Structures
  * ============================================ */
 
-/** 编码器虚函数表 */
+/** Encoder virtual function table */
 typedef struct {
     voice_error_t (*encode)(
         void *state,
@@ -33,7 +34,7 @@ typedef struct {
     voice_error_t (*set_packet_loss)(void *state, int packet_loss_perc);
 } encoder_vtable_t;
 
-/** 解码器虚函数表 */
+/** Decoder virtual function table */
 typedef struct {
     voice_error_t (*decode)(
         void *state,
@@ -53,7 +54,7 @@ typedef struct {
 } decoder_vtable_t;
 
 /* ============================================
- * 编解码器基类
+ * Codec Base Classes
  * ============================================ */
 
 struct voice_encoder_s {
@@ -69,20 +70,20 @@ struct voice_decoder_s {
 };
 
 /* ============================================
- * 各编解码器创建函数声明
+ * Codec Creation Function Declarations
  * ============================================ */
 
 #ifdef VOICE_HAVE_OPUS
-voice_encoder_t *voice_opus_encoder_create(const voice_opus_config_t *config);
-voice_decoder_t *voice_opus_decoder_create(const voice_opus_config_t *config);
+VOICE_API voice_encoder_t *voice_opus_encoder_create(const voice_opus_config_t *config);
+VOICE_API voice_decoder_t *voice_opus_decoder_create(const voice_opus_config_t *config);
 #endif
 
-voice_encoder_t *voice_g711_encoder_create(const voice_g711_config_t *config);
-voice_decoder_t *voice_g711_decoder_create(const voice_g711_config_t *config);
+VOICE_API voice_encoder_t *voice_g711_encoder_create(const voice_g711_config_t *config);
+VOICE_API voice_decoder_t *voice_g711_decoder_create(const voice_g711_config_t *config);
 
 #ifdef VOICE_HAVE_G722
-voice_encoder_t *voice_g722_encoder_create(const voice_g722_config_t *config);
-voice_decoder_t *voice_g722_decoder_create(const voice_g722_config_t *config);
+VOICE_API voice_encoder_t *voice_g722_encoder_create(const voice_g722_config_t *config);
+VOICE_API voice_decoder_t *voice_g722_decoder_create(const voice_g722_config_t *config);
 #endif
 
 #ifdef __cplusplus

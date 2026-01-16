@@ -2,8 +2,8 @@
  * @file equalizer.h
  * @brief Multi-band parametric equalizer
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
- * 提供多频段参数均衡器，用于调整音频频谱响应
+ *
+ * Provides multi-band parametric equalizer for adjusting audio frequency response.
  */
 
 #ifndef VOICE_EQUALIZER_H
@@ -11,6 +11,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -19,172 +20,172 @@ extern "C" {
 #endif
 
 /* ============================================
- * 类型定义
+ * Type Definitions
  * ============================================ */
 
 /**
- * @brief 滤波器类型
+ * @brief Filter type
  */
 typedef enum {
-    VOICE_EQ_LOWPASS,       /**< 低通滤波器 */
-    VOICE_EQ_HIGHPASS,      /**< 高通滤波器 */
-    VOICE_EQ_BANDPASS,      /**< 带通滤波器 */
-    VOICE_EQ_NOTCH,         /**< 陷波滤波器 */
-    VOICE_EQ_PEAK,          /**< 峰值滤波器 (参数均衡) */
-    VOICE_EQ_LOWSHELF,      /**< 低架滤波器 */
-    VOICE_EQ_HIGHSHELF      /**< 高架滤波器 */
+    VOICE_EQ_LOWPASS,       /**< Low-pass filter */
+    VOICE_EQ_HIGHPASS,      /**< High-pass filter */
+    VOICE_EQ_BANDPASS,      /**< Band-pass filter */
+    VOICE_EQ_NOTCH,         /**< Notch filter */
+    VOICE_EQ_PEAK,          /**< Peak filter (parametric EQ) */
+    VOICE_EQ_LOWSHELF,      /**< Low-shelf filter */
+    VOICE_EQ_HIGHSHELF      /**< High-shelf filter */
 } voice_eq_filter_type_t;
 
 /**
- * @brief 均衡器频段配置
+ * @brief Equalizer band configuration
  */
 typedef struct {
-    bool enabled;                   /**< 频段是否启用 */
-    voice_eq_filter_type_t type;    /**< 滤波器类型 */
-    float frequency;                /**< 中心/截止频率 (Hz) */
-    float gain_db;                  /**< 增益 (dB) [-24, +24] */
-    float q;                        /**< Q值 (品质因数) [0.1, 10] */
+    bool enabled;                   /**< Whether band is enabled */
+    voice_eq_filter_type_t type;    /**< Filter type */
+    float frequency;                /**< Center/cutoff frequency (Hz) */
+    float gain_db;                  /**< Gain (dB) [-24, +24] */
+    float q;                        /**< Q value (quality factor) [0.1, 10] */
 } voice_eq_band_t;
 
 /**
- * @brief 预设类型
+ * @brief Preset type
  */
 typedef enum {
-    VOICE_EQ_PRESET_FLAT,           /**< 平坦响应 */
-    VOICE_EQ_PRESET_VOICE_ENHANCE,  /**< 语音增强 */
-    VOICE_EQ_PRESET_TELEPHONE,      /**< 电话音质 (300-3400Hz) */
-    VOICE_EQ_PRESET_BASS_BOOST,     /**< 低音增强 */
-    VOICE_EQ_PRESET_TREBLE_BOOST,   /**< 高音增强 */
-    VOICE_EQ_PRESET_REDUCE_NOISE,   /**< 降噪倾向 (衰减高频) */
-    VOICE_EQ_PRESET_CLARITY,        /**< 清晰度增强 */
-    VOICE_EQ_PRESET_CUSTOM          /**< 自定义 */
+    VOICE_EQ_PRESET_FLAT,           /**< Flat response */
+    VOICE_EQ_PRESET_VOICE_ENHANCE,  /**< Voice enhancement */
+    VOICE_EQ_PRESET_TELEPHONE,      /**< Telephone quality (300-3400Hz) */
+    VOICE_EQ_PRESET_BASS_BOOST,     /**< Bass boost */
+    VOICE_EQ_PRESET_TREBLE_BOOST,   /**< Treble boost */
+    VOICE_EQ_PRESET_REDUCE_NOISE,   /**< Noise reduction tendency (attenuate high freq) */
+    VOICE_EQ_PRESET_CLARITY,        /**< Clarity enhancement */
+    VOICE_EQ_PRESET_CUSTOM          /**< Custom */
 } voice_eq_preset_t;
 
 /**
- * @brief 均衡器配置
+ * @brief Equalizer configuration
  */
 typedef struct {
-    uint32_t sample_rate;       /**< 采样率 */
-    uint32_t num_bands;         /**< 频段数量 [1, 10] */
-    voice_eq_band_t *bands;     /**< 频段配置数组 */
-    float master_gain_db;       /**< 主增益 (dB) */
+    uint32_t sample_rate;       /**< Sample rate */
+    uint32_t num_bands;         /**< Number of bands [1, 10] */
+    voice_eq_band_t *bands;     /**< Band configuration array */
+    float master_gain_db;       /**< Master gain (dB) */
 } voice_eq_config_t;
 
 /* ============================================
- * 前向声明
+ * Forward Declarations
  * ============================================ */
 
 typedef struct voice_eq_s voice_eq_t;
 
 /* ============================================
- * 配置初始化
+ * Configuration Initialization
  * ============================================ */
 
 /**
- * @brief 初始化均衡器配置为默认值
+ * @brief Initialize equalizer configuration to default values
  */
-void voice_eq_config_init(voice_eq_config_t *config);
+VOICE_API void voice_eq_config_init(voice_eq_config_t *config);
 
 /**
- * @brief 从预设加载配置
+ * @brief Load configuration from preset
  */
-voice_error_t voice_eq_config_from_preset(
+VOICE_API voice_error_t voice_eq_config_from_preset(
     voice_eq_config_t *config,
     voice_eq_preset_t preset,
     uint32_t sample_rate
 );
 
 /* ============================================
- * 均衡器生命周期
+ * Equalizer Lifecycle
  * ============================================ */
 
 /**
- * @brief 创建均衡器实例
+ * @brief Create equalizer instance
  */
-voice_eq_t *voice_eq_create(const voice_eq_config_t *config);
+VOICE_API voice_eq_t *voice_eq_create(const voice_eq_config_t *config);
 
 /**
- * @brief 销毁均衡器实例
+ * @brief Destroy equalizer instance
  */
-void voice_eq_destroy(voice_eq_t *eq);
+VOICE_API void voice_eq_destroy(voice_eq_t *eq);
 
 /* ============================================
- * 处理接口
+ * Processing Interface
  * ============================================ */
 
 /**
- * @brief 处理音频数据 (原地处理)
+ * @brief Process audio data (in-place)
  */
-voice_error_t voice_eq_process(
+VOICE_API voice_error_t voice_eq_process(
     voice_eq_t *eq,
     int16_t *samples,
     size_t num_samples
 );
 
 /**
- * @brief 处理浮点音频数据
+ * @brief Process float audio data
  */
-voice_error_t voice_eq_process_float(
+VOICE_API voice_error_t voice_eq_process_float(
     voice_eq_t *eq,
     float *samples,
     size_t num_samples
 );
 
 /* ============================================
- * 频段控制
+ * Band Control
  * ============================================ */
 
 /**
- * @brief 设置频段参数
+ * @brief Set band parameters
  */
-voice_error_t voice_eq_set_band(
+VOICE_API voice_error_t voice_eq_set_band(
     voice_eq_t *eq,
     uint32_t band_index,
     const voice_eq_band_t *band
 );
 
 /**
- * @brief 获取频段参数
+ * @brief Get band parameters
  */
-voice_error_t voice_eq_get_band(
+VOICE_API VOICE_API voice_error_t voice_eq_get_band(
     voice_eq_t *eq,
     uint32_t band_index,
     voice_eq_band_t *band
 );
 
 /**
- * @brief 启用/禁用频段
+ * @brief Enable/disable band
  */
-voice_error_t voice_eq_enable_band(
+VOICE_API voice_error_t voice_eq_enable_band(
     voice_eq_t *eq,
     uint32_t band_index,
     bool enable
 );
 
 /**
- * @brief 设置主增益
+ * @brief Set master gain
  */
-voice_error_t voice_eq_set_master_gain(voice_eq_t *eq, float gain_db);
+VOICE_API voice_error_t voice_eq_set_master_gain(voice_eq_t *eq, float gain_db);
 
 /**
- * @brief 应用预设
+ * @brief Apply preset
  */
-voice_error_t voice_eq_apply_preset(
+VOICE_API voice_error_t voice_eq_apply_preset(
     voice_eq_t *eq,
     voice_eq_preset_t preset
 );
 
 /* ============================================
- * 状态查询
+ * State Query
  * ============================================ */
 
 /**
- * @brief 获取频率响应
- * @param frequencies 频率点数组 (Hz)
- * @param responses 响应数组 (dB)，输出参数
- * @param count 数组大小
+ * @brief Get frequency response
+ * @param frequencies Frequency point array (Hz)
+ * @param responses Response array (dB), output parameter
+ * @param count Array size
  */
-voice_error_t voice_eq_get_frequency_response(
+VOICE_API voice_error_t voice_eq_get_frequency_response(
     voice_eq_t *eq,
     const float *frequencies,
     float *responses,
@@ -192,9 +193,9 @@ voice_error_t voice_eq_get_frequency_response(
 );
 
 /**
- * @brief 重置均衡器状态
+ * @brief Reset equalizer state
  */
-void voice_eq_reset(voice_eq_t *eq);
+VOICE_API void voice_eq_reset(voice_eq_t *eq);
 
 #ifdef __cplusplus
 }

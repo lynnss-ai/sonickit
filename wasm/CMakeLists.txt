@@ -80,6 +80,10 @@ set(DSP_SOURCES
     ${SONICKIT_SRC}/dsp/comfort_noise.c
     ${SONICKIT_SRC}/dsp/effects.c
     ${SONICKIT_SRC}/dsp/watermark.c
+    ${SONICKIT_SRC}/dsp/spatial.c
+    ${SONICKIT_SRC}/dsp/hrtf.c
+    ${SONICKIT_SRC}/dsp/time_stretcher.c
+    ${SONICKIT_SRC}/dsp/delay_estimator.c
 )
 
 # 编解码器模块
@@ -202,7 +206,15 @@ endif()
 # ============================================
 # JavaScript API（使用 Embind）
 # ============================================
-add_executable(sonickit api/sonickit_api.cpp)
+set(WASM_API_SOURCES
+    api/sonickit_api.cpp
+    api/sonickit_dsp_extended.cpp
+    api/sonickit_effects.cpp
+    api/sonickit_audio.cpp
+    api/sonickit_watermark.cpp
+)
+
+add_executable(sonickit ${WASM_API_SOURCES})
 
 target_link_libraries(sonickit PRIVATE sonickit_core)
 

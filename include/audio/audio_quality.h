@@ -2,8 +2,8 @@
  * @file audio_quality.h
  * @brief Audio quality metrics and MOS estimation
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
- * 音频质量评估工具，包含 MOS (Mean Opinion Score) 估计
+ *
+ * Audio quality assessment tools with MOS (Mean Opinion Score) estimation
  */
 
 #ifndef VOICE_AUDIO_QUALITY_H
@@ -11,6 +11,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -20,95 +21,95 @@ extern "C" {
 #endif
 
 /* ============================================
- * 类型定义
+ * Type Definitions
  * ============================================ */
 
 typedef struct voice_quality_analyzer_s voice_quality_analyzer_t;
 
 /* ============================================
- * 质量指标
+ * Quality Metrics
  * ============================================ */
 
 typedef struct {
-    /* MOS 分数 (1.0-5.0) */
+    /* MOS score (1.0-5.0) */
     float mos_lq;               /**< MOS-LQ (Listening Quality) */
     float mos_cq;               /**< MOS-CQ (Conversational Quality) */
-    
-    /* 网络相关 */
-    float packet_loss_rate;     /**< 丢包率 (0-1) */
-    uint32_t jitter_ms;         /**< 抖动 (ms) */
-    uint32_t rtt_ms;            /**< 往返延迟 (ms) */
-    uint32_t one_way_delay_ms;  /**< 单向延迟 (ms) */
-    
-    /* 音频相关 */
-    float snr_db;               /**< 信噪比 (dB) */
-    float noise_level_db;       /**< 噪声电平 (dB) */
-    float signal_level_db;      /**< 信号电平 (dB) */
-    float clipping_rate;        /**< 削波率 */
-    
-    /* 语音相关 */
-    float speech_ratio;         /**< 语音占比 (0-1) */
-    uint32_t speech_duration_ms;/**< 语音时长 (ms) */
-    
+
+    /* Network related */
+    float packet_loss_rate;     /**< Packet loss rate (0-1) */
+    uint32_t jitter_ms;         /**< Jitter (ms) */
+    uint32_t rtt_ms;            /**< Round-trip time (ms) */
+    uint32_t one_way_delay_ms;  /**< One-way delay (ms) */
+
+    /* Audio related */
+    float snr_db;               /**< Signal-to-noise ratio (dB) */
+    float noise_level_db;       /**< Noise level (dB) */
+    float signal_level_db;      /**< Signal level (dB) */
+    float clipping_rate;        /**< Clipping rate */
+
+    /* Speech related */
+    float speech_ratio;         /**< Speech ratio (0-1) */
+    uint32_t speech_duration_ms;/**< Speech duration (ms) */
+
     /* R-Factor (ITU-T G.107) */
-    float r_factor;             /**< R值 (0-100) */
-    
-    /* 问题标志 */
-    bool has_echo;              /**< 检测到回声 */
-    bool has_noise;             /**< 噪声过大 */
-    bool has_clipping;          /**< 有削波 */
-    bool low_volume;            /**< 音量过低 */
+    float r_factor;             /**< R value (0-100) */
+
+    /* Problem flags */
+    bool has_echo;              /**< Echo detected */
+    bool has_noise;             /**< Excessive noise */
+    bool has_clipping;          /**< Clipping present */
+    bool low_volume;            /**< Volume too low */
 } voice_quality_metrics_t;
 
 /* ============================================
- * 配置
+ * Configuration
  * ============================================ */
 
 typedef struct {
     uint32_t sample_rate;
     uint32_t frame_size;
-    uint32_t analysis_window_ms;    /**< 分析窗口 (ms) */
-    
-    /* 阈值 */
-    float noise_threshold_db;       /**< 噪声阈值 */
-    float snr_threshold_db;         /**< 信噪比阈值 */
-    float clipping_threshold;       /**< 削波阈值 */
+    uint32_t analysis_window_ms;    /**< Analysis window (ms) */
+
+    /* Thresholds */
+    float noise_threshold_db;       /**< Noise threshold */
+    float snr_threshold_db;         /**< SNR threshold */
+    float clipping_threshold;       /**< Clipping threshold */
 } voice_quality_config_t;
 
 /* ============================================
- * 质量分析器 API
+ * Quality Analyzer API
  * ============================================ */
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
  */
-void voice_quality_config_init(voice_quality_config_t *config);
+VOICE_API void voice_quality_config_init(voice_quality_config_t *config);
 
 /**
- * @brief 创建质量分析器
+ * @brief Create quality analyzer
  */
-voice_quality_analyzer_t *voice_quality_analyzer_create(
+VOICE_API voice_quality_analyzer_t *voice_quality_analyzer_create(
     const voice_quality_config_t *config
 );
 
 /**
- * @brief 销毁分析器
+ * @brief Destroy analyzer
  */
-void voice_quality_analyzer_destroy(voice_quality_analyzer_t *analyzer);
+VOICE_API void voice_quality_analyzer_destroy(voice_quality_analyzer_t *analyzer);
 
 /**
- * @brief 分析音频帧
+ * @brief Analyze audio frame
  */
-voice_error_t voice_quality_analyze_frame(
+VOICE_API voice_error_t voice_quality_analyze_frame(
     voice_quality_analyzer_t *analyzer,
     const int16_t *samples,
     size_t num_samples
 );
 
 /**
- * @brief 更新网络指标
+ * @brief Update network metrics
  */
-void voice_quality_update_network(
+VOICE_API void voice_quality_update_network(
     voice_quality_analyzer_t *analyzer,
     float packet_loss_rate,
     uint32_t jitter_ms,
@@ -116,63 +117,63 @@ void voice_quality_update_network(
 );
 
 /**
- * @brief 获取质量指标
+ * @brief Get quality metrics
  */
-voice_error_t voice_quality_get_metrics(
+VOICE_API voice_error_t voice_quality_get_metrics(
     voice_quality_analyzer_t *analyzer,
     voice_quality_metrics_t *metrics
 );
 
 /**
- * @brief 重置分析器
+ * @brief Reset analyzer
  */
-void voice_quality_reset(voice_quality_analyzer_t *analyzer);
+VOICE_API void voice_quality_reset(voice_quality_analyzer_t *analyzer);
 
 /* ============================================
- * MOS 估计函数
+ * MOS Estimation Functions
  * ============================================ */
 
 /**
- * @brief 基于 E-Model (ITU-T G.107) 计算 R-Factor
- * @param delay_ms 单向延迟 (ms)
- * @param packet_loss_pct 丢包率 (百分比, 0-100)
- * @param codec_ie 编解码器损伤因子 (Opus约10, G.711约0)
+ * @brief Calculate R-Factor based on E-Model (ITU-T G.107)
+ * @param delay_ms One-way delay (ms)
+ * @param packet_loss_pct Packet loss rate (percentage, 0-100)
+ * @param codec_ie Codec impairment factor (Opus ~10, G.711 ~0)
  * @return R-Factor (0-100)
  */
-float voice_calculate_r_factor(
+VOICE_API float voice_calculate_r_factor(
     uint32_t delay_ms,
     float packet_loss_pct,
     float codec_ie
 );
 
 /**
- * @brief R-Factor 转 MOS
- * @param r_factor R值 (0-100)
- * @return MOS 分数 (1.0-5.0)
+ * @brief Convert R-Factor to MOS
+ * @param r_factor R value (0-100)
+ * @return MOS score (1.0-5.0)
  */
-float voice_r_factor_to_mos(float r_factor);
+VOICE_API float voice_r_factor_to_mos(float r_factor);
 
 /**
- * @brief 快速 MOS 估计
+ * @brief Quick MOS estimation
  */
-float voice_estimate_mos(
+VOICE_API float voice_estimate_mos(
     uint32_t delay_ms,
     float packet_loss_pct,
     uint32_t jitter_ms
 );
 
 /**
- * @brief 获取质量描述
+ * @brief Get quality description
  */
-const char *voice_mos_description(float mos);
+VOICE_API const char *voice_mos_description(float mos);
 
 /**
- * @brief 获取 R-Factor 描述
+ * @brief Get R-Factor description
  */
-const char *voice_r_factor_description(float r_factor);
+VOICE_API const char *voice_r_factor_description(float r_factor);
 
 /* ============================================
- * 编解码器损伤因子 (Ie)
+ * Codec Impairment Factors (Ie)
  * ITU-T G.113 Appendix I
  * ============================================ */
 

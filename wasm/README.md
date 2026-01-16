@@ -12,6 +12,9 @@ SonicKit 的 WebAssembly 版本，将音频处理能力带到浏览器端。
 - ✅ **自动增益控制** (AGC) - 多种模式
 - ✅ **重采样** - 高质量采样率转换
 - ✅ **语音活动检测** (VAD) - 实时语音检测
+- ✅ **DTMF 检测/生成** - 电话按键音处理
+- ✅ **延时估计** - 信号延时测量
+- ✅ **时间拉伸** - 变速不变调处理
 
 ### 编解码器
 - ✅ **Opus** - 高质量语音编码
@@ -22,12 +25,27 @@ SonicKit 的 WebAssembly 版本，将音频处理能力带到浏览器端。
 - ✅ **混音器** - 多流混合
 - ✅ **音频质量分析** - MOS 评分
 - ✅ **电平监测** - RMS/峰值测量
+- ✅ **抖动缓冲** - 网络音频缓冲
 
 ### 音频效果
 - ✅ **均衡器** - 多频段参数均衡
 - ✅ **压缩器** - 动态范围控制
-- ✅ **DTMF** - 双音多频检测/生成
+- ✅ **限幅器** - 峰值限制
+- ✅ **噪声门** - 背景噪音消除
 - ✅ **舒适噪声** - CNG 生成
+- ✅ **混响** - 房间模拟效果
+- ✅ **延迟** - 回声效果
+- ✅ **变调** - 音调变换
+- ✅ **合唱** - 声音加厚效果
+- ✅ **镶边** - 调制效果
+
+### 空间音频
+- ✅ **空间渲染** - 3D 音频定位
+- ✅ **HRTF** - 头部相关传输函数
+
+### 音频水印
+- ✅ **水印嵌入** - 隐藏数据嵌入
+- ✅ **水印检测** - 隐藏数据提取
 
 ## 🚀 快速开始
 
@@ -70,12 +88,12 @@ chmod +x build.sh
 <script src="sonickit.js"></script>
 <script>
   let sonicKit = null;
-  
+
   async function init() {
     sonicKit = await createSonicKit();
     console.log('SonicKit WASM loaded!');
   }
-  
+
   init();
 </script>
 ```
@@ -313,7 +331,7 @@ import { useEffect, useState } from 'react';
 function AudioProcessor() {
   const [sonicKit, setSonicKit] = useState(null);
   const [denoiser, setDenoiser] = useState(null);
-  
+
   useEffect(() => {
     const script = document.createElement('script');
     script.src = '/sonickit.js';
@@ -323,14 +341,14 @@ function AudioProcessor() {
     };
     document.body.appendChild(script);
   }, []);
-  
+
   const startDenoising = () => {
     if (sonicKit) {
       const den = new sonicKit.Denoiser(48000, 480, 1);
       setDenoiser(den);
     }
   };
-  
+
   return <button onClick={startDenoising}>Start</button>;
 }
 ```
@@ -351,7 +369,7 @@ onMounted(async () => {
     script.onload = resolve;
     document.body.appendChild(script);
   });
-  
+
   sonicKit.value = await window.createSonicKit();
 });
 

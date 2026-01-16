@@ -9,37 +9,38 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* ============================================
- * 重采样器
+ * Resampler
  * ============================================ */
 
-/** 重采样器句柄 */
+/** Resampler handle */
 typedef struct voice_resampler_s voice_resampler_t;
 
-/** 重采样质量 */
+/** Resample quality */
 typedef enum {
-    VOICE_RESAMPLE_QUALITY_FAST = 0,        /**< 最快 (质量0) */
-    VOICE_RESAMPLE_QUALITY_LOW = 2,         /**< 低质量 */
-    VOICE_RESAMPLE_QUALITY_MEDIUM = 4,      /**< 中等质量 */
-    VOICE_RESAMPLE_QUALITY_DEFAULT = 5,     /**< 默认 (推荐) */
-    VOICE_RESAMPLE_QUALITY_HIGH = 7,        /**< 高质量 */
-    VOICE_RESAMPLE_QUALITY_BEST = 10        /**< 最佳质量 */
+    VOICE_RESAMPLE_QUALITY_FAST = 0,        /**< Fastest (quality 0) */
+    VOICE_RESAMPLE_QUALITY_LOW = 2,         /**< Low quality */
+    VOICE_RESAMPLE_QUALITY_MEDIUM = 4,      /**< Medium quality */
+    VOICE_RESAMPLE_QUALITY_DEFAULT = 5,     /**< Default (recommended) */
+    VOICE_RESAMPLE_QUALITY_HIGH = 7,        /**< High quality */
+    VOICE_RESAMPLE_QUALITY_BEST = 10        /**< Best quality */
 } voice_resample_quality_t;
 
 /**
- * @brief 创建重采样器
- * @param channels 通道数
- * @param in_rate 输入采样率
- * @param out_rate 输出采样率
- * @param quality 质量等级 (0-10)
- * @return 重采样器句柄
+ * @brief Create resampler
+ * @param channels Number of channels
+ * @param in_rate Input sample rate
+ * @param out_rate Output sample rate
+ * @param quality Quality level (0-10)
+ * @return Resampler handle
  */
-voice_resampler_t *voice_resampler_create(
+VOICE_API voice_resampler_t *voice_resampler_create(
     uint8_t channels,
     uint32_t in_rate,
     uint32_t out_rate,
@@ -47,21 +48,21 @@ voice_resampler_t *voice_resampler_create(
 );
 
 /**
- * @brief 销毁重采样器
- * @param rs 重采样器句柄
+ * @brief Destroy resampler
+ * @param rs Resampler handle
  */
-void voice_resampler_destroy(voice_resampler_t *rs);
+VOICE_API void voice_resampler_destroy(voice_resampler_t *rs);
 
 /**
- * @brief 处理int16格式音频
- * @param rs 重采样器句柄
- * @param in 输入数据
- * @param in_frames 输入帧数 (每通道样本数)
- * @param out 输出缓冲区
- * @param out_frames 输出缓冲区可容纳的帧数
- * @return 实际输出的帧数，负数表示错误
+ * @brief Process int16 format audio
+ * @param rs Resampler handle
+ * @param in Input data
+ * @param in_frames Input frame count (samples per channel)
+ * @param out Output buffer
+ * @param out_frames Output buffer capacity in frames
+ * @return Actual output frame count, negative on error
  */
-int voice_resampler_process_int16(
+VOICE_API int voice_resampler_process_int16(
     voice_resampler_t *rs,
     const int16_t *in,
     size_t in_frames,
@@ -70,15 +71,15 @@ int voice_resampler_process_int16(
 );
 
 /**
- * @brief 处理float格式音频
- * @param rs 重采样器句柄
- * @param in 输入数据
- * @param in_frames 输入帧数 (每通道样本数)
- * @param out 输出缓冲区
- * @param out_frames 输出缓冲区可容纳的帧数
- * @return 实际输出的帧数，负数表示错误
+ * @brief Process float format audio
+ * @param rs Resampler handle
+ * @param in Input data
+ * @param in_frames Input frame count (samples per channel)
+ * @param out Output buffer
+ * @param out_frames Output buffer capacity in frames
+ * @return Actual output frame count, negative on error
  */
-int voice_resampler_process_float(
+VOICE_API int voice_resampler_process_float(
     voice_resampler_t *rs,
     const float *in,
     size_t in_frames,
@@ -87,61 +88,61 @@ int voice_resampler_process_float(
 );
 
 /**
- * @brief 设置采样率
- * @param rs 重采样器句柄
- * @param in_rate 输入采样率
- * @param out_rate 输出采样率
- * @return 错误码
+ * @brief Set sample rate
+ * @param rs Resampler handle
+ * @param in_rate Input sample rate
+ * @param out_rate Output sample rate
+ * @return Error code
  */
-voice_error_t voice_resampler_set_rate(
+VOICE_API voice_error_t voice_resampler_set_rate(
     voice_resampler_t *rs,
     uint32_t in_rate,
     uint32_t out_rate
 );
 
 /**
- * @brief 设置质量
- * @param rs 重采样器句柄
- * @param quality 质量等级 (0-10)
- * @return 错误码
+ * @brief Set quality
+ * @param rs Resampler handle
+ * @param quality Quality level (0-10)
+ * @return Error code
  */
-voice_error_t voice_resampler_set_quality(voice_resampler_t *rs, int quality);
+VOICE_API voice_error_t voice_resampler_set_quality(voice_resampler_t *rs, int quality);
 
 /**
- * @brief 获取输入延迟
- * @param rs 重采样器句柄
- * @return 输入延迟(样本数)
+ * @brief Get input latency
+ * @param rs Resampler handle
+ * @return Input latency (samples)
  */
-int voice_resampler_get_input_latency(voice_resampler_t *rs);
+VOICE_API int voice_resampler_get_input_latency(voice_resampler_t *rs);
 
 /**
- * @brief 获取输出延迟
- * @param rs 重采样器句柄
- * @return 输出延迟(样本数)
+ * @brief Get output latency
+ * @param rs Resampler handle
+ * @return Output latency (samples)
  */
-int voice_resampler_get_output_latency(voice_resampler_t *rs);
+VOICE_API int voice_resampler_get_output_latency(voice_resampler_t *rs);
 
 /**
- * @brief 重置重采样器状态
- * @param rs 重采样器句柄
+ * @brief Reset resampler state
+ * @param rs Resampler handle
  */
-void voice_resampler_reset(voice_resampler_t *rs);
+VOICE_API void voice_resampler_reset(voice_resampler_t *rs);
 
 /**
- * @brief 计算输出帧数
- * @param rs 重采样器句柄
- * @param in_frames 输入帧数
- * @return 预期输出帧数
+ * @brief Calculate output frame count
+ * @param rs Resampler handle
+ * @param in_frames Input frame count
+ * @return Expected output frame count
  */
-size_t voice_resampler_get_output_frames(voice_resampler_t *rs, size_t in_frames);
+VOICE_API size_t voice_resampler_get_output_frames(voice_resampler_t *rs, size_t in_frames);
 
 /**
- * @brief 计算输入帧数
- * @param rs 重采样器句柄
- * @param out_frames 需要的输出帧数
- * @return 需要的输入帧数
+ * @brief Calculate input frame count
+ * @param rs Resampler handle
+ * @param out_frames Required output frame count
+ * @return Required input frame count
  */
-size_t voice_resampler_get_input_frames(voice_resampler_t *rs, size_t out_frames);
+VOICE_API size_t voice_resampler_get_input_frames(voice_resampler_t *rs, size_t out_frames);
 
 #ifdef __cplusplus
 }

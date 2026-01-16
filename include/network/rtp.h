@@ -12,6 +12,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -20,7 +21,7 @@ extern "C" {
 #endif
 
 /* ============================================
- * RTP 常量定义
+ * RTP Constants
  * ============================================ */
 
 #define RTP_VERSION             2
@@ -34,10 +35,10 @@ extern "C" {
 #define RTP_PT_DYNAMIC_MAX      127
 
 /* ============================================
- * RTP 头部结构
+ * RTP Header Structure
  * ============================================ */
 
-/** RTP 固定头部 (12字节) */
+/** RTP fixed header (12 bytes) */
 typedef struct {
 #if defined(__BIG_ENDIAN__)
     uint8_t version:2;
@@ -59,14 +60,14 @@ typedef struct {
     uint32_t ssrc;
 } rtp_header_t;
 
-/** RTP 扩展头 */
+/** RTP extension header */
 typedef struct {
     uint16_t profile_specific;
-    uint16_t length;  /* 扩展数据长度 (32位字) */
-    /* 扩展数据跟随其后 */
+    uint16_t length;  /* Extension data length (32-bit words) */
+    /* Extension data follows */
 } rtp_extension_t;
 
-/** RTP 包结构 */
+/** RTP packet structure */
 typedef struct {
     rtp_header_t header;
     uint32_t csrc[RTP_MAX_CSRC];
@@ -81,10 +82,10 @@ typedef struct {
 } rtp_packet_t;
 
 /* ============================================
- * RTCP 类型定义
+ * RTCP Type Definitions
  * ============================================ */
 
-/** RTCP 包类型 */
+/** RTCP packet type */
 typedef enum {
     RTCP_TYPE_SR   = 200,   /**< Sender Report */
     RTCP_TYPE_RR   = 201,   /**< Receiver Report */
@@ -95,7 +96,7 @@ typedef enum {
     RTCP_TYPE_PSFB = 206,   /**< Payload-specific Feedback */
 } rtcp_type_t;
 
-/** RTCP 公共头 */
+/** RTCP common header */
 typedef struct {
 #if defined(__BIG_ENDIAN__)
     uint8_t version:2;
@@ -107,98 +108,98 @@ typedef struct {
     uint8_t version:2;
 #endif
     uint8_t packet_type;
-    uint16_t length;  /* 长度 (32位字) - 1 */
+    uint16_t length;  /* Length (32-bit words) - 1 */
 } rtcp_header_t;
 
 /** RTCP SR (Sender Report) */
 typedef struct {
     uint32_t ssrc;
-    uint32_t ntp_sec;       /**< NTP 时间戳 (秒) */
-    uint32_t ntp_frac;      /**< NTP 时间戳 (小数) */
-    uint32_t rtp_timestamp; /**< RTP 时间戳 */
-    uint32_t packet_count;  /**< 发送包数 */
-    uint32_t octet_count;   /**< 发送字节数 */
+    uint32_t ntp_sec;       /**< NTP timestamp (seconds) */
+    uint32_t ntp_frac;      /**< NTP timestamp (fraction) */
+    uint32_t rtp_timestamp; /**< RTP timestamp */
+    uint32_t packet_count;  /**< Packets sent */
+    uint32_t octet_count;   /**< Bytes sent */
 } rtcp_sr_t;
 
 /** RTCP RR (Receiver Report Block) */
 typedef struct {
-    uint32_t ssrc;          /**< 报告源 SSRC */
+    uint32_t ssrc;          /**< Report source SSRC */
     uint32_t fraction_lost:8;
     uint32_t cumulative_lost:24;
-    uint32_t highest_seq;   /**< 最高接收序列号 */
-    uint32_t jitter;        /**< 抖动 */
-    uint32_t last_sr;       /**< 最后SR时间戳 */
-    uint32_t delay_since_sr;/**< 距离最后SR的延迟 */
+    uint32_t highest_seq;   /**< Highest received sequence number */
+    uint32_t jitter;        /**< Jitter */
+    uint32_t last_sr;       /**< Last SR timestamp */
+    uint32_t delay_since_sr;/**< Delay since last SR */
 } rtcp_rr_block_t;
 
 /* ============================================
- * RTP 会话句柄
+ * RTP Session Handle
  * ============================================ */
 
 typedef struct rtp_session_s rtp_session_t;
 
-/** RTP 会话配置 */
+/** RTP session configuration */
 typedef struct {
-    uint32_t ssrc;              /**< SSRC (0=自动生成) */
-    uint8_t payload_type;       /**< 载荷类型 */
-    uint32_t clock_rate;        /**< 时钟频率 */
-    uint32_t max_packet_size;   /**< 最大包大小 */
-    bool enable_rtcp;           /**< 启用RTCP */
-    uint32_t rtcp_bandwidth;    /**< RTCP带宽 (bps) */
+    uint32_t ssrc;              /**< SSRC (0=auto-generate) */
+    uint8_t payload_type;       /**< Payload type */
+    uint32_t clock_rate;        /**< Clock rate */
+    uint32_t max_packet_size;   /**< Maximum packet size */
+    bool enable_rtcp;           /**< Enable RTCP */
+    uint32_t rtcp_bandwidth;    /**< RTCP bandwidth (bps) */
 } rtp_session_config_t;
 
-/** RTP 统计信息 */
+/** RTP statistics */
 typedef struct {
-    /* 发送统计 */
+    /* Send statistics */
     uint64_t packets_sent;
     uint64_t bytes_sent;
     uint32_t packets_lost;
 
-    /* 接收统计 */
+    /* Receive statistics */
     uint64_t packets_received;
     uint64_t bytes_received;
     uint32_t packets_lost_recv;
     uint32_t packets_reordered;
     uint32_t packets_duplicate;
 
-    /* 质量指标 */
-    uint32_t jitter;            /**< 抖动 (时钟单位) */
-    float fraction_lost;        /**< 丢包率 (0-1) */
-    uint32_t rtt_ms;            /**< 往返延迟 (ms) */
+    /* Quality metrics */
+    uint32_t jitter;            /**< Jitter (clock units) */
+    float fraction_lost;        /**< Packet loss rate (0-1) */
+    uint32_t rtt_ms;            /**< Round-trip time (ms) */
 } rtp_statistics_t;
 
 /* ============================================
- * RTP 会话 API
+ * RTP Session API
  * ============================================ */
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
  */
-void rtp_session_config_init(rtp_session_config_t *config);
+VOICE_API void rtp_session_config_init(rtp_session_config_t *config);
 
 /**
- * @brief 创建 RTP 会话
+ * @brief Create RTP session
  */
-rtp_session_t *rtp_session_create(const rtp_session_config_t *config);
+VOICE_API rtp_session_t *rtp_session_create(const rtp_session_config_t *config);
 
 /**
- * @brief 销毁 RTP 会话
+ * @brief Destroy RTP session
  */
-void rtp_session_destroy(rtp_session_t *session);
+VOICE_API void rtp_session_destroy(rtp_session_t *session);
 
 /**
- * @brief 创建 RTP 包
+ * @brief Create RTP packet
  *
- * @param session RTP会话
- * @param payload 载荷数据
- * @param payload_size 载荷大小
- * @param timestamp RTP时间戳
- * @param marker 标记位
- * @param output 输出缓冲区
- * @param output_size 缓冲区大小(输入)/实际大小(输出)
- * @return 错误码
+ * @param session RTP session
+ * @param payload Payload data
+ * @param payload_size Payload size
+ * @param timestamp RTP timestamp
+ * @param marker Marker bit
+ * @param output Output buffer
+ * @param output_size Buffer size (input) / actual size (output)
+ * @return Error code
  */
-voice_error_t rtp_session_create_packet(
+VOICE_API voice_error_t rtp_session_create_packet(
     rtp_session_t *session,
     const uint8_t *payload,
     size_t payload_size,
@@ -209,15 +210,15 @@ voice_error_t rtp_session_create_packet(
 );
 
 /**
- * @brief 解析 RTP 包
+ * @brief Parse RTP packet
  *
- * @param session RTP会话 (可为NULL)
- * @param data 包数据
- * @param size 包大小
- * @param packet 输出解析结果
- * @return 错误码
+ * @param session RTP session (can be NULL)
+ * @param data Packet data
+ * @param size Packet size
+ * @param packet Output parsed result
+ * @return Error code
  */
-voice_error_t rtp_session_parse_packet(
+VOICE_API voice_error_t rtp_session_parse_packet(
     rtp_session_t *session,
     const uint8_t *data,
     size_t size,
@@ -225,64 +226,64 @@ voice_error_t rtp_session_parse_packet(
 );
 
 /**
- * @brief 处理接收的 RTP 包
+ * @brief Process received RTP packet
  *
- * 更新接收统计，处理序列号等
+ * Updates receive statistics, handles sequence numbers, etc.
  */
-voice_error_t rtp_session_process_received(
+VOICE_API voice_error_t rtp_session_process_received(
     rtp_session_t *session,
     const rtp_packet_t *packet
 );
 
 /**
- * @brief 获取统计信息
+ * @brief Get statistics
  */
-voice_error_t rtp_session_get_statistics(
+VOICE_API voice_error_t rtp_session_get_statistics(
     rtp_session_t *session,
     rtp_statistics_t *stats
 );
 
 /**
- * @brief 重置统计信息
+ * @brief Reset statistics
  */
-void rtp_session_reset_statistics(rtp_session_t *session);
+VOICE_API void rtp_session_reset_statistics(rtp_session_t *session);
 
 /**
- * @brief 获取 SSRC
+ * @brief Get SSRC
  */
-uint32_t rtp_session_get_ssrc(rtp_session_t *session);
+VOICE_API uint32_t rtp_session_get_ssrc(rtp_session_t *session);
 
 /**
- * @brief 设置 SSRC
+ * @brief Set SSRC
  */
-void rtp_session_set_ssrc(rtp_session_t *session, uint32_t ssrc);
+VOICE_API void rtp_session_set_ssrc(rtp_session_t *session, uint32_t ssrc);
 
 /* ============================================
  * RTCP API
  * ============================================ */
 
 /**
- * @brief 创建 RTCP SR 包
+ * @brief Create RTCP SR packet
  */
-voice_error_t rtcp_create_sr(
+VOICE_API voice_error_t rtcp_create_sr(
     rtp_session_t *session,
     uint8_t *output,
     size_t *output_size
 );
 
 /**
- * @brief 创建 RTCP RR 包
+ * @brief Create RTCP RR packet
  */
-voice_error_t rtcp_create_rr(
+VOICE_API voice_error_t rtcp_create_rr(
     rtp_session_t *session,
     uint8_t *output,
     size_t *output_size
 );
 
 /**
- * @brief 创建 RTCP BYE 包
+ * @brief Create RTCP BYE packet
  */
-voice_error_t rtcp_create_bye(
+VOICE_API voice_error_t rtcp_create_bye(
     rtp_session_t *session,
     const char *reason,
     uint8_t *output,
@@ -290,55 +291,55 @@ voice_error_t rtcp_create_bye(
 );
 
 /**
- * @brief 解析 RTCP 包
+ * @brief Parse RTCP packet
  */
-voice_error_t rtcp_parse(
+VOICE_API voice_error_t rtcp_parse(
     const uint8_t *data,
     size_t size,
     rtcp_header_t *header
 );
 
 /**
- * @brief 处理接收的 RTCP SR
+ * @brief Process received RTCP SR
  */
-voice_error_t rtcp_process_sr(
+VOICE_API voice_error_t rtcp_process_sr(
     rtp_session_t *session,
     const uint8_t *data,
     size_t size
 );
 
 /**
- * @brief 处理接收的 RTCP RR
+ * @brief Process received RTCP RR
  */
-voice_error_t rtcp_process_rr(
+VOICE_API voice_error_t rtcp_process_rr(
     rtp_session_t *session,
     const uint8_t *data,
     size_t size
 );
 
 /* ============================================
- * 工具函数
+ * Utility Functions
  * ============================================ */
 
 /**
- * @brief 生成随机 SSRC
+ * @brief Generate random SSRC
  */
-uint32_t rtp_generate_ssrc(void);
+VOICE_API uint32_t rtp_generate_ssrc(void);
 
 /**
- * @brief 生成随机初始序列号
+ * @brief Generate random initial sequence number
  */
-uint16_t rtp_generate_sequence(void);
+VOICE_API uint16_t rtp_generate_sequence(void);
 
 /**
- * @brief 获取当前 NTP 时间戳
+ * @brief Get current NTP timestamp
  */
-void rtp_get_ntp_timestamp(uint32_t *ntp_sec, uint32_t *ntp_frac);
+VOICE_API void rtp_get_ntp_timestamp(uint32_t *ntp_sec, uint32_t *ntp_frac);
 
 /**
- * @brief 计算序列号差值 (处理回绕)
+ * @brief Calculate sequence number difference (handles wrap-around)
  */
-int32_t rtp_sequence_diff(uint16_t seq1, uint16_t seq2);
+VOICE_API int32_t rtp_sequence_diff(uint16_t seq1, uint16_t seq2);
 
 #ifdef __cplusplus
 }

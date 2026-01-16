@@ -2,7 +2,7 @@
  * @file sip_ua.h
  * @brief SIP User Agent
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
+ *
  * Complete SIP User Agent implementation for making and receiving calls.
  * Handles:
  * - Registration with SIP registrar
@@ -18,6 +18,7 @@
 #include "sip/sip_core.h"
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -84,22 +85,22 @@ typedef struct {
     char call_id[128];
     sip_call_state_t state;
     sip_call_direction_t direction;
-    
+
     /* Parties */
     sip_address_t local;
     sip_address_t remote;
-    
+
     /* Media info */
     char remote_sdp[4096];
     char local_sdp[4096];
     char remote_rtp_host[64];
     uint16_t remote_rtp_port;
-    
+
     /* Timing */
     uint64_t start_time;
     uint64_t connect_time;
     uint64_t end_time;
-    
+
     /* Stats */
     uint32_t rtp_packets_sent;
     uint32_t rtp_packets_received;
@@ -112,7 +113,7 @@ typedef struct {
 /**
  * @brief Registration state callback
  */
-typedef void (*sip_on_registration_state_t)(sip_ua_t *ua, 
+typedef void (*sip_on_registration_state_t)(sip_ua_t *ua,
                                              sip_registration_state_t state,
                                              int expires,
                                              void *user_data);
@@ -120,7 +121,7 @@ typedef void (*sip_on_registration_state_t)(sip_ua_t *ua,
 /**
  * @brief Incoming call callback
  */
-typedef void (*sip_on_incoming_call_t)(sip_ua_t *ua, 
+typedef void (*sip_on_incoming_call_t)(sip_ua_t *ua,
                                         sip_call_t *call,
                                         const sip_call_info_t *info,
                                         void *user_data);
@@ -128,7 +129,7 @@ typedef void (*sip_on_incoming_call_t)(sip_ua_t *ua,
 /**
  * @brief Call state callback
  */
-typedef void (*sip_on_call_state_t)(sip_ua_t *ua, 
+typedef void (*sip_on_call_state_t)(sip_ua_t *ua,
                                      sip_call_t *call,
                                      sip_call_state_t state,
                                      void *user_data);
@@ -161,27 +162,27 @@ typedef struct {
     char password[128];
     char domain[256];
     char display_name[128];
-    
+
     /* Server settings */
     char registrar_host[256];
     uint16_t registrar_port;
     char proxy_host[256];
     uint16_t proxy_port;
-    
+
     /* Transport */
     sip_transport_type_t transport;
     uint16_t local_port;
     char local_host[64];
-    
+
     /* Registration */
     bool auto_register;
     int register_expires;
     int register_retry_interval;
-    
+
     /* RTP settings */
     uint16_t rtp_port_min;
     uint16_t rtp_port_max;
-    
+
     /* Callbacks */
     sip_on_registration_state_t on_registration;
     sip_on_incoming_call_t on_incoming_call;
@@ -189,7 +190,7 @@ typedef struct {
     sip_on_call_media_t on_call_media;
     sip_on_dtmf_t on_dtmf;
     void *callback_user_data;
-    
+
     /* Audio codecs (in preference order) */
     uint8_t audio_codecs[16];
     int audio_codec_count;
@@ -202,32 +203,32 @@ typedef struct {
 /**
  * @brief Initialize UA config with defaults
  */
-void sip_ua_config_init(sip_ua_config_t *config);
+VOICE_API void sip_ua_config_init(sip_ua_config_t *config);
 
 /**
  * @brief Create SIP User Agent
  */
-sip_ua_t *sip_ua_create(const sip_ua_config_t *config);
+VOICE_API sip_ua_t *sip_ua_create(const sip_ua_config_t *config);
 
 /**
  * @brief Destroy SIP User Agent
  */
-void sip_ua_destroy(sip_ua_t *ua);
+VOICE_API void sip_ua_destroy(sip_ua_t *ua);
 
 /**
  * @brief Start the UA (begin listening and processing)
  */
-voice_error_t sip_ua_start(sip_ua_t *ua);
+VOICE_API voice_error_t sip_ua_start(sip_ua_t *ua);
 
 /**
  * @brief Stop the UA
  */
-voice_error_t sip_ua_stop(sip_ua_t *ua);
+VOICE_API voice_error_t sip_ua_stop(sip_ua_t *ua);
 
 /**
  * @brief Process pending events (call periodically)
  */
-voice_error_t sip_ua_process(sip_ua_t *ua, int timeout_ms);
+VOICE_API voice_error_t sip_ua_process(sip_ua_t *ua, int timeout_ms);
 
 /* ============================================
  * Registration
@@ -236,22 +237,22 @@ voice_error_t sip_ua_process(sip_ua_t *ua, int timeout_ms);
 /**
  * @brief Register with SIP registrar
  */
-voice_error_t sip_ua_register(sip_ua_t *ua);
+VOICE_API voice_error_t sip_ua_register(sip_ua_t *ua);
 
 /**
  * @brief Unregister from SIP registrar
  */
-voice_error_t sip_ua_unregister(sip_ua_t *ua);
+VOICE_API voice_error_t sip_ua_unregister(sip_ua_t *ua);
 
 /**
  * @brief Get registration state
  */
-sip_registration_state_t sip_ua_get_registration_state(sip_ua_t *ua);
+VOICE_API sip_registration_state_t sip_ua_get_registration_state(sip_ua_t *ua);
 
 /**
  * @brief Check if registered
  */
-bool sip_ua_is_registered(sip_ua_t *ua);
+VOICE_API bool sip_ua_is_registered(sip_ua_t *ua);
 
 /* ============================================
  * Call Management
@@ -260,67 +261,67 @@ bool sip_ua_is_registered(sip_ua_t *ua);
 /**
  * @brief Make outgoing call
  */
-sip_call_t *sip_ua_make_call(sip_ua_t *ua, const char *destination);
+VOICE_API sip_call_t *sip_ua_make_call(sip_ua_t *ua, const char *destination);
 
 /**
  * @brief Answer incoming call
  */
-voice_error_t sip_call_answer(sip_call_t *call, int status_code);
+VOICE_API voice_error_t sip_call_answer(sip_call_t *call, int status_code);
 
 /**
  * @brief Reject incoming call
  */
-voice_error_t sip_call_reject(sip_call_t *call, int status_code);
+VOICE_API voice_error_t sip_call_reject(sip_call_t *call, int status_code);
 
 /**
  * @brief Hang up call
  */
-voice_error_t sip_call_hangup(sip_call_t *call);
+VOICE_API voice_error_t sip_call_hangup(sip_call_t *call);
 
 /**
  * @brief Put call on hold
  */
-voice_error_t sip_call_hold(sip_call_t *call);
+VOICE_API voice_error_t sip_call_hold(sip_call_t *call);
 
 /**
  * @brief Resume held call
  */
-voice_error_t sip_call_resume(sip_call_t *call);
+VOICE_API voice_error_t sip_call_resume(sip_call_t *call);
 
 /**
  * @brief Send DTMF digit
  */
-voice_error_t sip_call_send_dtmf(sip_call_t *call, char digit, int duration_ms);
+VOICE_API voice_error_t sip_call_send_dtmf(sip_call_t *call, char digit, int duration_ms);
 
 /**
  * @brief Transfer call (REFER)
  */
-voice_error_t sip_call_transfer(sip_call_t *call, const char *destination);
+VOICE_API voice_error_t sip_call_transfer(sip_call_t *call, const char *destination);
 
 /**
  * @brief Get call info
  */
-voice_error_t sip_call_get_info(sip_call_t *call, sip_call_info_t *info);
+VOICE_API voice_error_t sip_call_get_info(sip_call_t *call, sip_call_info_t *info);
 
 /**
  * @brief Get call state
  */
-sip_call_state_t sip_call_get_state(sip_call_t *call);
+VOICE_API sip_call_state_t sip_call_get_state(sip_call_t *call);
 
 /**
  * @brief Get call ID
  */
-const char *sip_call_get_id(sip_call_t *call);
+VOICE_API const char *sip_call_get_id(sip_call_t *call);
 
 /**
  * @brief Set local SDP
  */
-voice_error_t sip_call_set_local_sdp(sip_call_t *call, const char *sdp);
+VOICE_API voice_error_t sip_call_set_local_sdp(sip_call_t *call, const char *sdp);
 
 /**
  * @brief Get remote SDP
  */
-const char *sip_call_get_remote_sdp(sip_call_t *call);
+VOICE_API const char *sip_call_get_remote_sdp(sip_call_t *call);
 
 /* ============================================
  * SDP Helpers
@@ -329,7 +330,7 @@ const char *sip_call_get_remote_sdp(sip_call_t *call);
 /**
  * @brief Generate basic audio SDP
  */
-voice_error_t sip_generate_sdp(char *buffer, size_t size,
+VOICE_API voice_error_t sip_generate_sdp(char *buffer, size_t size,
                                 const char *session_name,
                                 const char *local_ip,
                                 uint16_t rtp_port,
@@ -339,7 +340,7 @@ voice_error_t sip_generate_sdp(char *buffer, size_t size,
 /**
  * @brief Parse SDP for RTP info
  */
-voice_error_t sip_parse_sdp_rtp(const char *sdp,
+VOICE_API voice_error_t sip_parse_sdp_rtp(const char *sdp,
                                  char *host, size_t host_size,
                                  uint16_t *port,
                                  uint8_t *codecs, int *codec_count);
@@ -351,22 +352,22 @@ voice_error_t sip_parse_sdp_rtp(const char *sdp,
 /**
  * @brief Get call state as string
  */
-const char *sip_call_state_to_string(sip_call_state_t state);
+VOICE_API const char *sip_call_state_to_string(sip_call_state_t state);
 
 /**
  * @brief Get registration state as string
  */
-const char *sip_registration_state_to_string(sip_registration_state_t state);
+VOICE_API const char *sip_registration_state_to_string(sip_registration_state_t state);
 
 /**
  * @brief Get UA local URI
  */
-voice_error_t sip_ua_get_local_uri(sip_ua_t *ua, char *buffer, size_t size);
+VOICE_API voice_error_t sip_ua_get_local_uri(sip_ua_t *ua, char *buffer, size_t size);
 
 /**
  * @brief Get active call count
  */
-int sip_ua_get_call_count(sip_ua_t *ua);
+VOICE_API int sip_ua_get_call_count(sip_ua_t *ua);
 
 #ifdef __cplusplus
 }

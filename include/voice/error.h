@@ -7,6 +7,8 @@
 #ifndef VOICE_ERROR_H
 #define VOICE_ERROR_H
 
+#include "voice/export.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -130,62 +132,62 @@ typedef enum {
 } voice_log_level_t;
 
 /* ============================================
- * 错误处理函数
+ * Error Handling Functions
  * ============================================ */
 
 /**
- * @brief 获取错误码对应的错误信息
- * @param error 错误码
- * @return 错误信息字符串
+ * @brief Get error message for error code
+ * @param error Error code
+ * @return Error message string
  */
-const char *voice_error_string(voice_error_t error);
+VOICE_API const char *voice_error_string(voice_error_t error);
 
 /**
- * @brief 获取最后一次错误码
- * @return 错误码
+ * @brief Get last error code
+ * @return Error code
  */
-voice_error_t voice_get_last_error(void);
+VOICE_API voice_error_t voice_get_last_error(void);
 
 /**
- * @brief 设置最后一次错误码
- * @param error 错误码
+ * @brief Set last error code
+ * @param error Error code
  */
-void voice_set_last_error(voice_error_t error);
+VOICE_API void voice_set_last_error(voice_error_t error);
 
 /**
- * @brief 清除最后一次错误
+ * @brief Clear last error
  */
-void voice_clear_error(void);
+VOICE_API void voice_clear_error(void);
 
 /**
- * @brief 设置日志级别
- * @param level 日志级别
+ * @brief Set log level
+ * @param level Log level
  */
-void voice_set_log_level(voice_log_level_t level);
+VOICE_API void voice_set_log_level(voice_log_level_t level);
 
 /**
- * @brief 获取当前日志级别
- * @return 日志级别
+ * @brief Get current log level
+ * @return Log level
  */
-voice_log_level_t voice_get_log_level(void);
+VOICE_API voice_log_level_t voice_get_log_level(void);
 
 /**
- * @brief 设置日志回调
- * @param callback 日志回调函数
- * @param user_data 用户数据
+ * @brief Set log callback
+ * @param callback Log callback function
+ * @param user_data User data
  */
-void voice_set_log_callback(
+VOICE_API void voice_set_log_callback(
     void (*callback)(voice_log_level_t level, const char *msg, void *user_data),
     void *user_data
 );
 
 /**
- * @brief 输出日志
- * @param level 日志级别
- * @param fmt 格式字符串
- * @param ... 参数
+ * @brief Output log message
+ * @param level Log level
+ * @param fmt Format string
+ * @param ... Arguments
  */
-void voice_log(voice_log_level_t level, const char *fmt, ...);
+VOICE_API void voice_log(voice_log_level_t level, const char *fmt, ...);
 
 /* 日志宏 */
 #define VOICE_LOG_T(fmt, ...) voice_log(VOICE_LOG_TRACE, fmt, ##__VA_ARGS__)

@@ -11,6 +11,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -175,24 +176,24 @@ typedef struct {
 /**
  * @brief 初始化默认配置
  */
-void voice_stats_config_init(voice_stats_config_t *config);
+VOICE_API void voice_stats_config_init(voice_stats_config_t *config);
 
 /**
  * @brief 创建统计收集器
  */
-voice_stats_collector_t *voice_stats_collector_create(
+VOICE_API voice_stats_collector_t *voice_stats_collector_create(
     const voice_stats_config_t *config
 );
 
 /**
  * @brief 销毁统计收集器
  */
-void voice_stats_collector_destroy(voice_stats_collector_t *collector);
+VOICE_API void voice_stats_collector_destroy(voice_stats_collector_t *collector);
 
 /**
  * @brief 更新音频统计
  */
-void voice_stats_update_audio(
+VOICE_API void voice_stats_update_audio(
     voice_stats_collector_t *collector,
     const voice_audio_stats_t *stats
 );
@@ -200,7 +201,7 @@ void voice_stats_update_audio(
 /**
  * @brief 更新编解码器统计
  */
-void voice_stats_update_codec(
+VOICE_API void voice_stats_update_codec(
     voice_stats_collector_t *collector,
     const voice_codec_stats_t *stats
 );
@@ -208,7 +209,7 @@ void voice_stats_update_codec(
 /**
  * @brief 更新网络统计
  */
-void voice_stats_update_network(
+VOICE_API void voice_stats_update_network(
     voice_stats_collector_t *collector,
     const voice_network_stats_t *stats
 );
@@ -216,7 +217,7 @@ void voice_stats_update_network(
 /**
  * @brief 记录发送的包
  */
-void voice_stats_on_packet_sent(
+VOICE_API void voice_stats_on_packet_sent(
     voice_stats_collector_t *collector,
     size_t size
 );
@@ -224,7 +225,7 @@ void voice_stats_on_packet_sent(
 /**
  * @brief 记录接收的包
  */
-void voice_stats_on_packet_received(
+VOICE_API void voice_stats_on_packet_received(
     voice_stats_collector_t *collector,
     size_t size,
     uint32_t delay_ms
@@ -233,7 +234,7 @@ void voice_stats_on_packet_received(
 /**
  * @brief 记录丢失的包
  */
-void voice_stats_on_packet_lost(
+VOICE_API void voice_stats_on_packet_lost(
     voice_stats_collector_t *collector,
     uint32_t count
 );
@@ -241,7 +242,7 @@ void voice_stats_on_packet_lost(
 /**
  * @brief 获取会话统计
  */
-voice_error_t voice_stats_get_session(
+VOICE_API voice_error_t voice_stats_get_session(
     voice_stats_collector_t *collector,
     voice_session_stats_t *stats
 );
@@ -249,7 +250,7 @@ voice_error_t voice_stats_get_session(
 /**
  * @brief 获取最新快照
  */
-voice_error_t voice_stats_get_snapshot(
+VOICE_API voice_error_t voice_stats_get_snapshot(
     voice_stats_collector_t *collector,
     voice_stats_snapshot_t *snapshot
 );
@@ -257,7 +258,7 @@ voice_error_t voice_stats_get_snapshot(
 /**
  * @brief 获取历史快照
  */
-voice_error_t voice_stats_get_history(
+VOICE_API voice_error_t voice_stats_get_history(
     voice_stats_collector_t *collector,
     voice_stats_snapshot_t *snapshots,
     size_t *count
@@ -266,12 +267,12 @@ voice_error_t voice_stats_get_history(
 /**
  * @brief 重置统计
  */
-void voice_stats_reset(voice_stats_collector_t *collector);
+VOICE_API void voice_stats_reset(voice_stats_collector_t *collector);
 
 /**
  * @brief 导出统计为 JSON
  */
-size_t voice_stats_export_json(
+VOICE_API size_t voice_stats_export_json(
     voice_stats_collector_t *collector,
     char *buffer,
     size_t buffer_size
@@ -280,7 +281,7 @@ size_t voice_stats_export_json(
 /**
  * @brief 打印统计摘要
  */
-void voice_stats_print_summary(voice_stats_collector_t *collector);
+VOICE_API void voice_stats_print_summary(voice_stats_collector_t *collector);
 
 #ifdef __cplusplus
 }

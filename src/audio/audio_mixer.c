@@ -417,6 +417,53 @@ voice_error_t voice_mixer_set_master_gain(voice_mixer_t *mixer, float gain) {
     return VOICE_OK;
 }
 
+voice_error_t voice_mixer_set_source_gain(
+    voice_mixer_t *mixer,
+    mixer_source_id_t source_id,
+    float gain
+) {
+    if (!mixer) return VOICE_ERROR_NULL_POINTER;
+
+    MIXER_MUTEX_LOCK(mixer->mutex);
+
+    for (size_t i = 0; i < mixer->config.max_sources; i++) {
+        if (mixer->sources[i].active && mixer->sources[i].id == source_id) {
+            mixer->sources[i].config.gain = gain;
+            MIXER_MUTEX_UNLOCK(mixer->mutex);
+            return VOICE_OK;
+        }
+    }
+
+    MIXER_MUTEX_UNLOCK(mixer->mutex);
+    return VOICE_ERROR_NOT_FOUND;
+}
+
+voice_error_t voice_mixer_set_source_muted(
+    voice_mixer_t *mixer,
+    mixer_source_id_t source_id,
+    bool muted
+) {
+    if (!mixer) return VOICE_ERROR_NULL_POINTER;
+
+    MIXER_MUTEX_LOCK(mixer->mutex);
+
+    for (size_t i = 0; i < mixer->config.max_sources; i++) {
+        if (mixer->sources[i].active && mixer->sources[i].id == source_id) {
+            mixer->sources[i].config.muted = muted;
+            MIXER_MUTEX_UNLOCK(mixer->mutex);
+            return VOICE_OK;
+        }
+    }
+
+    MIXER_MUTEX_UNLOCK(mixer->mutex);
+    return VOICE_ERROR_NOT_FOUND;
+}
+
+size_t voice_mixer_get_active_sources(voice_mixer_t *mixer) {
+    if (!mixer) return 0;
+    return mixer->active_count;
+}
+
 voice_error_t voice_mixer_get_stats(voice_mixer_t *mixer, voice_mixer_stats_t *stats) {
     if (!mixer || !stats) return VOICE_ERROR_NULL_POINTER;
 

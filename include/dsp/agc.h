@@ -2,9 +2,9 @@
  * @file agc.h
  * @brief Automatic Gain Control (AGC)
  * @author wangxuebing <lynnss.codeai@gmail.com>
- * 
- * 自动增益控制模块，自动调整音频电平到目标范围
- * 支持多种 AGC 模式和自适应算法
+ *
+ * Automatic gain control module that adjusts audio levels to target range.
+ * Supports multiple AGC modes and adaptive algorithms.
  */
 
 #ifndef VOICE_AGC_H
@@ -12,6 +12,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -21,73 +22,73 @@ extern "C" {
 #endif
 
 /* ============================================
- * 类型定义
+ * Type Definitions
  * ============================================ */
 
 typedef struct voice_agc_s voice_agc_t;
 
-/** AGC 模式 */
+/** AGC mode */
 typedef enum {
-    VOICE_AGC_FIXED,            /**< 固定增益 */
-    VOICE_AGC_ADAPTIVE,         /**< 自适应增益 */
-    VOICE_AGC_ADAPTIVE_DIGITAL, /**< 数字自适应 (WebRTC 风格) */
-    VOICE_AGC_LIMITER,          /**< 仅限制器模式 */
+    VOICE_AGC_FIXED,            /**< Fixed gain */
+    VOICE_AGC_ADAPTIVE,         /**< Adaptive gain */
+    VOICE_AGC_ADAPTIVE_DIGITAL, /**< Digital adaptive (WebRTC style) */
+    VOICE_AGC_LIMITER,          /**< Limiter-only mode */
 } voice_agc_mode_t;
 
-/** AGC 压缩比 */
+/** AGC compression ratio */
 typedef enum {
-    VOICE_AGC_COMPRESSION_NONE = 0,     /**< 无压缩 */
-    VOICE_AGC_COMPRESSION_LOW = 1,      /**< 低压缩 (2:1) */
-    VOICE_AGC_COMPRESSION_MEDIUM = 2,   /**< 中压缩 (4:1) */
-    VOICE_AGC_COMPRESSION_HIGH = 3,     /**< 高压缩 (8:1) */
+    VOICE_AGC_COMPRESSION_NONE = 0,     /**< No compression */
+    VOICE_AGC_COMPRESSION_LOW = 1,      /**< Low compression (2:1) */
+    VOICE_AGC_COMPRESSION_MEDIUM = 2,   /**< Medium compression (4:1) */
+    VOICE_AGC_COMPRESSION_HIGH = 3,     /**< High compression (8:1) */
 } voice_agc_compression_t;
 
 /* ============================================
- * 配置
+ * Configuration
  * ============================================ */
 
 typedef struct {
     voice_agc_mode_t mode;
     uint32_t sample_rate;
-    uint32_t frame_size;            /**< 帧大小 (样本数) */
-    
-    /* 目标电平 */
-    float target_level_dbfs;        /**< 目标输出电平 (dBFS), 通常 -3 到 -18 */
-    
-    /* 增益限制 */
-    float min_gain_db;              /**< 最小增益 (dB) */
-    float max_gain_db;              /**< 最大增益 (dB) */
-    
-    /* 动态参数 */
-    float attack_time_ms;           /**< 攻击时间 (ms) */
-    float release_time_ms;          /**< 释放时间 (ms) */
-    float hold_time_ms;             /**< 保持时间 (ms) */
-    
-    /* 压缩 */
+    uint32_t frame_size;            /**< Frame size (samples) */
+
+    /* Target level */
+    float target_level_dbfs;        /**< Target output level (dBFS), typically -3 to -18 */
+
+    /* Gain limits */
+    float min_gain_db;              /**< Minimum gain (dB) */
+    float max_gain_db;              /**< Maximum gain (dB) */
+
+    /* Dynamic parameters */
+    float attack_time_ms;           /**< Attack time (ms) */
+    float release_time_ms;          /**< Release time (ms) */
+    float hold_time_ms;             /**< Hold time (ms) */
+
+    /* Compression */
     voice_agc_compression_t compression;
-    float compression_threshold_db; /**< 压缩阈值 (dBFS) */
-    
-    /* 噪声门 */
+    float compression_threshold_db; /**< Compression threshold (dBFS) */
+
+    /* Noise gate */
     bool enable_noise_gate;
-    float noise_gate_threshold_db;  /**< 噪声门阈值 (dBFS) */
-    
-    /* 限制器 */
+    float noise_gate_threshold_db;  /**< Noise gate threshold (dBFS) */
+
+    /* Limiter */
     bool enable_limiter;
-    float limiter_threshold_db;     /**< 限制器阈值 (dBFS), 通常 -1 */
+    float limiter_threshold_db;     /**< Limiter threshold (dBFS), typically -1 */
 } voice_agc_config_t;
 
 /* ============================================
- * 状态信息
+ * State Information
  * ============================================ */
 
 typedef struct {
-    float current_gain_db;          /**< 当前增益 (dB) */
-    float input_level_db;           /**< 输入电平 (dBFS) */
-    float output_level_db;          /**< 输出电平 (dBFS) */
-    float compression_ratio;        /**< 当前压缩比 */
-    bool gate_active;               /**< 噪声门是否激活 */
-    bool limiter_active;            /**< 限制器是否激活 */
-    uint32_t saturation_count;      /**< 饱和/削波次数 */
+    float current_gain_db;          /**< Current gain (dB) */
+    float input_level_db;           /**< Input level (dBFS) */
+    float output_level_db;          /**< Output level (dBFS) */
+    float compression_ratio;        /**< Current compression ratio */
+    bool gate_active;               /**< Whether noise gate is active */
+    bool limiter_active;            /**< Whether limiter is active */
+    uint32_t saturation_count;      /**< Saturation/clipping count */
 } voice_agc_state_t;
 
 /* ============================================
@@ -95,75 +96,75 @@ typedef struct {
  * ============================================ */
 
 /**
- * @brief 初始化默认配置
+ * @brief Initialize default configuration
  */
-void voice_agc_config_init(voice_agc_config_t *config);
+VOICE_API void voice_agc_config_init(voice_agc_config_t *config);
 
 /**
- * @brief 创建 AGC 实例
+ * @brief Create AGC instance
  */
-voice_agc_t *voice_agc_create(const voice_agc_config_t *config);
+VOICE_API voice_agc_t *voice_agc_create(const voice_agc_config_t *config);
 
 /**
- * @brief 销毁 AGC 实例
+ * @brief Destroy AGC instance
  */
-void voice_agc_destroy(voice_agc_t *agc);
+VOICE_API void voice_agc_destroy(voice_agc_t *agc);
 
 /**
- * @brief 处理音频帧 (int16)
- * @param agc AGC 实例
- * @param samples 音频样本 (原地修改)
- * @param num_samples 样本数
- * @return 错误码
+ * @brief Process audio frame (int16)
+ * @param agc AGC instance
+ * @param samples Audio samples (modified in-place)
+ * @param num_samples Number of samples
+ * @return Error code
  */
-voice_error_t voice_agc_process(
+VOICE_API voice_error_t voice_agc_process(
     voice_agc_t *agc,
     int16_t *samples,
     size_t num_samples
 );
 
 /**
- * @brief 处理音频帧 (float)
+ * @brief Process audio frame (float)
  */
-voice_error_t voice_agc_process_float(
+VOICE_API voice_error_t voice_agc_process_float(
     voice_agc_t *agc,
     float *samples,
     size_t num_samples
 );
 
 /**
- * @brief 设置目标电平
+ * @brief Set target level
  */
-voice_error_t voice_agc_set_target_level(voice_agc_t *agc, float level_dbfs);
+VOICE_API voice_error_t voice_agc_set_target_level(voice_agc_t *agc, float level_dbfs);
 
 /**
- * @brief 设置增益范围
+ * @brief Set gain range
  */
-voice_error_t voice_agc_set_gain_range(
+VOICE_API voice_error_t voice_agc_set_gain_range(
     voice_agc_t *agc,
     float min_gain_db,
     float max_gain_db
 );
 
 /**
- * @brief 设置模式
+ * @brief Set mode
  */
-voice_error_t voice_agc_set_mode(voice_agc_t *agc, voice_agc_mode_t mode);
+VOICE_API voice_error_t voice_agc_set_mode(voice_agc_t *agc, voice_agc_mode_t mode);
 
 /**
- * @brief 获取当前状态
+ * @brief Get current state
  */
-voice_error_t voice_agc_get_state(voice_agc_t *agc, voice_agc_state_t *state);
+VOICE_API voice_error_t voice_agc_get_state(voice_agc_t *agc, voice_agc_state_t *state);
 
 /**
- * @brief 重置 AGC 状态
+ * @brief Reset AGC state
  */
-void voice_agc_reset(voice_agc_t *agc);
+VOICE_API void voice_agc_reset(voice_agc_t *agc);
 
 /**
- * @brief 分析音频电平 (不修改样本)
+ * @brief Analyze audio level (does not modify samples)
  */
-float voice_agc_analyze_level(
+VOICE_API float voice_agc_analyze_level(
     voice_agc_t *agc,
     const int16_t *samples,
     size_t num_samples

@@ -16,6 +16,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -125,19 +126,19 @@ typedef struct voice_spatial_renderer_s voice_spatial_renderer_t;
  * @brief Initialize default source properties
  * @param source Source to initialize
  */
-void voice_spatial_source_init(voice_spatial_source_t *source);
+VOICE_API void voice_spatial_source_init(voice_spatial_source_t *source);
 
 /**
  * @brief Initialize default listener properties
  * @param listener Listener to initialize
  */
-void voice_spatial_listener_init(voice_spatial_listener_t *listener);
+VOICE_API void voice_spatial_listener_init(voice_spatial_listener_t *listener);
 
 /**
  * @brief Initialize default renderer configuration
  * @param config Configuration to initialize
  */
-void voice_spatial_config_init(voice_spatial_config_t *config);
+VOICE_API void voice_spatial_config_init(voice_spatial_config_t *config);
 
 /* ============================================
  * Renderer Lifecycle
@@ -148,20 +149,20 @@ void voice_spatial_config_init(voice_spatial_config_t *config);
  * @param config Renderer configuration
  * @return Renderer handle, or NULL on failure
  */
-voice_spatial_renderer_t *voice_spatial_renderer_create(
+VOICE_API voice_spatial_renderer_t *voice_spatial_renderer_create(
     const voice_spatial_config_t *config);
 
 /**
  * @brief Destroy a spatial renderer
  * @param renderer Renderer to destroy
  */
-void voice_spatial_renderer_destroy(voice_spatial_renderer_t *renderer);
+VOICE_API void voice_spatial_renderer_destroy(voice_spatial_renderer_t *renderer);
 
 /**
  * @brief Reset renderer state
  * @param renderer Renderer to reset
  */
-void voice_spatial_renderer_reset(voice_spatial_renderer_t *renderer);
+VOICE_API void voice_spatial_renderer_reset(voice_spatial_renderer_t *renderer);
 
 /* ============================================
  * Listener Control
@@ -173,7 +174,7 @@ void voice_spatial_renderer_reset(voice_spatial_renderer_t *renderer);
  * @param listener Listener properties
  * @return Error code
  */
-voice_error_t voice_spatial_set_listener(
+VOICE_API voice_error_t voice_spatial_set_listener(
     voice_spatial_renderer_t *renderer,
     const voice_spatial_listener_t *listener);
 
@@ -183,7 +184,7 @@ voice_error_t voice_spatial_set_listener(
  * @param listener Output listener properties
  * @return Error code
  */
-voice_error_t voice_spatial_get_listener(
+VOICE_API voice_error_t voice_spatial_get_listener(
     const voice_spatial_renderer_t *renderer,
     voice_spatial_listener_t *listener);
 
@@ -207,7 +208,7 @@ voice_error_t voice_spatial_get_listener(
  * @param num_samples Number of mono samples
  * @return Error code
  */
-voice_error_t voice_spatial_render_source(
+VOICE_API voice_error_t voice_spatial_render_source(
     voice_spatial_renderer_t *renderer,
     const voice_spatial_source_t *source,
     const float *mono_input,
@@ -217,7 +218,7 @@ voice_error_t voice_spatial_render_source(
 /**
  * @brief Render a mono source to stereo output (int16)
  */
-voice_error_t voice_spatial_render_source_int16(
+VOICE_API voice_error_t voice_spatial_render_source_int16(
     voice_spatial_renderer_t *renderer,
     const voice_spatial_source_t *source,
     const int16_t *mono_input,
@@ -237,7 +238,7 @@ voice_error_t voice_spatial_render_source_int16(
  * @param pan Pan position (-1.0 = left, 0.0 = center, 1.0 = right)
  * @param law Panning law to use
  */
-void voice_spatial_pan_mono(
+VOICE_API void voice_spatial_pan_mono(
     const float *mono_input,
     float *stereo_output,
     size_t num_samples,
@@ -247,7 +248,7 @@ void voice_spatial_pan_mono(
 /**
  * @brief Apply stereo panning (int16 version)
  */
-void voice_spatial_pan_mono_int16(
+VOICE_API void voice_spatial_pan_mono_int16(
     const int16_t *mono_input,
     int16_t *stereo_output,
     size_t num_samples,
@@ -268,7 +269,7 @@ void voice_spatial_pan_mono_int16(
  * @param model Attenuation model
  * @return Attenuation factor (0.0 - 1.0)
  */
-float voice_spatial_distance_attenuation(
+VOICE_API float voice_spatial_distance_attenuation(
     float distance,
     float min_distance,
     float max_distance,
@@ -282,7 +283,7 @@ float voice_spatial_distance_attenuation(
 /**
  * @brief Calculate distance between two points
  */
-float voice_vec3_distance(const voice_vec3_t *a, const voice_vec3_t *b);
+VOICE_API float voice_vec3_distance(const voice_vec3_t *a, const voice_vec3_t *b);
 
 /**
  * @brief Calculate azimuth angle (horizontal angle from forward direction)
@@ -290,7 +291,7 @@ float voice_vec3_distance(const voice_vec3_t *a, const voice_vec3_t *b);
  * @param source_pos Source position
  * @return Azimuth in degrees (-180 to 180, positive = right)
  */
-float voice_spatial_azimuth(
+VOICE_API float voice_spatial_azimuth(
     const voice_spatial_listener_t *listener,
     const voice_vec3_t *source_pos);
 
@@ -300,7 +301,7 @@ float voice_spatial_azimuth(
  * @param source_pos Source position
  * @return Elevation in degrees (-90 to 90, positive = up)
  */
-float voice_spatial_elevation(
+VOICE_API float voice_spatial_elevation(
     const voice_spatial_listener_t *listener,
     const voice_vec3_t *source_pos);
 
@@ -309,7 +310,7 @@ float voice_spatial_elevation(
  * @param azimuth Azimuth in degrees
  * @return Pan value (-1.0 to 1.0)
  */
-float voice_spatial_azimuth_to_pan(float azimuth);
+VOICE_API float voice_spatial_azimuth_to_pan(float azimuth);
 
 #ifdef __cplusplus
 }

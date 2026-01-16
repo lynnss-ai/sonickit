@@ -9,6 +9,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,106 +31,106 @@ typedef struct {
     bool enable_agc;                    /**< 启用AGC */
     bool enable_vad;                    /**< 启用VAD */
     float agc_level;                    /**< AGC目标电平 */
-    
+
     /* 兼容字段别名 */
     #define denoise_enabled enable_vad  /* 兼容旧代码 */
     #define agc_enabled enable_agc      /* 兼容旧代码 */
 } voice_denoiser_config_t;
 
 /**
- * @brief 初始化默认配置
- * @param config 配置结构指针
+ * @brief Initialize default configuration
+ * @param config Configuration structure pointer
  */
-void voice_denoiser_config_init(voice_denoiser_config_t *config);
+VOICE_API void voice_denoiser_config_init(voice_denoiser_config_t *config);
 
 /**
- * @brief 创建去噪器
- * @param config 配置
- * @return 去噪器句柄
+ * @brief Create denoiser instance
+ * @param config Configuration
+ * @return Denoiser handle, or NULL on failure
  */
-voice_denoiser_t *voice_denoiser_create(const voice_denoiser_config_t *config);
+VOICE_API voice_denoiser_t *voice_denoiser_create(const voice_denoiser_config_t *config);
 
 /**
- * @brief 销毁去噪器
- * @param denoiser 去噪器句柄
+ * @brief Destroy denoiser instance
+ * @param denoiser Denoiser handle
  */
-void voice_denoiser_destroy(voice_denoiser_t *denoiser);
+VOICE_API void voice_denoiser_destroy(voice_denoiser_t *denoiser);
 
 /**
- * @brief 处理音频帧 (int16)
- * @param denoiser 去噪器句柄
- * @param samples 输入/输出音频样本 (原地处理)
- * @param count 样本数
- * @return 语音概率 (0.0-1.0), 负数表示错误
+ * @brief Process audio frame (int16)
+ * @param denoiser Denoiser handle
+ * @param samples Input/output audio samples (in-place processing)
+ * @param count Sample count
+ * @return Voice probability (0.0-1.0), negative on error
  */
-float voice_denoiser_process_int16(
+VOICE_API float voice_denoiser_process_int16(
     voice_denoiser_t *denoiser,
     int16_t *samples,
     size_t count
 );
 
 /**
- * @brief 处理音频帧 (float)
- * @param denoiser 去噪器句柄
- * @param samples 输入/输出音频样本 (原地处理)
- * @param count 样本数
- * @return 语音概率 (0.0-1.0), 负数表示错误
+ * @brief Process audio frame (float)
+ * @param denoiser Denoiser handle
+ * @param samples Input/output audio samples (in-place processing)
+ * @param count Sample count
+ * @return Voice probability (0.0-1.0), negative on error
  */
-float voice_denoiser_process_float(
+VOICE_API float voice_denoiser_process_float(
     voice_denoiser_t *denoiser,
     float *samples,
     size_t count
 );
 
 /**
- * @brief 处理音频帧 (通用宏，默认使用 int16)
- * @param denoiser 去噪器句柄
- * @param samples 输入/输出音频样本 (原地处理)
- * @param count 样本数
- * @return 语音概率 (0.0-1.0), 负数表示错误
+ * @brief Process audio frame (generic macro, defaults to int16)
+ * @param denoiser Denoiser handle
+ * @param samples Input/output audio samples (in-place processing)
+ * @param count Sample count
+ * @return Voice probability (0.0-1.0), negative on error
  */
 #define voice_denoiser_process(denoiser, samples, count) \
     voice_denoiser_process_int16((denoiser), (samples), (count))
 
 /**
- * @brief 设置噪声抑制量
- * @param denoiser 去噪器句柄
- * @param db 抑制量 (负dB)
- * @return 错误码
+ * @brief Set noise suppression level
+ * @param denoiser Denoiser handle
+ * @param db Suppression level (negative dB)
+ * @return Error code
  */
-voice_error_t voice_denoiser_set_noise_suppress(voice_denoiser_t *denoiser, int db);
+VOICE_API voice_error_t voice_denoiser_set_noise_suppress(voice_denoiser_t *denoiser, int db);
 
 /**
- * @brief 启用/禁用去噪
- * @param denoiser 去噪器句柄
- * @param enabled 是否启用
- * @return 错误码
+ * @brief Enable/disable denoising
+ * @param denoiser Denoiser handle
+ * @param enabled Enable flag
+ * @return Error code
  */
-voice_error_t voice_denoiser_set_enabled(voice_denoiser_t *denoiser, bool enabled);
+VOICE_API voice_error_t voice_denoiser_set_enabled(voice_denoiser_t *denoiser, bool enabled);
 
 /**
- * @brief 获取当前引擎类型
- * @param denoiser 去噪器句柄
- * @return 引擎类型
+ * @brief Get current engine type
+ * @param denoiser Denoiser handle
+ * @return Engine type
  */
-voice_denoise_engine_t voice_denoiser_get_engine(voice_denoiser_t *denoiser);
+VOICE_API voice_denoise_engine_t voice_denoiser_get_engine(voice_denoiser_t *denoiser);
 
 /**
- * @brief 切换去噪引擎
- * @param denoiser 去噪器句柄
- * @param engine 目标引擎
- * @return 错误码
+ * @brief Switch denoising engine
+ * @param denoiser Denoiser handle
+ * @param engine Target engine
+ * @return Error code
  */
-voice_error_t voice_denoiser_switch_engine(
+VOICE_API voice_error_t voice_denoiser_switch_engine(
     voice_denoiser_t *denoiser,
     voice_denoise_engine_t engine
 );
 
 /**
- * @brief 重置去噪器状态
- * @param denoiser 去噪器句柄
+ * @brief Reset denoiser state
+ * @param denoiser Denoiser handle
  */
-void voice_denoiser_reset(voice_denoiser_t *denoiser);
+VOICE_API void voice_denoiser_reset(voice_denoiser_t *denoiser);
 
 /* ============================================
  * 自适应去噪器

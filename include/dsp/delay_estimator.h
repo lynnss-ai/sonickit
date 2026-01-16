@@ -14,6 +14,7 @@
 
 #include "voice/types.h"
 #include "voice/error.h"
+#include "voice/export.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,7 +65,7 @@ typedef struct voice_delay_estimator voice_delay_estimator_t;
  *
  * @param config Configuration to initialize
  */
-void voice_delay_estimator_config_init(voice_delay_estimator_config_t *config);
+VOICE_API void voice_delay_estimator_config_init(voice_delay_estimator_config_t *config);
 
 /**
  * @brief Create a delay estimator instance
@@ -72,7 +73,7 @@ void voice_delay_estimator_config_init(voice_delay_estimator_config_t *config);
  * @param config Configuration parameters
  * @return Delay estimator handle, or NULL on failure
  */
-voice_delay_estimator_t *voice_delay_estimator_create(
+VOICE_API voice_delay_estimator_t *voice_delay_estimator_create(
     const voice_delay_estimator_config_t *config
 );
 
@@ -81,7 +82,7 @@ voice_delay_estimator_t *voice_delay_estimator_create(
  *
  * @param de Delay estimator handle
  */
-void voice_delay_estimator_destroy(voice_delay_estimator_t *de);
+VOICE_API void voice_delay_estimator_destroy(voice_delay_estimator_t *de);
 
 /**
  * @brief Reset the delay estimator state
@@ -89,7 +90,7 @@ void voice_delay_estimator_destroy(voice_delay_estimator_t *de);
  * @param de Delay estimator handle
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_delay_estimator_reset(voice_delay_estimator_t *de);
+VOICE_API voice_error_t voice_delay_estimator_reset(voice_delay_estimator_t *de);
 
 /**
  * @brief Estimate delay between reference and capture signals
@@ -104,7 +105,7 @@ voice_error_t voice_delay_estimator_reset(voice_delay_estimator_t *de);
  * @param result Estimation result output
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_delay_estimator_estimate(
+VOICE_API voice_error_t voice_delay_estimator_estimate(
     voice_delay_estimator_t *de,
     const int16_t *reference,
     const int16_t *capture,
@@ -122,7 +123,7 @@ voice_error_t voice_delay_estimator_estimate(
  * @param result Estimation result
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_delay_estimator_estimate_float(
+VOICE_API voice_error_t voice_delay_estimator_estimate_float(
     voice_delay_estimator_t *de,
     const float *reference,
     const float *capture,
@@ -139,7 +140,7 @@ voice_error_t voice_delay_estimator_estimate_float(
  * @param de Delay estimator handle
  * @return Current delay in samples, or 0 if not yet estimated
  */
-int32_t voice_delay_estimator_get_delay(voice_delay_estimator_t *de);
+VOICE_API int32_t voice_delay_estimator_get_delay(voice_delay_estimator_t *de);
 
 /**
  * @brief Get delay in milliseconds
@@ -147,7 +148,7 @@ int32_t voice_delay_estimator_get_delay(voice_delay_estimator_t *de);
  * @param de Delay estimator handle
  * @return Current delay in milliseconds
  */
-float voice_delay_estimator_get_delay_ms(voice_delay_estimator_t *de);
+VOICE_API float voice_delay_estimator_get_delay_ms(voice_delay_estimator_t *de);
 
 /**
  * @brief Set a known/fixed delay
@@ -158,7 +159,7 @@ float voice_delay_estimator_get_delay_ms(voice_delay_estimator_t *de);
  * @param delay_samples Known delay in samples
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_delay_estimator_set_delay(
+VOICE_API voice_error_t voice_delay_estimator_set_delay(
     voice_delay_estimator_t *de,
     int32_t delay_samples
 );
@@ -170,7 +171,7 @@ voice_error_t voice_delay_estimator_set_delay(
  * @param state State output
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_delay_estimator_get_state(
+VOICE_API voice_error_t voice_delay_estimator_get_state(
     voice_delay_estimator_t *de,
     voice_delay_estimator_state_t *state
 );
@@ -184,7 +185,7 @@ voice_error_t voice_delay_estimator_get_state(
  * @param de Delay estimator handle
  * @return true if stable, false otherwise
  */
-bool voice_delay_estimator_is_stable(voice_delay_estimator_t *de);
+VOICE_API bool voice_delay_estimator_is_stable(voice_delay_estimator_t *de);
 
 /**
  * @brief Get cross-correlation values for debugging
@@ -195,7 +196,7 @@ bool voice_delay_estimator_is_stable(voice_delay_estimator_t *de);
  * @param actual_lags Actual number of lags written
  * @return VOICE_SUCCESS on success
  */
-voice_error_t voice_delay_estimator_get_correlation(
+VOICE_API voice_error_t voice_delay_estimator_get_correlation(
     voice_delay_estimator_t *de,
     float *correlation,
     size_t max_lags,
