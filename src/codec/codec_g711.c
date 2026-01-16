@@ -16,10 +16,10 @@
 #include <string.h>
 
 /* ============================================
- * G.711 编码/解码表
+ * G.711 Encoding/Decoding Tables
  * ============================================ */
 
-/* A-law 编码表 */
+/* A-law decoding table */
 static const int16_t g_alaw_decode_table[256] = {
     -5504, -5248, -6016, -5760, -4480, -4224, -4992, -4736,
     -7552, -7296, -8064, -7808, -6528, -6272, -7040, -6784,
@@ -55,7 +55,7 @@ static const int16_t g_alaw_decode_table[256] = {
     944,   912,   1008,  976,   816,   784,   880,   848
 };
 
-/* μ-law 编码表 */
+/* μ-law decoding table */
 static const int16_t g_ulaw_decode_table[256] = {
     -32124,-31100,-30076,-29052,-28028,-27004,-25980,-24956,
     -23932,-22908,-21884,-20860,-19836,-18812,-17788,-16764,
@@ -92,7 +92,7 @@ static const int16_t g_ulaw_decode_table[256] = {
 };
 
 /* ============================================
- * G.711 编码函数
+ * G.711 Encoding Functions
  * ============================================ */
 
 /**
@@ -183,7 +183,7 @@ static uint8_t linear_to_ulaw(int16_t pcm)
 }
 
 /* ============================================
- * G.711 编解码器状态
+ * G.711 Codec State
  * ============================================ */
 
 typedef struct {
@@ -192,9 +192,28 @@ typedef struct {
 } g711_state_t;
 
 /* ============================================
- * G.711 编码器实现
+ * G.711 Encoder Implementation
  * ============================================ */
 
+/**
+ * @brief Encode PCM samples to G.711 format
+ * @details This function performs logarithmic companding on 16-bit linear PCM samples,
+ *          converting them to 8-bit G.711 format (either A-law or μ-law). G.711 is
+ *          a simple, memoryless codec used in telephony, providing 64 kbps at 8 kHz.
+ *          The encoding is instantaneous with no latency:
+ *          - A-law: Used in Europe, provides slightly better small-signal quality
+ *          - μ-law: Used in North America/Japan, provides slightly better large-signal quality
+ *          Compression ratio is 2:1 (16-bit -> 8-bit per sample).
+ * @param state Pointer to the encoder state (internal use)
+ * @param pcm_input Buffer containing 16-bit PCM samples at 8kHz
+ * @param pcm_samples Number of PCM samples to encode
+ * @param output Buffer to store encoded G.711 data (8-bit per sample)
+ * @param output_size Input: output buffer size; Output: actual encoded bytes
+ * @return VOICE_OK on success,
+ *         VOICE_ERROR_NOT_INITIALIZED if encoder state is invalid,
+ *         VOICE_ERROR_NULL_POINTER if required pointers are NULL,
+ *         VOICE_ERROR_BUFFER_TOO_SMALL if output buffer is insufficient
+ */
 static voice_error_t g711_encode(
     void *state,
     const int16_t *pcm_input,
@@ -309,7 +328,7 @@ voice_encoder_t *voice_g711_encoder_create(const voice_g711_config_t *config)
 }
 
 /* ============================================
- * G.711 解码器实现
+ * G.711 Decoder Implementation
  * ============================================ */
 
 static voice_error_t g711_decode(

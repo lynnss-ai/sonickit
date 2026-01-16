@@ -11,27 +11,27 @@
 #include <math.h>
 
 /* ============================================
- * 内部结构
+ * Internal Structure
  * ============================================ */
 
 struct voice_agc_s {
     voice_agc_config_t config;
 
-    /* 状态 */
-    float current_gain;             /**< 当前增益 (线性) */
-    float target_gain;              /**< 目标增益 (线性) */
-    float envelope;                 /**< 信号包络 */
+    /* State */
+    float current_gain;             /**< Current gain (linear) */
+    float target_gain;              /**< Target gain (linear) */
+    float envelope;                 /**< Signal envelope */
 
-    /* 时间常数 (每样本) */
+    /* Time constants (per sample) */
     float attack_coeff;
     float release_coeff;
     float hold_samples;
     float hold_counter;
 
-    /* 限制器状态 */
+    /* Limiter state */
     float limiter_gain;
 
-    /* 统计 */
+    /* Statistics */
     float input_level;
     float output_level;
     uint32_t saturation_count;
@@ -40,7 +40,7 @@ struct voice_agc_s {
 };
 
 /* ============================================
- * 辅助函数
+ * Helper Functions
  * ============================================ */
 
 static float db_to_linear(float db) {
@@ -76,7 +76,7 @@ static float compute_rms_float(const float *samples, size_t count) {
 }
 
 /* ============================================
- * 配置
+ * Configuration
  * ============================================ */
 
 void voice_agc_config_init(voice_agc_config_t *config) {
@@ -108,7 +108,7 @@ void voice_agc_config_init(voice_agc_config_t *config) {
 }
 
 /* ============================================
- * 创建/销毁
+ * Create/Destroy
  * ============================================ */
 
 voice_agc_t *voice_agc_create(const voice_agc_config_t *config) {
@@ -134,6 +134,10 @@ voice_agc_t *voice_agc_create(const voice_agc_config_t *config) {
     return agc;
 }
 
+/**
+ * @brief Destroy AGC processor and free resources
+ * @param[in] agc AGC processor to destroy
+ */
 void voice_agc_destroy(voice_agc_t *agc) {
     if (agc) {
         free(agc);
@@ -141,7 +145,7 @@ void voice_agc_destroy(voice_agc_t *agc) {
 }
 
 /* ============================================
- * 处理
+ * Processing
  * ============================================ */
 
 voice_error_t voice_agc_process(
@@ -264,6 +268,20 @@ voice_error_t voice_agc_process(
     return VOICE_SUCCESS;
 }
 
+/**
+ * @brief Process audio samples with automatic gain control (float version)
+ * @details Float version of AGC processing for better precision and dynamic range.
+ *          Operates on normalized float samples in range [-1.0, 1.0].
+ *          Uses same algorithm as int16 version but with floating-point math.
+ *
+ * @param[in] agc AGC processor instance
+ * @param[in,out] samples Float audio samples (modified in-place)
+ * @param[in] num_samples Number of samples to process
+ * @return VOICE_SUCCESS on success, error code on failure
+ *
+ * @note Soft clipping is applied at ±1.0 instead of hard saturation.
+ * @see voice_agc_process
+ */
 voice_error_t voice_agc_process_float(
     voice_agc_t *agc,
     float *samples,
@@ -350,7 +368,7 @@ voice_error_t voice_agc_process_float(
 }
 
 /* ============================================
- * 控制接口
+ * Control Interface
  * ============================================ */
 
 voice_error_t voice_agc_set_target_level(voice_agc_t *agc, float level_dbfs) {
@@ -360,6 +378,15 @@ voice_error_t voice_agc_set_target_level(voice_agc_t *agc, float level_dbfs) {
     return VOICE_SUCCESS;
 }
 
+/**
+ * @brief Set gain range limits
+ * @details Constrains the AGC gain to prevent excessive amplification or attenuation.
+ *
+ * @param[in] agc AGC processor instance
+ * @param[in] min_gain_db Minimum gain in dB (e.g., -12dB to limit attenuation)
+ * @param[in] max_gain_db Maximum gain in dB (e.g., +30dB to limit amplification)
+ * @return VOICE_SUCCESS on success, error code on failure
+ */
 voice_error_t voice_agc_set_gain_range(
     voice_agc_t *agc,
     float min_gain_db,
@@ -372,6 +399,12 @@ voice_error_t voice_agc_set_gain_range(
     return VOICE_SUCCESS;
 }
 
+/**
+ * @brief Set AGC operating mode
+ * @param[in] agc AGC processor instance
+ * @param[in] mode AGC mode (FIXED, ADAPTIVE, ADAPTIVE_DIGITAL, LIMITER)
+ * @return VOICE_SUCCESS on success, error code on failure
+ */
 voice_error_t voice_agc_set_mode(voice_agc_t *agc, voice_agc_mode_t mode) {
     if (!agc) return VOICE_ERROR_INVALID_PARAM;
 
@@ -379,6 +412,15 @@ voice_error_t voice_agc_set_mode(voice_agc_t *agc, voice_agc_mode_t mode) {
     return VOICE_SUCCESS;
 }
 
+/**
+ * @brief Get current AGC state and statistics
+ * @details Provides real-time feedback on AGC operation including levels,
+ *          gain, and active features for monitoring and debugging.
+ *
+ * @param[in] agc AGC processor instance
+ * @param[out] state Structure to fill with current state
+ * @return VOICE_SUCCESS on success, error code on failure
+ */
 voice_error_t voice_agc_get_state(voice_agc_t *agc, voice_agc_state_t *state) {
     if (!agc || !state) {
         return VOICE_ERROR_INVALID_PARAM;
@@ -395,6 +437,13 @@ voice_error_t voice_agc_get_state(voice_agc_t *agc, voice_agc_state_t *state) {
     return VOICE_SUCCESS;
 }
 
+/**
+ * @brief Reset AGC state to initial values
+ * @details Clears gain history and statistics, useful when switching
+ *          audio sources or after long periods of silence.
+ *
+ * @param[in] agc AGC processor instance
+ */
 void voice_agc_reset(voice_agc_t *agc) {
     if (!agc) return;
 
@@ -408,6 +457,16 @@ void voice_agc_reset(voice_agc_t *agc) {
     agc->limiter_active = false;
 }
 
+/**
+ * @brief Analyze audio level without modifying samples
+ * @details Computes RMS level in dBFS for level monitoring without applying AGC.
+ *          Useful for preview, metering, or configuration tuning.
+ *
+ * @param[in] agc AGC processor instance (unused, for future extensions)
+ * @param[in] samples Audio samples to analyze
+ * @param[in] num_samples Number of samples
+ * @return Audio level in dBFS
+ */
 float voice_agc_analyze_level(
     voice_agc_t *agc,
     const int16_t *samples,

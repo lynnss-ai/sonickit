@@ -28,7 +28,7 @@
 #endif
 
 /* ============================================
- * 内部结构
+ * Internal Structure
  * ============================================ */
 
 typedef struct {
@@ -60,7 +60,7 @@ struct voice_mixer_s {
 };
 
 /* ============================================
- * 辅助函数
+ * Helper Functions
  * ============================================ */
 
 static void apply_limiter(
@@ -91,7 +91,7 @@ static void apply_limiter(
 }
 
 /* ============================================
- * 配置
+ * Configuration
  * ============================================ */
 
 void voice_mixer_config_init(voice_mixer_config_t *config) {
@@ -111,7 +111,7 @@ void voice_mixer_config_init(voice_mixer_config_t *config) {
 }
 
 /* ============================================
- * 创建/销毁
+ * Create/Destroy
  * ============================================ */
 
 voice_mixer_t *voice_mixer_create(const voice_mixer_config_t *config) {
@@ -178,9 +178,22 @@ void voice_mixer_destroy(voice_mixer_t *mixer) {
 }
 
 /* ============================================
- * 音源管理
+ * Source Management
  * ============================================ */
 
+/**
+ * @brief Add a new audio source to the mixer
+ * @details This function creates a new mixing source with the specified configuration.
+ *          It allocates a ring buffer for the source to store incoming audio data,
+ *          assigns a unique source ID, and initializes the source parameters including
+ *          gain, pan, mute state, and priority. The mixer can support up to max_sources
+ *          concurrent audio sources. Each source maintains its own buffer and can be
+ *          individually controlled.
+ * @param mixer Pointer to the mixer instance
+ * @param config Pointer to source configuration (NULL uses defaults: gain=1.0, pan=0.0, unmuted)
+ * @return Unique source ID on success, MIXER_INVALID_SOURCE_ID if mixer is full or allocation fails
+ * @note The source buffer capacity is set to 4x the mixer's frame size to prevent underruns.
+ */
 mixer_source_id_t voice_mixer_add_source(
     voice_mixer_t *mixer,
     const voice_mixer_source_config_t *config
@@ -202,7 +215,7 @@ mixer_source_id_t voice_mixer_add_source(
         return MIXER_INVALID_SOURCE_ID;
     }
 
-    /* 创建音源缓冲区 */
+    /* Create source buffer */
     size_t buf_capacity = mixer->buffer_size * 4 * sizeof(int16_t);
     mixer->sources[slot].buffer = voice_ring_buffer_create(buf_capacity, sizeof(int16_t));
     if (!mixer->sources[slot].buffer) {
@@ -260,7 +273,7 @@ voice_error_t voice_mixer_remove_source(
 }
 
 /* ============================================
- * 音频处理
+ * Audio Processing
  * ============================================ */
 
 voice_error_t voice_mixer_push_audio(
@@ -291,6 +304,22 @@ voice_error_t voice_mixer_push_audio(
     return VOICE_ERROR_NOT_FOUND;
 }
 
+/**
+ * @brief Mix all active sources and generate output audio
+ * @details This function is the core mixing engine. It reads audio from all active,
+ *          unmuted sources that have sufficient data available, converts samples to
+ *          floating-point format, applies per-source gain, mixes them together using
+ *          the configured mixing algorithm (additive or normalized), applies master gain
+ *          and optional limiting, then converts back to 16-bit PCM. The function uses
+ *          SIMD-optimized operations for efficient processing. Normalized mixing prevents
+ *          clipping when many sources are active by scaling down the mix proportionally.
+ * @param mixer Pointer to the mixer instance
+ * @param output Buffer to store the mixed 16-bit PCM output
+ * @param num_samples Number of samples to generate
+ * @param samples_out Output parameter: actual number of samples generated
+ * @return VOICE_OK on success, VOICE_ERROR_NULL_POINTER if parameters are invalid,
+ *         VOICE_ERROR_OUT_OF_MEMORY if temporary buffer allocation fails
+ */
 voice_error_t voice_mixer_get_output(
     voice_mixer_t *mixer,
     int16_t *output,
@@ -301,7 +330,7 @@ voice_error_t voice_mixer_get_output(
 
     MIXER_MUTEX_LOCK(mixer->mutex);
 
-    /* 清空混音缓冲区 */
+    /* Clear mix buffer */
     memset(mixer->mix_buffer, 0, mixer->buffer_size * sizeof(float));
 
     size_t active_sources = 0;
@@ -320,7 +349,7 @@ voice_error_t voice_mixer_get_output(
         size_t read = voice_ring_buffer_read(src->buffer, temp_i16, num_samples * sizeof(int16_t));
         if (read < num_samples * sizeof(int16_t)) continue;
 
-        /* 转换为浮点并应用增益 (SIMD优化) */
+        /* Convert to float and apply gain (SIMD optimized) */
         float gain = src->config.gain;
         voice_int16_to_float(temp_i16, mixer->source_buffer, num_samples);
         voice_apply_gain_float(mixer->source_buffer, gain, num_samples);
@@ -331,22 +360,22 @@ voice_error_t voice_mixer_get_output(
 
     free(temp_i16);
 
-    /* 归一化 (SIMD优化) */
+    /* Normalize mix to prevent clipping (SIMD optimized) */
     if (active_sources > 1 && mixer->config.algorithm == VOICE_MIX_NORMALIZED) {
         float scale = 1.0f / sqrtf((float)active_sources);
         voice_apply_gain_float(mixer->mix_buffer, scale, num_samples);
     }
 
-    /* 应用主增益 (SIMD优化) */
+    /* Apply master gain (SIMD optimized) */
     voice_apply_gain_float(mixer->mix_buffer, mixer->config.master_gain, num_samples);
 
-    /* 应用限制器 */
+    /* Apply limiter to prevent clipping */
     if (mixer->config.enable_limiter) {
         float threshold = powf(10.0f, mixer->config.limiter_threshold_db / 20.0f);
         apply_limiter(mixer, mixer->mix_buffer, num_samples, threshold);
     }
 
-    /* 转换回 int16 (SIMD优化) */
+    /* Convert back to int16 (SIMD optimized) */
     voice_float_to_int16(mixer->mix_buffer, output, num_samples);
 
     if (samples_out) {
@@ -358,7 +387,7 @@ voice_error_t voice_mixer_get_output(
 }
 
 /* ============================================
- * 控制
+ * Control Functions
  * ============================================ */
 
 voice_error_t voice_mixer_set_source_config(

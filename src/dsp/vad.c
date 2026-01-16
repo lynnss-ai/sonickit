@@ -11,26 +11,26 @@
 #include <math.h>
 
 /* ============================================
- * 内部结构
+ * Internal Structure
  * ============================================ */
 
 struct voice_vad_s {
     voice_vad_config_t config;
     voice_vad_mode_t mode;
 
-    /* 状态 */
+    /* State */
     bool last_speech;
     uint32_t speech_frames;
     uint32_t silence_frames;
-    uint32_t hangover_frames;       /**< 语音结束后的延迟帧数 */
-    uint32_t hangover_counter;      /**< 当前延迟计数 */
+    uint32_t hangover_frames;       /**< Hangover frames after speech ends */
+    uint32_t hangover_counter;      /**< Current hangover count */
 
-    /* 能量 VAD 状态 */
-    float energy_threshold;         /**< 当前能量阈值 */
-    float noise_estimate;           /**< 噪声估计 */
-    float signal_estimate;          /**< 信号估计 */
+    /* Energy VAD state */
+    float energy_threshold;         /**< Current energy threshold */
+    float noise_estimate;           /**< Noise estimate */
+    float signal_estimate;          /**< Signal estimate */
 
-    /* 自适应 */
+    /* Adaptation */
     float adaptation_rate;
     float long_term_energy;
 
@@ -44,7 +44,7 @@ struct voice_vad_s {
 };
 
 /* ============================================
- * 辅助函数
+ * Helper Functions
  * ============================================ */
 
 static float compute_energy_db(const int16_t *samples, size_t count) {

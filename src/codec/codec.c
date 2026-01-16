@@ -10,9 +10,24 @@
 #include <stdlib.h>
 
 /* ============================================
- * 默认配置初始化
+ * Default Configuration Initialization
  * ============================================ */
 
+/**
+ * @brief Initialize Opus codec configuration with default values
+ * @details This function sets up an Opus encoder configuration with sensible defaults
+ *          optimized for VoIP applications. The default settings provide a good balance
+ *          between audio quality and bandwidth usage:
+ *          - Sample rate: 48kHz (full bandwidth)
+ *          - Channels: 1 (mono)
+ *          - Bitrate: 32kbps (suitable for voice)
+ *          - Application: VOIP mode (optimized for speech)
+ *          - Complexity: 5 (medium CPU usage)
+ *          - FEC: Enabled (Forward Error Correction for packet loss)
+ *          - VBR: Enabled (Variable Bit Rate for better quality)
+ *          - DTX: Disabled (Discontinuous Transmission)
+ * @param config Pointer to the Opus configuration structure to initialize
+ */
 void voice_opus_config_init(voice_opus_config_t *config)
 {
     if (!config) return;
@@ -30,6 +45,14 @@ void voice_opus_config_init(voice_opus_config_t *config)
     config->signal_type = -1000;      /* OPUS_AUTO */
 }
 
+/**
+ * @brief Initialize G.711 codec configuration
+ * @details G.711 is a simple 8kHz, 64kbps codec used in telephony. This function
+ *          initializes the configuration for either A-law (Europe) or μ-law
+ *          (North America/Japan) encoding.
+ * @param config Pointer to the G.711 configuration structure to initialize
+ * @param use_alaw true for A-law encoding, false for μ-law encoding
+ */
 void voice_g711_config_init(voice_g711_config_t *config, bool use_alaw)
 {
     if (!config) return;
@@ -39,6 +62,13 @@ void voice_g711_config_init(voice_g711_config_t *config, bool use_alaw)
     config->use_alaw = use_alaw;
 }
 
+/**
+ * @brief Initialize G.722 codec configuration
+ * @details G.722 is a wideband codec (50-7000 Hz) that operates at 16kHz sample rate
+ *          but is declared as 8kHz in RTP for historical reasons. Default bitrate
+ *          is 64kbps, with options for 56kbps and 48kbps.
+ * @param config Pointer to the G.722 configuration structure to initialize
+ */
 void voice_g722_config_init(voice_g722_config_t *config)
 {
     if (!config) return;
@@ -49,9 +79,20 @@ void voice_g722_config_init(voice_g722_config_t *config)
 }
 
 /* ============================================
- * 编码器API实现
+ * Encoder API Implementation
  * ============================================ */
 
+/**
+ * @brief Create an audio encoder instance
+ * @details This factory function creates an encoder for the specified codec type.
+ *          It dispatches to the appropriate codec-specific encoder creation function
+ *          based on the codec_id in the configuration. The returned encoder provides
+ *          a unified interface for all supported codecs through a vtable.
+ * @param config Pointer to detailed codec configuration including codec type and parameters
+ * @return Pointer to the created encoder instance, or NULL on failure
+ * @note The caller must call voice_encoder_destroy() when finished to free resources.
+ *       Supported codecs: OPUS, G.711 (A-law/μ-law), G.722
+ */
 voice_encoder_t *voice_encoder_create(const voice_codec_detail_config_t *config)
 {
     if (!config) {
@@ -79,6 +120,13 @@ voice_encoder_t *voice_encoder_create(const voice_codec_detail_config_t *config)
     }
 }
 
+/**
+ * @brief Destroy an encoder instance and free all associated resources
+ * @details This function releases all memory and resources allocated by the encoder,
+ *          including codec-specific state and internal buffers. After calling this
+ *          function, the encoder pointer becomes invalid.
+ * @param encoder Pointer to the encoder to destroy (can be NULL)
+ */
 void voice_encoder_destroy(voice_encoder_t *encoder)
 {
     if (!encoder) return;
@@ -90,6 +138,24 @@ void voice_encoder_destroy(voice_encoder_t *encoder)
     free(encoder);
 }
 
+/**
+ * @brief Encode PCM audio samples
+ * @details This function compresses raw 16-bit PCM audio samples into the codec's
+ *          encoded format. The encoding process is stateful - internal codec state
+ *          is updated with each call. The output buffer must be large enough to hold
+ *          the maximum possible encoded size for the given number of input samples.
+ * @param encoder Pointer to the encoder instance
+ * @param pcm_input Buffer containing 16-bit PCM samples to encode
+ * @param pcm_samples Number of PCM samples to encode (not bytes)
+ * @param output Buffer to store the encoded data
+ * @param output_size Input: size of output buffer; Output: actual encoded bytes
+ * @return VOICE_OK on success,
+ *         VOICE_ERROR_NOT_INITIALIZED if encoder is invalid,
+ *         VOICE_ERROR_NULL_POINTER if pointers are NULL,
+ *         VOICE_ERROR_BUFFER_TOO_SMALL if output buffer is insufficient,
+ *         VOICE_ERROR_ENCODE_FAILED if encoding fails
+ * @note For frame-based codecs, pcm_samples should match the expected frame size
+ */
 voice_error_t voice_encoder_encode(
     voice_encoder_t *encoder,
     const int16_t *pcm_input,
@@ -110,6 +176,14 @@ voice_error_t voice_encoder_encode(
     );
 }
 
+/**
+ * @brief Reset encoder state to initial conditions
+ * @details This function resets the encoder's internal state, clearing any history
+ *          or adaptive parameters. This is useful when starting a new encoding session
+ *          or after a long silence period. Note that some codecs (like G.711) are
+ *          memoryless and don't require resetting.
+ * @param encoder Pointer to the encoder instance
+ */
 void voice_encoder_reset(voice_encoder_t *encoder)
 {
     if (!encoder || !encoder->vtable || !encoder->vtable->reset) {
@@ -128,6 +202,18 @@ voice_error_t voice_encoder_get_info(
     return encoder->vtable->get_info(encoder->state, info);
 }
 
+/**
+ * @brief Dynamically change the encoder's target bitrate
+ * @details This function adjusts the encoder's bitrate setting at runtime, allowing
+ *          for adaptive bitrate control based on network conditions. Not all codecs
+ *          support dynamic bitrate changes (e.g., G.711 is fixed at 64kbps).
+ * @param encoder Pointer to the encoder instance
+ * @param bitrate New target bitrate in bits per second
+ * @return VOICE_OK on success,
+ *         VOICE_ERROR_NOT_INITIALIZED if encoder is invalid,
+ *         VOICE_ERROR_NOT_SUPPORTED if codec doesn't support bitrate changes,
+ *         VOICE_ERROR_INVALID_PARAM if bitrate is out of valid range
+ */
 voice_error_t voice_encoder_set_bitrate(
     voice_encoder_t *encoder,
     uint32_t bitrate)
@@ -143,6 +229,19 @@ voice_error_t voice_encoder_set_bitrate(
     return encoder->vtable->set_bitrate(encoder->state, bitrate);
 }
 
+/**
+ * @brief Set expected packet loss percentage for FEC optimization
+ * @details This function informs the encoder about expected network packet loss,
+ *          allowing it to adjust Forward Error Correction (FEC) parameters for better
+ *          resilience. Higher values increase redundancy but also bandwidth usage.
+ * @param encoder Pointer to the encoder instance
+ * @param packet_loss_perc Expected packet loss percentage (0-100)
+ * @return VOICE_OK on success,
+ *         VOICE_ERROR_NOT_INITIALIZED if encoder is invalid,
+ *         VOICE_ERROR_NOT_SUPPORTED if codec doesn't support FEC,
+ *         VOICE_ERROR_INVALID_PARAM if percentage is out of range
+ * @note Only codecs with FEC support (like Opus) will use this parameter
+ */
 voice_error_t voice_encoder_set_packet_loss(
     voice_encoder_t *encoder,
     int packet_loss_perc)
@@ -159,7 +258,7 @@ voice_error_t voice_encoder_set_packet_loss(
 }
 
 /* ============================================
- * 解码器API实现
+ * Decoder API Implementation
  * ============================================ */
 
 voice_decoder_t *voice_decoder_create(const voice_codec_detail_config_t *config)
@@ -255,7 +354,7 @@ voice_error_t voice_decoder_get_info(
 }
 
 /* ============================================
- * 工具函数实现
+ * Utility Functions Implementation
  * ============================================ */
 
 static const struct {

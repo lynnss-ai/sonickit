@@ -12,14 +12,14 @@
 #include <string.h>
 
 /* ============================================
- * 内部结构
+ * Internal Structure
  * ============================================ */
 
 struct voice_device_context_s {
     ma_context context;
     bool initialized;
 
-    /* 设备枚举缓存 */
+    /* Device enumeration cache */
     ma_device_info *capture_devices;
     uint32_t capture_count;
     ma_device_info *playback_devices;
@@ -33,11 +33,11 @@ struct voice_device_s {
     bool initialized;
 };
 
-/* 全局设备上下文 */
+/* Global device context */
 static voice_device_context_t *g_device_context = NULL;
 
 /* ============================================
- * 设备上下文
+ * Device Context
  * ============================================ */
 
 voice_error_t voice_device_context_init(void)
@@ -59,7 +59,7 @@ voice_error_t voice_device_context_init(void)
         return VOICE_ERROR_DEVICE_OPEN_FAILED;
     }
 
-    /* 枚举设备 */
+    /* Enumerate available devices */
     ma_result result = ma_context_get_devices(
         &g_device_context->context,
         &g_device_context->playback_devices,
@@ -96,7 +96,7 @@ voice_device_context_t *voice_device_context_get(void)
 }
 
 /* ============================================
- * miniaudio格式转换
+ * miniaudio Format Conversion
  * ============================================ */
 
 static ma_format voice_format_to_ma(voice_format_t format)
@@ -124,7 +124,7 @@ static voice_format_t ma_format_to_voice(ma_format format)
 }
 
 /* ============================================
- * 回调包装
+ * Callback Wrapper
  * ============================================ */
 
 static void device_data_callback(
@@ -151,7 +151,7 @@ static void device_stop_callback(ma_device *pDevice)
 }
 
 /* ============================================
- * 设备操作
+ * Device Operations
  * ============================================ */
 
 void voice_device_desc_init(voice_device_desc_t *desc, voice_device_mode_t mode)
@@ -161,12 +161,12 @@ void voice_device_desc_init(voice_device_desc_t *desc, voice_device_mode_t mode)
     memset(desc, 0, sizeof(voice_device_desc_t));
     desc->mode = mode;
 
-    /* 默认采集配置 */
+    /* Default capture configuration */
     desc->capture.format = VOICE_FORMAT_S16;
     desc->capture.channels = 1;
     desc->capture.sample_rate = 48000;
 
-    /* 默认播放配置 */
+    /* Default playback configuration */
     desc->playback.format = VOICE_FORMAT_S16;
     desc->playback.channels = 1;
     desc->playback.sample_rate = 48000;
@@ -208,19 +208,19 @@ voice_device_t *voice_device_create(const voice_device_desc_t *desc)
             break;
     }
 
-    /* 采集配置 */
+    /* Capture device configuration */
     if (desc->mode == VOICE_DEVICE_CAPTURE || desc->mode == VOICE_DEVICE_DUPLEX) {
         config.capture.format = voice_format_to_ma(desc->capture.format);
         config.capture.channels = desc->capture.channels;
     }
 
-    /* 播放配置 */
+    /* Playback device configuration */
     if (desc->mode == VOICE_DEVICE_PLAYBACK || desc->mode == VOICE_DEVICE_DUPLEX) {
         config.playback.format = voice_format_to_ma(desc->playback.format);
         config.playback.channels = desc->playback.channels;
     }
 
-    config.sampleRate = desc->capture.sample_rate;  /* 使用采集采样率 */
+    config.sampleRate = desc->capture.sample_rate;  /* Use capture sample rate */
     config.periodSizeInFrames = desc->period_size_frames;
     config.periods = desc->periods;
     config.dataCallback = device_data_callback;
@@ -332,7 +332,7 @@ voice_format_t voice_device_get_format(voice_device_t *device, voice_device_mode
 }
 
 /* ============================================
- * 设备枚举
+ * Device Enumeration
  * ============================================ */
 
 uint32_t voice_device_get_capture_count(void)
@@ -396,10 +396,10 @@ voice_error_t voice_device_get_playback_info(uint32_t index, voice_device_enum_i
 }
 
 /* ============================================
- * 兼容性 API 实现
+ * Compatibility API Implementation
  * ============================================ */
 
-/** 简化版回调包装器数据 */
+/** Simplified callback wrapper data */
 typedef struct {
     voice_capture_callback_t capture_cb;
     void *capture_user_data;
@@ -420,12 +420,12 @@ static void simple_data_callback(
     simple_callback_data_t *cb_data = (simple_callback_data_t *)user_data;
     if (!cb_data) return;
 
-    /* 采集回调 */
+    /* Capture callback */
     if (pInput && cb_data->capture_cb) {
         cb_data->capture_cb(device, (const int16_t *)pInput, frameCount, cb_data->capture_user_data);
     }
 
-    /* 播放回调 */
+    /* Playback callback */
     if (pOutput && cb_data->playback_cb) {
         cb_data->playback_cb(device, (int16_t *)pOutput, frameCount, cb_data->playback_user_data);
     }
@@ -446,7 +446,7 @@ voice_device_t *voice_device_create_simple(const voice_device_ext_config_t *conf
 {
     if (!config) return NULL;
 
-    /* 分配回调数据 */
+    /* Allocate callback data structure */
     if (g_simple_callback_count >= 16) {
         VOICE_LOG_E("Too many simple devices created");
         return NULL;
@@ -458,7 +458,7 @@ voice_device_t *voice_device_create_simple(const voice_device_ext_config_t *conf
     cb_data->playback_cb = config->playback_callback;
     cb_data->playback_user_data = config->playback_user_data;
 
-    /* 转换为 voice_device_desc_t */
+    /* Convert to voice_device_desc_t */
     voice_device_desc_t desc;
     voice_device_desc_init(&desc, config->mode);
 
@@ -488,7 +488,7 @@ voice_error_t voice_device_enumerate(
     }
 
     if (!g_device_context) {
-        /* 自动初始化上下文 */
+        /* Auto-initialize context if not already done */
         voice_error_t err = voice_device_context_init();
         if (err != VOICE_OK) {
             return err;
@@ -499,7 +499,7 @@ voice_error_t voice_device_enumerate(
     size_t actual_count = 0;
 
     if (mode == VOICE_DEVICE_CAPTURE || mode == VOICE_DEVICE_DUPLEX) {
-        /* 枚举采集设备 */
+        /* Enumerate capture devices */
         for (uint32_t i = 0; i < g_device_context->capture_count && actual_count < max_count; i++) {
             ma_device_info *ma_info = &g_device_context->capture_devices[i];
             strncpy(devices[actual_count].id, ma_info->name, sizeof(devices[actual_count].id) - 1);
@@ -508,7 +508,7 @@ voice_error_t voice_device_enumerate(
             actual_count++;
         }
     } else {
-        /* 枚举播放设备 */
+        /* Enumerate playback devices */
         for (uint32_t i = 0; i < g_device_context->playback_count && actual_count < max_count; i++) {
             ma_device_info *ma_info = &g_device_context->playback_devices[i];
             strncpy(devices[actual_count].id, ma_info->name, sizeof(devices[actual_count].id) - 1);

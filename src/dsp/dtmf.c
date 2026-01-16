@@ -3,7 +3,7 @@
  * @brief DTMF detection and generation implementation
  * @author wangxuebing <lynnss.codeai@gmail.com>
  *
- * 使用 Goertzel 算法进行 DTMF 检测
+ * Uses Goertzel algorithm for DTMF detection
  */
 
 #include "dsp/dtmf.h"
@@ -17,20 +17,20 @@
 #endif
 
 /* ============================================
- * DTMF 频率表
+ * DTMF Frequency Table
  * ============================================ */
 
-/* 低频组 (行) */
+/* Low frequency group (rows) */
 static const float DTMF_LOW_FREQ[4] = {
     697.0f, 770.0f, 852.0f, 941.0f
 };
 
-/* 高频组 (列) */
+/* High frequency group (columns) */
 static const float DTMF_HIGH_FREQ[4] = {
     1209.0f, 1336.0f, 1477.0f, 1633.0f
 };
 
-/* DTMF 键盘布局 */
+/* DTMF keyboard layout */
 static const char DTMF_KEYS[4][4] = {
     {'1', '2', '3', 'A'},
     {'4', '5', '6', 'B'},
@@ -39,7 +39,7 @@ static const char DTMF_KEYS[4][4] = {
 };
 
 /* ============================================
- * Goertzel 状态 - SIMD 友好布局
+ * Goertzel State - SIMD-Friendly Layout
  * ============================================ */
 
 typedef struct {
@@ -55,7 +55,7 @@ typedef struct {
 } goertzel_bank_t;
 
 /* ============================================
- * 检测器结构
+ * Detector Structure
  * ============================================ */
 
 #define DTMF_DIGIT_BUFFER_SIZE 64
@@ -71,7 +71,7 @@ struct voice_dtmf_detector_s {
     goertzel_state_t low_filters[4];
     goertzel_state_t high_filters[4];
 
-    /* 检测状态 */
+    /* Detection state */
     voice_dtmf_digit_t current_digit;
     uint32_t on_samples;
     uint32_t off_samples;
@@ -79,36 +79,36 @@ struct voice_dtmf_detector_s {
     uint32_t min_off_samples;
     bool digit_active;
 
-    /* 数字缓冲区 */
+    /* Digit buffer */
     char digit_buffer[DTMF_DIGIT_BUFFER_SIZE];
     size_t digit_count;
 
-    /* 采样计数 */
+    /* Sample count */
     size_t sample_count;
     size_t block_size;
 };
 
 /* ============================================
- * 生成器结构
+ * Generator Structure
  * ============================================ */
 
 struct voice_dtmf_generator_s {
     voice_dtmf_generator_config_t config;
 
-    /* 相位累加器 */
+    /* Phase accumulators */
     float low_phase;
     float high_phase;
     float low_phase_inc;
     float high_phase_inc;
 
-    /* 状态 */
+    /* State */
     size_t samples_remaining;
     size_t pause_remaining;
     bool in_pause;
 };
 
 /* ============================================
- * Goertzel 算法
+ * Goertzel Algorithm
  * ============================================ */
 
 static void goertzel_init(goertzel_state_t *state, float freq, uint32_t sample_rate, size_t block_size) {
@@ -209,7 +209,7 @@ static inline void goertzel_bank_get_power_scalar(goertzel_bank_t *bank, float *
 #endif
 
 /* ============================================
- * 检测器配置
+ * Detector Configuration
  * ============================================ */
 
 void voice_dtmf_detector_config_init(voice_dtmf_detector_config_t *config) {
@@ -229,7 +229,7 @@ void voice_dtmf_detector_config_init(voice_dtmf_detector_config_t *config) {
 }
 
 /* ============================================
- * 检测器实现
+ * Detector Implementation
  * ============================================ */
 
 voice_dtmf_detector_t *voice_dtmf_detector_create(
@@ -244,7 +244,7 @@ voice_dtmf_detector_t *voice_dtmf_detector_create(
         voice_dtmf_detector_config_init(&det->config);
     }
 
-    /* 计算块大小 (约 10ms) */
+    /* Compute block size (~10ms) */
     det->block_size = det->config.sample_rate / 100;
 
     /* Initialize SIMD-optimized Goertzel filter banks */
@@ -261,7 +261,7 @@ voice_dtmf_detector_t *voice_dtmf_detector_create(
                       det->config.sample_rate, det->block_size);
     }
 
-    /* 计算最小样本数 */
+    /* Compute minimum samples */
     det->min_on_samples = det->config.min_on_time_ms * det->config.sample_rate / 1000;
     det->min_off_samples = det->config.min_off_time_ms * det->config.sample_rate / 1000;
 
@@ -276,6 +276,33 @@ void voice_dtmf_detector_destroy(voice_dtmf_detector_t *detector) {
     }
 }
 
+/**
+ * @brief Process audio samples for DTMF detection
+ * @details Analyzes audio using Goertzel algorithm to detect DTMF tones.
+ *          Processes samples block by block (~10ms), computing power at each
+ *          of the 8 DTMF frequencies. Detects valid digits based on:
+ *          - Both low and high frequency above threshold
+ *          - Twist ratio within acceptable range
+ *          - Minimum duration requirements met
+ *
+ *          Algorithm:
+ *          1. Update all Goertzel filters with each sample (SIMD-optimized)
+ *          2. At block boundaries, compute frequency powers
+ *          3. Find strongest low and high frequencies
+ *          4. Validate thresholds and twist ratio
+ *          5. Check timing constraints (min on/off duration)
+ *          6. Invoke callback if valid digit detected
+ *
+ * @param[in] detector Detector instance
+ * @param[in] samples Input audio samples (int16)
+ * @param[in] num_samples Number of samples to process
+ * @param[out] result Optional detailed detection result
+ * @return Detected digit, or VOICE_DTMF_NONE if no digit detected
+ *
+ * @note Uses SIMD acceleration (SSE/NEON) for Goertzel filter banks.
+ *       Twist checking prevents false positives from harmonics.
+ *       Hangover prevents multiple triggers from single key press.
+ */
 voice_dtmf_digit_t voice_dtmf_detector_process(
     voice_dtmf_detector_t *detector,
     const int16_t *samples,
@@ -324,12 +351,12 @@ voice_dtmf_digit_t voice_dtmf_detector_process(
 
             detector->sample_count = 0;
 
-            /* 检查阈值 */
+            /* Check thresholds */
             if (max_low > detector->config.detection_threshold &&
                 max_high > detector->config.detection_threshold &&
                 low_idx >= 0 && high_idx >= 0) {
 
-                /* 检查 twist */
+                /* Check twist */
                 float twist = 10.0f * log10f(max_high / max_low);
 
                 if (twist >= -detector->config.reverse_twist_threshold &&
@@ -345,19 +372,19 @@ voice_dtmf_digit_t voice_dtmf_detector_process(
                         detector->off_samples = 0;
                     }
 
-                    /* 检查最小持续时间 */
+                    /* Check minimum duration */
                     if (detector->on_samples >= detector->min_on_samples &&
                         !detector->digit_active) {
                         detector->digit_active = true;
                         detected = digit;
 
-                        /* 添加到缓冲区 */
+                        /* Add to buffer */
                         if (detector->digit_count < DTMF_DIGIT_BUFFER_SIZE - 1) {
                             detector->digit_buffer[detector->digit_count++] = (char)digit;
                             detector->digit_buffer[detector->digit_count] = '\0';
                         }
 
-                        /* 回调 */
+                        /* Callback */
                         if (detector->config.on_digit) {
                             uint32_t duration_ms = detector->on_samples * 1000 /
                                                    detector->config.sample_rate;
@@ -430,7 +457,7 @@ void voice_dtmf_detector_clear_digits(voice_dtmf_detector_t *detector) {
 }
 
 /* ============================================
- * 生成器配置
+ * Generator Configuration
  * ============================================ */
 
 void voice_dtmf_generator_config_init(voice_dtmf_generator_config_t *config) {
@@ -447,7 +474,7 @@ void voice_dtmf_generator_config_init(voice_dtmf_generator_config_t *config) {
 }
 
 /* ============================================
- * 生成器实现
+ * Generator Implementation
  * ============================================ */
 
 voice_dtmf_generator_t *voice_dtmf_generator_create(
@@ -481,7 +508,7 @@ size_t voice_dtmf_generator_generate(
         return 0;
     }
 
-    /* 查找频率 */
+    /* Find frequency */
     float low_freq = 0.0f, high_freq = 0.0f;
     voice_dtmf_get_frequencies(digit, &low_freq, &high_freq);
 
@@ -489,11 +516,11 @@ size_t voice_dtmf_generator_generate(
         return 0;
     }
 
-    /* 计算相位增量 */
+    /* Compute phase increment */
     float low_inc = 2.0f * (float)M_PI * low_freq / generator->config.sample_rate;
     float high_inc = 2.0f * (float)M_PI * high_freq / generator->config.sample_rate;
 
-    /* 生成样本数 */
+    /* Generate sample count */
     size_t tone_samples = generator->config.tone_duration_ms * generator->config.sample_rate / 1000;
     if (tone_samples > num_samples) tone_samples = num_samples;
 
@@ -538,10 +565,10 @@ size_t voice_dtmf_generator_generate_sequence(
     for (const char *p = digits; *p != '\0'; p++) {
         if (!voice_dtmf_is_valid_digit(*p)) continue;
 
-        /* 检查空间 */
+        /* Check space */
         if (total + tone_samples + pause_samples > max_samples) break;
 
-        /* 生成音调 */
+        /* Generate tone */
         size_t generated = voice_dtmf_generator_generate(
             generator,
             (voice_dtmf_digit_t)*p,
@@ -550,7 +577,7 @@ size_t voice_dtmf_generator_generate_sequence(
         );
         total += generated;
 
-        /* 添加静音间隔 */
+        /* Add silence interval */
         if (total + pause_samples <= max_samples) {
             memset(output + total, 0, pause_samples * sizeof(int16_t));
             total += pause_samples;
@@ -571,7 +598,7 @@ void voice_dtmf_generator_reset(voice_dtmf_generator_t *generator) {
 }
 
 /* ============================================
- * 辅助函数
+ * Utility Functions
  * ============================================ */
 
 bool voice_dtmf_is_valid_digit(char c) {
@@ -591,13 +618,13 @@ void voice_dtmf_get_frequencies(
     *low_freq = 0.0f;
     *high_freq = 0.0f;
 
-    /* 查找键位 */
+    /* Find key position */
     for (int row = 0; row < 4; row++) {
         for (int col = 0; col < 4; col++) {
             char key = DTMF_KEYS[row][col];
             char d = (char)digit;
 
-            /* 处理大小写 */
+            /* Handle case conversion */
             if (d >= 'a' && d <= 'd') d -= 32;
 
             if (key == d) {

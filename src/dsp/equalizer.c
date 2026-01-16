@@ -3,7 +3,7 @@
  * @brief Multi-band parametric equalizer implementation
  * @author wangxuebing <lynnss.codeai@gmail.com>
  *
- * 使用 Biquad 滤波器实现各类均衡器
+ * Implements various equalizers using Biquad filters
  */
 
 #include "dsp/equalizer.h"
@@ -17,20 +17,20 @@
 #endif
 
 /* ============================================
- * Biquad 滤波器系数
+ * Biquad Filter Coefficients
  * ============================================ */
 
 typedef struct {
-    float b0, b1, b2;   /* 分子系数 */
-    float a1, a2;       /* 分母系数 (a0 = 1) */
+    float b0, b1, b2;   /* Numerator coefficients */
+    float a1, a2;       /* Denominator coefficients (a0 = 1) */
 } biquad_coeffs_t;
 
 typedef struct {
-    float z1, z2;       /* 状态变量 */
+    float z1, z2;       /* State variables */
 } biquad_state_t;
 
 /* ============================================
- * 内部结构
+ * Internal Structure
  * ============================================ */
 
 #define MAX_EQ_BANDS 10
@@ -43,11 +43,11 @@ struct voice_eq_s {
     biquad_coeffs_t coeffs[MAX_EQ_BANDS];
     biquad_state_t states[MAX_EQ_BANDS];
 
-    float master_gain;  /* 线性 */
+    float master_gain;  /* Linear */
 };
 
 /* ============================================
- * Biquad 系数计算
+ * Biquad Coefficients Calculation
  * ============================================ */
 
 static void compute_biquad_coeffs(

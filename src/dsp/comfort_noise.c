@@ -11,7 +11,7 @@
 #include <math.h>
 
 /* ============================================
- * 随机数生成
+ * Random Number Generation
  * ============================================ */
 
 static uint32_t g_cng_seed = 12345;
@@ -26,7 +26,7 @@ static float cng_randf(void) {
 }
 
 /* ============================================
- * 内部结构
+ * Internal Structure
  * ============================================ */
 
 #define CNG_SPECTRAL_BANDS 8
@@ -34,21 +34,21 @@ static float cng_randf(void) {
 struct voice_cng_s {
     voice_cng_config_t config;
 
-    /* 噪声电平 */
-    float noise_level;              /**< 线性 */
+    /* Noise level */
+    float noise_level;              /**< Linear */
     float target_level;
 
-    /* 频谱匹配 */
+    /* Spectral matching */
     float spectral_energy[CNG_SPECTRAL_BANDS];
     float filter_state[CNG_SPECTRAL_BANDS * 2];
 
-    /* 粉红噪声状态 */
+    /* Pink noise state */
     float pink_state[7];
 
-    /* 布朗噪声状态 */
+    /* Brown noise state */
     float brown_state;
 
-    /* 平滑 */
+    /* Smoothing */
     float transition_coeff;
     float current_level;
 };
@@ -89,12 +89,12 @@ voice_cng_t *voice_cng_create(const voice_cng_config_t *config) {
         voice_cng_config_init(&cng->config);
     }
 
-    /* 初始化电平 */
+    /* Initialize level */
     cng->noise_level = powf(10.0f, cng->config.noise_level_db / 20.0f);
     cng->target_level = cng->noise_level;
     cng->current_level = cng->noise_level;
 
-    /* 初始化频谱能量 (平坦) */
+    /* Initialize spectral energy (flat) */
     for (int i = 0; i < CNG_SPECTRAL_BANDS; i++) {
         cng->spectral_energy[i] = 1.0f / CNG_SPECTRAL_BANDS;
     }
@@ -114,7 +114,7 @@ void voice_cng_destroy(voice_cng_t *cng) {
 }
 
 /* ============================================
- * 噪声生成
+ * Noise Generation
  * ============================================ */
 
 static float generate_white_noise(void) {
@@ -187,6 +187,28 @@ voice_error_t voice_cng_analyze(
     return VOICE_SUCCESS;
 }
 
+/**
+ * @brief Generate comfort noise (int16 version)
+ * @details Generates synthetic comfort noise with the configured characteristics.
+ *          Supports multiple noise types (white, pink, brown, spectral) and
+ *          smoothly transitions between level changes.
+ *
+ *          Algorithm:
+ *          1. Smooth transition to target level
+ *          2. Generate noise sample based on configured type
+ *          3. Apply current level scaling
+ *          4. Saturate to int16 range
+ *
+ * @param[in] cng CNG processor instance
+ * @param[out] output Output buffer for generated noise
+ * @param[in] num_samples Number of samples to generate
+ * @return VOICE_SUCCESS on success, error code on failure
+ *
+ * @note Level transitions are smoothed per-sample to avoid artifacts.
+ *       White noise: uniform distribution.
+ *       Pink noise: 1/f spectrum using Voss-McCartney algorithm.
+ *       Brown noise: integrated white noise (1/f² spectrum).
+ */
 voice_error_t voice_cng_generate(
     voice_cng_t *cng,
     int16_t *output,

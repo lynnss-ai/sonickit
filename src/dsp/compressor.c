@@ -11,18 +11,18 @@
 #include <math.h>
 
 /* ============================================
- * 内部结构
+ * Internal Structure
  * ============================================ */
 
 struct voice_compressor_s {
     voice_compressor_config_t config;
 
-    /* 状态 */
-    float envelope;         /**< 包络检测器状态 */
-    float gain;             /**< 当前增益 */
-    float hold_counter;     /**< 保持计数器 */
+    /* State */
+    float envelope;         /**< Envelope detector state */
+    float gain;             /**< Current gain */
+    float hold_counter;     /**< Hold counter */
 
-    /* 时间常数 */
+    /* Time constants */
     float attack_coeff;
     float release_coeff;
     float hold_samples;
@@ -44,14 +44,14 @@ struct voice_compressor_s {
     float sc_hp_b0, sc_hp_b1, sc_hp_b2;
     float sc_hp_a1, sc_hp_a2;
 
-    /* 前瞻缓冲区 */
+    /* Lookahead buffer */
     float *lookahead_buffer;
     size_t lookahead_samples;
     size_t lookahead_pos;
 };
 
 /* ============================================
- * 辅助函数
+ * Helper Functions
  * ============================================ */
 
 static float db_to_linear(float db) {
@@ -69,7 +69,7 @@ static float time_to_coeff(float time_ms, uint32_t sample_rate) {
     return 1.0f - expf(-1.0f / samples);
 }
 
-/* 软拐点传输函数 */
+/* Soft knee transfer function */
 static float compute_gain_db(
     voice_compressor_config_t *config,
     float input_db
@@ -79,31 +79,31 @@ static float compute_gain_db(
     float knee_width = config->knee_width_db;
 
     if (config->knee_type == VOICE_DRC_SOFT_KNEE && knee_width > 0.0f) {
-        /* 软拐点 */
+        /* Soft knee */
         float knee_start = threshold - knee_width / 2.0f;
         float knee_end = threshold + knee_width / 2.0f;
 
         if (input_db < knee_start) {
-            return 0.0f;  /* 无压缩 */
+            return 0.0f;  /* No compression */
         } else if (input_db > knee_end) {
-            /* 完全压缩 */
+            /* Full compression */
             return (threshold + (input_db - threshold) / ratio) - input_db;
         } else {
-            /* 拐点区域 - 平滑过渡 */
+            /* Knee region - smooth transition */
             float x = input_db - knee_start;
             float slope = (1.0f - 1.0f / ratio) / (2.0f * knee_width);
             return -slope * x * x;
         }
     } else {
-        /* 硬拐点 */
+        /* Hard knee */
         if (input_db < threshold) {
             return 0.0f;
         } else {
             if (config->type == VOICE_DRC_LIMITER) {
                 return threshold - input_db;
             } else if (config->type == VOICE_DRC_GATE) {
-                /* 门限: 低于阈值大幅衰减 */
-                return -80.0f;  /* 大幅衰减 */
+                /* Gate: large attenuation below threshold */
+                return -80.0f;  /* Large attenuation */
             } else {
                 return (threshold + (input_db - threshold) / ratio) - input_db;
             }
@@ -142,6 +142,20 @@ void voice_compressor_config_init(voice_compressor_config_t *config) {
     config->sidechain_hpf = 0.0f;
 }
 
+/**
+ * @brief Initialize limiter configuration
+ * @details Sets up a fast-acting peak limiter for preventing clipping.
+ *          Uses near-infinite ratio (100:1) and hard knee for brick-wall limiting.
+ *
+ * @param[out] config Configuration structure to initialize
+ *
+ * @note Limiter settings:
+ *       - Threshold: -1 dBFS (just below 0dBFS)
+ *       - Ratio: 100:1 (approximates infinity)
+ *       - Attack: 0.5ms (very fast)
+ *       - Release: 50ms
+ *       - Detection: TRUE_PEAK (most accurate)
+ */
 void voice_limiter_config_init(voice_compressor_config_t *config) {
     voice_compressor_config_init(config);
 
@@ -155,6 +169,21 @@ void voice_limiter_config_init(voice_compressor_config_t *config) {
     config->auto_makeup = false;
 }
 
+/**
+ * @brief Initialize noise gate configuration
+ * @details Sets up a gate for suppressing low-level noise and room ambience.
+ *          Uses expander-style reduction with soft knee for natural transitions.
+ *
+ * @param[out] config Configuration structure to initialize
+ *
+ * @note Gate settings:
+ *       - Threshold: -40 dBFS
+ *       - Ratio: 10:1 (expansion)
+ *       - Attack: 1ms (fast)
+ *       - Release: 50ms
+ *       - Hold: 20ms (prevents chattering)
+ *       - Soft knee: 6dB width
+ */
 void voice_gate_config_init(voice_compressor_config_t *config) {
     voice_compressor_config_init(config);
 
@@ -169,7 +198,7 @@ void voice_gate_config_init(voice_compressor_config_t *config) {
 }
 
 /* ============================================
- * 生命周期
+ * Lifecycle
  * ============================================ */
 
 voice_compressor_t *voice_compressor_create(const voice_compressor_config_t *config) {
@@ -220,7 +249,7 @@ void voice_compressor_destroy(voice_compressor_t *comp) {
 }
 
 /* ============================================
- * 处理
+ * Processing
  * ============================================ */
 
 voice_error_t voice_compressor_process(

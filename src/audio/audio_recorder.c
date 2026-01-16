@@ -169,7 +169,7 @@ voice_error_t voice_recorder_start(voice_recorder_t *recorder) {
         return VOICE_ERROR_INVALID_STATE;
     }
 
-    /* 重置状态 */
+    /* Reset state counters */
     recorder->status.duration_ms = 0;
     recorder->status.samples_recorded = 0;
     recorder->status.bytes_written = 0;
@@ -178,7 +178,7 @@ voice_error_t voice_recorder_start(voice_recorder_t *recorder) {
     recorder->memory_used = 0;
     recorder->write_pos = 0;
 
-    /* 打开文件 (如果需要) */
+    /* Open file if needed */
     if (recorder->config.format == VOICE_RECORD_WAV && recorder->config.filename) {
         const char *mode = recorder->config.append ? "ab" : "wb";
         recorder->file = fopen(recorder->config.filename, mode);
@@ -212,7 +212,7 @@ voice_error_t voice_recorder_stop(voice_recorder_t *recorder) {
 
     recorder->status.is_recording = false;
 
-    /* 关闭文件 (如果打开) */
+    /* Close file if open */
     if (recorder->file) {
         if (recorder->config.format == VOICE_RECORD_WAV) {
             finalize_wav_file(recorder->file, recorder->status.bytes_written);
@@ -260,7 +260,7 @@ voice_error_t voice_recorder_write(
         return VOICE_ERROR_INVALID_STATE;
     }
 
-    /* 检查时长限制 */
+    /* Check duration limit */
     if (recorder->config.max_duration_ms > 0) {
         uint64_t new_duration = (recorder->status.samples_recorded + num_samples) * 1000
                                / recorder->config.sample_rate;
@@ -270,7 +270,7 @@ voice_error_t voice_recorder_write(
         }
     }
 
-    /* 计算电平 */
+    /* Calculate audio level for monitoring */
     float peak = 0.0f;
     float sum = 0.0f;
     for (size_t i = 0; i < num_samples; i++) {
@@ -286,14 +286,14 @@ voice_error_t voice_recorder_write(
     }
     recorder->status.avg_level_db = avg_db;
 
-    /* 触发数据回调 */
+    /* Trigger data callback for real-time processing */
     if (recorder->config.on_data) {
         recorder->config.on_data(samples, num_samples, recorder->config.callback_user_data);
     }
 
     size_t bytes_to_write = num_samples * sizeof(int16_t);
 
-    /* 写入文件或内存 */
+    /* Write to file or memory buffer */
     if (recorder->file) {
         size_t written = fwrite(samples, sizeof(int16_t), num_samples, recorder->file);
         if (written != num_samples) {
@@ -302,7 +302,7 @@ voice_error_t voice_recorder_write(
         recorder->status.bytes_written += written * sizeof(int16_t);
     } else if (recorder->memory_buffer) {
         if (recorder->config.circular_buffer) {
-            /* 循环缓冲区模式 */
+            /* Circular buffer mode */
             for (size_t i = 0; i < num_samples; i++) {
                 recorder->memory_buffer[recorder->write_pos] = samples[i];
                 recorder->write_pos = (recorder->write_pos + 1) % recorder->memory_capacity;
@@ -314,7 +314,7 @@ voice_error_t voice_recorder_write(
                 }
             }
         } else {
-            /* 线性缓冲区模式 */
+            /* Linear buffer mode */
             if (recorder->memory_used + num_samples > recorder->memory_capacity) {
                 return VOICE_ERROR_OUT_OF_MEMORY;
             }
@@ -418,7 +418,7 @@ voice_player_t *voice_player_create_from_file(
     FILE *file = fopen(filename, "rb");
     if (!file) return NULL;
 
-    /* 读取 WAV 头 */
+    /* Read WAV header */
     char riff[4];
     if (fread(riff, 1, 4, file) != 4 || memcmp(riff, "RIFF", 4) != 0) {
         fclose(file);
@@ -432,7 +432,7 @@ voice_player_t *voice_player_create_from_file(
         return NULL;
     }
 
-    /* 查找 fmt chunk */
+    /* Find fmt chunk */
     fseek(file, 12, SEEK_SET);
     uint16_t channels = 1;
     uint32_t sample_rate = 48000;
@@ -468,7 +468,7 @@ voice_player_t *voice_player_create_from_file(
         return NULL;
     }
 
-    /* 读取音频数据 */
+    /* Read audio data */
     size_t num_samples = data_size / (bits_per_sample / 8);
     int16_t *samples = (int16_t *)malloc(num_samples * sizeof(int16_t));
     if (!samples) {
@@ -494,7 +494,7 @@ voice_player_t *voice_player_create_from_file(
 
     fclose(file);
 
-    /* 创建播放器 */
+    /* Create player instance */
     voice_player_t *player = (voice_player_t *)calloc(1, sizeof(voice_player_t));
     if (!player) {
         free(samples);
@@ -541,7 +541,7 @@ voice_player_t *voice_player_create_from_memory(
         voice_player_config_init(&player->config);
     }
 
-    /* 复制样本数据 */
+    /* Copy sample data to player buffer */
     player->samples = (int16_t *)malloc(num_samples * sizeof(int16_t));
     if (!player->samples) {
         free(player);
@@ -683,7 +683,7 @@ size_t voice_player_read(
         }
     }
 
-    /* 应用音量 */
+    /* Apply volume control */
     float volume = player->config.volume;
     for (size_t i = 0; i < to_read; i++) {
         float sample = (float)player->samples[player->current_pos + i] * volume;
@@ -695,7 +695,7 @@ size_t voice_player_read(
     player->current_pos += to_read;
     player->status.position_ms = (player->current_pos * 1000) / player->sample_rate;
 
-    /* 位置回调 */
+    /* Trigger position callback */
     if (player->config.on_position) {
         player->config.on_position(player->status.position_ms,
                                   player->status.duration_ms,
