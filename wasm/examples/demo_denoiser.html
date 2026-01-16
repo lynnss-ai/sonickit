@@ -585,6 +585,25 @@
         spatialPad.addEventListener('mousedown', e => { isDragging = true; updateSpatialFromMouse(e); });
         document.addEventListener('mousemove', e => { if (isDragging) updateSpatialFromMouse(e); });
         document.addEventListener('mouseup', () => { isDragging = false; });
+        // 触摸支持
+        spatialPad.addEventListener('touchstart', e => { e.preventDefault(); isDragging = true; updateSpatialFromTouch(e); }, { passive: false });
+        spatialPad.addEventListener('touchmove', e => { e.preventDefault(); if (isDragging) updateSpatialFromTouch(e); }, { passive: false });
+        spatialPad.addEventListener('touchend', () => { isDragging = false; });
+        function updateSpatialFromTouch(e) {
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                const rect = spatialPad.getBoundingClientRect();
+                const x = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+                const y = Math.max(0, Math.min(1, (touch.clientY - rect.top) / rect.height));
+                spatialParams.azimuth = (x - 0.5) * 180;
+                spatialParams.distance = 0.5 + y * 2;
+                spatialDot.style.left = (x * 100) + '%';
+                spatialDot.style.top = (y * 100) + '%';
+                spatialDot.style.transform = 'translate(-50%, -50%)';
+                document.getElementById('azimuthValue').textContent = spatialParams.azimuth.toFixed(0) + '°';
+                document.getElementById('distanceValue').textContent = spatialParams.distance.toFixed(1) + 'm';
+            }
+        }
 
         // DTMF 拨号盘
         let dialedDigits = '';
@@ -692,8 +711,8 @@
             const engine = parseInt(engineSelect.value);
             const vadMode = parseInt(document.getElementById('vadMode').value);
             try { processors.denoiser = new sonicKit.Denoiser(sampleRate, frameSize, engine); } catch(e) { console.warn('Denoiser not available'); }
-            try { processors.agc = new sonicKit.AGC(sampleRate, frameSize, 0, -3); } catch(e) { console.warn('AGC not available'); }
-            try { processors.vad = new sonicKit.VAD(sampleRate, frameSize, vadMode); } catch(e) { console.warn('VAD not available'); }
+            try { processors.agc = new sonicKit.AGC(sampleRate, -3); } catch(e) { console.warn('AGC not available'); }
+            try { processors.vad = new sonicKit.VAD(sampleRate, frameSize); } catch(e) { console.warn('VAD not available'); }
             try { processors.compressor = new sonicKit.Compressor(sampleRate, -20, 4, 10, 100); } catch(e) { console.warn('Compressor not available'); }
             try { processors.equalizer = new sonicKit.Equalizer(sampleRate, 5); } catch(e) { console.warn('Equalizer not available'); }
             try { processors.reverb = new sonicKit.Reverb(sampleRate, 0.5, 0.5, 0.3, 0.7); } catch(e) { console.warn('Reverb not available'); }
@@ -703,13 +722,13 @@
             try { processors.pitchShifter = new sonicKit.PitchShifter(sampleRate, 0); } catch(e) { console.warn('PitchShifter not available'); }
             try { processors.dtmfDetector = new sonicKit.DTMFDetector(sampleRate, frameSize); } catch(e) { console.warn('DTMFDetector not available'); }
             try { processors.dtmfGenerator = new sonicKit.DTMFGenerator(sampleRate, 100, 50); } catch(e) { console.warn('DTMFGenerator not available'); }
-            try { processors.inputLevel = new sonicKit.LevelMeter(sampleRate, frameSize); } catch(e) { console.warn('LevelMeter not available'); }
-            try { processors.outputLevel = new sonicKit.LevelMeter(sampleRate, frameSize); } catch(e) { console.warn('LevelMeter not available'); }
+            try { processors.inputLevel = new sonicKit.AudioLevel(sampleRate, frameSize); } catch(e) { console.warn('AudioLevel not available'); }
+            try { processors.outputLevel = new sonicKit.AudioLevel(sampleRate, frameSize); } catch(e) { console.warn('AudioLevel not available'); }
             try { processors.limiter = new sonicKit.Limiter(sampleRate, -3); } catch(e) { console.warn('Limiter not available'); }
             try { processors.noiseGate = new sonicKit.NoiseGate(sampleRate, -40, 10, 50); } catch(e) { console.warn('NoiseGate not available'); }
-            try { processors.timeStretcher = new sonicKit.TimeStretcher(sampleRate, frameSize, 1.0); } catch(e) { console.warn('TimeStretcher not available'); }
+            try { processors.timeStretcher = new sonicKit.TimeStretcher(sampleRate, 1, 1.0); } catch(e) { console.warn('TimeStretcher not available'); }
             try { processors.spatialRenderer = new sonicKit.SpatialRenderer(sampleRate, frameSize); } catch(e) { console.warn('SpatialRenderer not available'); }
-            try { processors.hrtf = new sonicKit.HRTFProcessor(sampleRate, frameSize); } catch(e) { console.warn('HRTFProcessor not available'); }
+            try { processors.hrtf = new sonicKit.HRTF(sampleRate); } catch(e) { console.warn('HRTF not available'); }
             try {
                 const strength = parseInt(document.getElementById('watermarkStrength').value);
                 processors.watermarkEmbedder = new sonicKit.WatermarkEmbedder(sampleRate, strength, 12345);
@@ -770,13 +789,21 @@
             t0 = performance.now();
             if (enabled.spatial && processors.spatialRenderer) {
                 try {
-                    processors.spatialRenderer.setSourcePosition(0, spatialParams.azimuth, spatialParams.elevation, spatialParams.distance);
+                    // 球坐标转笛卡尔坐标 (x, y, z)
+                    const azRad = spatialParams.azimuth * Math.PI / 180;
+                    const elRad = spatialParams.elevation * Math.PI / 180;
+                    const x = spatialParams.distance * Math.cos(elRad) * Math.sin(azRad);
+                    const y = spatialParams.distance * Math.sin(elRad);
+                    const z = spatialParams.distance * Math.cos(elRad) * Math.cos(azRad);
+                    processors.spatialRenderer.setSourcePosition(x, y, z);
                     result = processors.spatialRenderer.process(result);
                 } catch(e) {}
             }
             if (enabled.hrtf && processors.hrtf) {
                 try {
-                    processors.hrtf.setPosition(spatialParams.azimuth, spatialParams.elevation);
+                    processors.hrtf.setAzimuth(spatialParams.azimuth);
+                    processors.hrtf.setElevation(spatialParams.elevation);
+                    processors.hrtf.setDistance(spatialParams.distance);
                     result = processors.hrtf.process(result);
                 } catch(e) {}
             }
